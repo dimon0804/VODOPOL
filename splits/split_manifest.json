@@ -1,0 +1,45 @@
+{
+  "dataset": "Sen1Floods11 v1.1",
+  "seed": 2026,
+  "rule": "leave-event-out: части не имеют общих событий; Bolivia целиком отложена под проверку переноса и не участвует ни в обучении, ни в подборе порога, ни в финальной оценке",
+  "parts": [
+    "train",
+    "validation",
+    "test",
+    "holdout"
+  ],
+  "events": {
+    "train": [
+      "Ghana",
+      "India",
+      "Paraguay",
+      "USA"
+    ],
+    "validation": [
+      "Nigeria",
+      "Spain",
+      "Sri-Lanka"
+    ],
+    "test": [
+      "Mekong",
+      "Pakistan",
+      "Somalia"
+    ],
+    "holdout": [
+      "Bolivia"
+    ]
+  },
+  "counts": {
+    "train": 257,
+    "validation": 90,
+    "test": 84,
+    "holdout": 15
+  },
+  "total_chips": 446,
+  "files": {
+    "train": "train.csv",
+    "validation": "validation.csv",
+    "test": "test.csv",
+    "holdout": "holdout.csv"
+  }
+}
