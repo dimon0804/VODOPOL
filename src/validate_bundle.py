@@ -1,4 +1,4 @@
-"""Валидатор пакета сдачи FloodValue.
+"""Валидатор пакета сдачи Водополь.
 
 Самостоятельная программа::
 
@@ -1281,7 +1281,7 @@ def format_report(run_dir: Path | str, results: Sequence[CheckResult]) -> str:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m src.validate_bundle",
-        description="Проверка пакета сдачи FloodValue: десять проверок обязательных артефактов.",
+        description="Проверка пакета сдачи Водополь: десять проверок обязательных артефактов.",
     )
     parser.add_argument("run_dir", help="каталог запуска, например outputs/20260926-India_900498-b250000")
     args = parser.parse_args(argv)

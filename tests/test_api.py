@@ -228,6 +228,6 @@ def test_бандл_это_zip_архив(client: TestClient) -> None:
 def test_страница_панели_отдаётся(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert "FloodValue" in response.text
+    assert "Водополь" in response.text
     assert client.get("/app.js").status_code == 200
     assert client.get("/styles.css").status_code == 200
