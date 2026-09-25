@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Исходный набор данных не кладём в репозиторий — он берётся из официального бакета
+data/cache/
+data/raw/
+*.tif
+!reports/figures/*.tif
+
+# Результаты запусков
+outputs/
+reports/_*.log
+
+.playwright-mcp/
+.DS_Store
+Thumbs.db
