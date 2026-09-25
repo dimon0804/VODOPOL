@@ -352,8 +352,24 @@ def recompute_under_budget(context, budget_rub: float):
         decision_deadline=str(summary.get("decision_deadline") or ""),
     )
     result = build_strategies(catalog, assets_geojson, asset_rows, config)
-    return (
-        result["plans"],
-        [position_row(p) for p in result["positions"]],
-        result["comparison"],
-    )
+
+    # Наружу отдаём обычные числа: сервис читает эти строки и из файлов комплекта тоже,
+    # и типы в обоих случаях должны совпадать.
+    comparison = []
+    for row in result["comparison"]:
+        item = dict(row)
+        for field in (
+            "data_cost_rub",
+            "other_cost_rub",
+            "decision_cost_rub",
+            "budget_rub",
+            "covered_expected_loss_rub",
+            "coverage_share",
+            "residual_uncertainty",
+        ):
+            value = item.get(field)
+            item[field] = None if value is None else float(value)
+        item["budget_feasible"] = bool(item["budget_feasible"])
+        comparison.append(item)
+
+    return result["plans"], [position_row(p) for p in result["positions"]], comparison

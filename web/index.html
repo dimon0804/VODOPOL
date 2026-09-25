@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FloodValue — панель оператора</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">FloodValue</span>
+    <span class="brand-sub">панель оператора · кейс 2</span>
+  </div>
+
+  <div class="runline" id="runline">
+    <span class="kv"><b>загрузка…</b></span>
+  </div>
+
+  <div class="topactions">
+    <span class="pill" id="health-pill">соединение…</span>
+    <a class="btn" id="bundle-link" href="/api/bundle.zip">Выгрузить комплект</a>
+  </div>
+</header>
+
+<div class="banner hidden" id="banner"></div>
+
+<main class="layout">
+
+  <!-- ── карта ──────────────────────────────────────────────────────────── -->
+  <section class="mapcol">
+    <div id="map"></div>
+
+    <div class="mapctl" id="mapctl">
+      <div class="mapctl-head">Слои карты</div>
+      <label class="row"><input type="checkbox" id="chk-s1" checked><span>подложка S1 (VV, дБ)</span></label>
+      <div class="sep"></div>
+      <label class="row"><input type="radio" name="thematic" value="probability" checked><span>вероятность затопления</span></label>
+      <label class="row"><input type="radio" name="thematic" value="mask"><span>бинарная маска</span></label>
+      <label class="row"><input type="radio" name="thematic" value="uncertainty"><span>неопределённость</span></label>
+      <label class="row"><input type="radio" name="thematic" value="none"><span>без тематического слоя</span></label>
+      <div class="sep"></div>
+      <label class="row slim"><span>прозрачность</span>
+        <input type="range" id="rng-opacity" min="10" max="100" value="80" step="5">
+        <span class="num" id="lbl-opacity">80%</span>
+      </label>
+      <div class="sep"></div>
+      <label class="row"><input type="checkbox" id="chk-zones" checked><span>каталог зон</span></label>
+      <label class="row"><input type="checkbox" id="chk-assets" checked><span>объекты портфеля</span></label>
+      <div class="mapctl-note" id="s1-note"></div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <!-- ── боковая колонка ────────────────────────────────────────────────── -->
+  <aside class="side">
+
+    <section class="card" id="card-budget">
+      <div class="card-head">
+        <h2>Бюджет решения</h2>
+        <span class="recalc hidden" id="recalc">пересчёт…</span>
+      </div>
+      <div class="budget-value">
+        <span class="big num" id="budget-num">—</span>
+        <span class="unit">₽</span>
+        <span class="mark case" title="Бюджет объявляется командой до расчёта">условие кейса</span>
+        <button class="btn ghost" id="btn-budget-reset" type="button">объявленный</button>
+      </div>
+      <input type="range" id="rng-budget" min="0" max="60000" step="250" value="20000">
+      <div class="scale" id="budget-scale"></div>
+      <p class="note">
+        Слайдер пересчитывает только отбор зон, их цену по ПП РФ № 840 и сравнение стратегий.
+        Модель <b>не переобучается</b>, порог бинаризации, карта вероятностей и портфель объектов
+        <b>не меняются</b>.
+      </p>
+    </section>
+
+    <section class="card" id="card-strategies">
+      <div class="card-head">
+        <h2>Стратегии закупки A / B / C</h2>
+        <div class="segmented" id="strategy-switch">
+          <button type="button" data-strategy="A">A</button>
+          <button type="button" data-strategy="B">B</button>
+          <button type="button" data-strategy="C" class="active">C</button>
+        </div>
+      </div>
+      <div class="strategy-legend">
+        <span><b>A</b> только открытые данные</span>
+        <span><b>B</b> широкая закупка по объявленному правилу</span>
+        <span><b>C</b> выборочная по приоритетам в пределах бюджета</span>
+      </div>
+      <div class="tablewrap">
+        <table class="grid abc" id="tbl-strategies"></table>
+      </div>
+      <p class="note" id="strategy-note"></p>
+    </section>
+
+    <section class="card" id="card-assets">
+      <div class="card-head">
+        <h2>Объекты портфеля — ожидаемый ущерб</h2>
+        <span class="muted" id="assets-total"></span>
+      </div>
+      <div class="tablewrap scroll-220">
+        <table class="grid" id="tbl-assets">
+          <thead>
+            <tr>
+              <th>ранг</th>
+              <th>объект</th>
+              <th class="r">p<br><span class="mark model">расчёт модели</span></th>
+              <th class="r">ущерб, ₽<br><span class="mark model">p × V × q</span></th>
+              <th class="r">неопр.<br><span class="mark model">расчёт модели</span></th>
+              <th>статус</th>
+              <th>покрыт</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note">
+        V и q — учебные значения из таблицы кейса, к реальному имуществу не относятся.
+        У статусов <b>partial</b> и <b>no_data</b> поля p, ущерба и ранга пустые (прочерк), а не нулевые:
+        ущерб там не равен нулю, он неизвестен.
+      </p>
+    </section>
+
+    <section class="card" id="card-zone">
+      <div class="card-head"><h2>Зона съёмки</h2><span class="muted" id="zone-hint">выберите зону на карте</span></div>
+      <div id="zone-body" class="zone-body"></div>
+    </section>
+
+    <section class="card" id="card-sensitivity">
+      <div class="card-head">
+        <h2>Чувствительность</h2>
+        <span class="muted" id="sens-count"></span>
+      </div>
+      <div class="tablewrap scroll-220">
+        <table class="grid" id="tbl-sensitivity">
+          <thead>
+            <tr>
+              <th>сценарий</th>
+              <th>стр.</th>
+              <th>что изменено</th>
+              <th class="r">стоимость, ₽<br><span class="mark scenario">сценарная ставка</span></th>
+              <th class="r">покрытый ущерб, ₽</th>
+              <th>итог</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note">Все строки — пересчёт входов при неизменной модели и неизменном пороге.</p>
+    </section>
+
+    <section class="card" id="card-meta">
+      <div class="card-head"><h2>Паспорт запуска</h2></div>
+      <div id="meta-body" class="meta-body"></div>
+    </section>
+
+  </aside>
+</main>
+
+<footer class="footer">
+  <span class="mark model">расчёт модели</span> получено из вероятностного растра запуска
+  <span class="mark scenario">сценарное</span> опирается на сценарную ставку БРЕ или сценарные даты, подтверждением не является
+  <span class="mark case">условие кейса</span> задано постановкой (V, q, бюджет)
+  <span class="mark measured">измерено</span> проверено по фактическим новым наблюдениям
+  <span class="mark none">нет оценки</span> значение пустое, нулём не заменяется
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
+</body>
+</html>

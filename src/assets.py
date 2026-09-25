@@ -223,26 +223,44 @@ def proxy_error(
     rows: Sequence[dict[str, Any]],
     assets: Sequence[Asset],
     truth: np.ndarray,
+    label_valid: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """Прокси-проверка ущерба: EL = p×V×q против EL_ref = y×V×q при тех же V и q.
 
     Контрольные точки не подбираются по прогнозу — берутся те же самые объекты,
     размещённые случайно до всякого расчёта. Это оценка качества перехода
     «вероятность → рубли», а не измерение фактических потерь.
+
+    `label_valid` — маска пикселей с надёжной ручной меткой. Кейс требует считать
+    прокси-ошибку на выборке с валидными метками, а пиксели со значением −1 меткой не
+    являются: объект, попавший в такой пиксель, исключается из проверки и считается
+    отдельно, а не записывается молча в сушу.
     """
     by_id = {asset.asset_id: asset for asset in assets}
     pairs: list[tuple[float, float]] = []
+    skipped: list[str] = []
     for row in rows:
         if row["status"] != C.ASSET_STATUS_OK:
             continue
         asset = by_id[row["asset_id"]]
-        y = float(bool(truth[asset.row, asset.col]))
+        if label_valid is not None and not label_valid[asset.row, asset.col]:
+            skipped.append(asset.asset_id)
+            continue
+        raw = truth[asset.row, asset.col]
+        # Если пришёл сырой слой меток, значение −1 означает «метки нет». Считать его
+        # ни водой, ни сушей нельзя: bool(-1) дало бы воду, а маска затопления — сушу.
+        if np.issubdtype(np.asarray(truth).dtype, np.integer) and int(raw) == C.LABEL_INVALID:
+            skipped.append(asset.asset_id)
+            continue
+        y = float(bool(raw))
         reference = C.expected_loss(y, asset.asset_value_rub, asset.vulnerability_coef)
         pairs.append((float(row["expected_loss_rub"]), reference))
 
     if not pairs:
         return {
             "n_points": 0,
+            "n_skipped_without_label": len(skipped),
+            "skipped_asset_ids": skipped,
             "status": "not_checked",
             "note": "Пригодных контрольных точек нет, прокси-ошибка не проверена.",
         }
@@ -251,6 +269,8 @@ def proxy_error(
     reference = np.array([r for _, r in pairs])
     return {
         "n_points": len(pairs),
+        "n_skipped_without_label": len(skipped),
+        "skipped_asset_ids": skipped,
         "status": "checked",
         "mae_rub": float(np.mean(np.abs(predicted - reference))),
         "rmse_rub": float(np.sqrt(np.mean((predicted - reference) ** 2))),

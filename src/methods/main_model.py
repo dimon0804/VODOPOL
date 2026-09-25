@@ -52,6 +52,11 @@ class MainModelConfig:
     #: Для калибровки берём больше пикселей: целевой класс редкий, нужна статистика.
     calibration_pixels: int = 20_000
     positive_share: float = 0.5
+    #: Выравнивать ли вклад событий. При выборке по чипам крупные события забирают
+    #: большую часть пикселей: USA и Paraguay дают 136 чипов из 257, то есть больше
+    #: половины обучающего материала, и модель настраивается на их условия съёмки.
+    #: При выравнивании каждое событие получает одинаковый пиксельный бюджет.
+    event_balanced: bool = True
     seed: int = 42
     features: FeatureConfig = field(default_factory=FeatureConfig)
     target_name: str = "временное затопление"
@@ -61,6 +66,9 @@ class MainModelConfig:
         payload["features"] = {
             "scales": list(self.features.scales),
             "use_chip_contrast": self.features.use_chip_contrast,
+            "use_chip_absolute": self.features.use_chip_absolute,
+            "despeckle_sizes": list(self.features.despeckle_sizes),
+            "per_chip_normalize": self.features.per_chip_normalize,
         }
         return payload
 
@@ -104,6 +112,9 @@ class MainModel:
         if not rows:
             raise ValueError("обучающая выборка пуста")
 
+        if self.config.event_balanced:
+            rows, labels = self._balance_by_event(chips, rows, labels)
+
         features = np.concatenate(rows).astype(np.float32)
         answers = np.concatenate(labels).astype(np.int8)
         self.trained_on = chips
@@ -132,6 +143,39 @@ class MainModel:
             booster.fit(features[take], answers[take])
             self.boosters.append(booster)
         return self
+
+    def _balance_by_event(
+        self, chips: list[str], rows: list[np.ndarray], labels: list[np.ndarray]
+    ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+        """Выравнивает пиксельный вклад событий.
+
+        Событие — это одна съёмочная кампания со своим углом наблюдения, своим типом
+        местности и своей статистикой обратного рассеяния. Если одно событие даёт
+        половину обучающих пикселей, модель настраивается на его условия, а на
+        остальных теряет. Поэтому бюджет пикселей делится между событиями поровну,
+        а внутри события — между его чипами.
+        """
+        from collections import defaultdict
+
+        by_event: dict[str, list[int]] = defaultdict(list)
+        for index, chip_id in enumerate(chips):
+            by_event[chip_id.split("_")[0]].append(index)
+
+        if len(by_event) < 2:
+            return rows, labels
+
+        budget = min(sum(len(rows[i]) for i in idx) for idx in by_event.values())
+        rng = np.random.default_rng(self.config.seed + 991)
+        new_rows: list[np.ndarray] = []
+        new_labels: list[np.ndarray] = []
+        for indexes in by_event.values():
+            per_chip = max(1, budget // len(indexes))
+            for index in indexes:
+                take = min(per_chip, len(rows[index]))
+                picked = rng.choice(len(rows[index]), size=take, replace=False)
+                new_rows.append(rows[index][picked])
+                new_labels.append(labels[index][picked])
+        return new_rows, new_labels
 
     def calibrate(
         self, samples: Iterable[tuple[str, np.ndarray, np.ndarray, np.ndarray, np.ndarray]]
@@ -254,6 +298,9 @@ class MainModel:
             features=FeatureConfig(
                 scales=tuple(features_payload.get("scales", ())),
                 use_chip_contrast=features_payload.get("use_chip_contrast", True),
+                use_chip_absolute=features_payload.get("use_chip_absolute", False),
+                despeckle_sizes=tuple(features_payload.get("despeckle_sizes", ())),
+                per_chip_normalize=features_payload.get("per_chip_normalize", False),
             ),
         )
         model = cls(config)

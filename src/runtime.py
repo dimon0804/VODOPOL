@@ -70,6 +70,29 @@ def _read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding=C.CSV_ENCODING))
 
 
+def _typed_comparison(row: dict[str, str]) -> dict[str, Any]:
+    """Приводит строку сравнения из CSV к тем же типам, что даёт пересчёт.
+
+    Одна и та же ручка сервиса не должна отдавать разные контракты. Особенно опасно
+    было поле budget_feasible: строка "false" в любом условии истинна, и стратегия B,
+    вышедшая за бюджет, читалась бы интерфейсом как уложившаяся.
+    """
+    typed: dict[str, Any] = dict(row)
+    for field in (
+        "data_cost_rub",
+        "other_cost_rub",
+        "decision_cost_rub",
+        "budget_rub",
+        "covered_expected_loss_rub",
+        "coverage_share",
+        "residual_uncertainty",
+    ):
+        typed[field] = _num(row.get(field))
+    raw = str(row.get("budget_feasible", "")).strip().lower()
+    typed["budget_feasible"] = raw in ("true", "1", "yes", "да")
+    return typed
+
+
 def _num(raw: str | None) -> float | None:
     """Пустое значение остаётся пустым: у partial и no_data ноль был бы ложью."""
     if raw is None or raw == C.CSV_EMPTY:
@@ -115,6 +138,8 @@ class RunContext:
             "run_id": meta.get("run_id"),
             "chip_id": meta.get("chip_id"),
             "event_id": meta.get("event_id"),
+            # Путь к исходному снимку нужен сервису для подложки карты.
+            "s1_path": meta.get("s1_path") or meta.get("source_chip_path"),
             "threshold": meta.get("threshold"),
             "budget_rub": meta.get("budget_rub"),
             "decision_deadline": meta.get("decision_deadline"),
@@ -161,7 +186,7 @@ class RunContext:
             return _demo_strategies(self._demo_payload, budget_rub)
         plans = _read_json(self.run_dir / C.F_STRATEGY_PLANS)
         positions = _read_csv(self.run_dir / C.F_PROCUREMENT)
-        comparison = _read_csv(self.run_dir / C.F_STRATEGY_COMPARISON)
+        comparison = [_typed_comparison(row) for row in _read_csv(self.run_dir / C.F_STRATEGY_COMPARISON)]
         if budget_rub is not None:
             from src.procurement.strategies import recompute_under_budget
 

@@ -19,7 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
-from scipy.ndimage import uniform_filter
+from scipy.ndimage import median_filter, uniform_filter
 
 #: Масштабы окрестности в пикселях. 10 м на пиксель, то есть 30 м … 510 м на местности.
 DEFAULT_SCALES: tuple[int, ...] = (3, 9, 25, 51)
@@ -28,8 +28,22 @@ DEFAULT_SCALES: tuple[int, ...] = (3, 9, 25, 51)
 @dataclass(frozen=True)
 class FeatureConfig:
     scales: tuple[int, ...] = DEFAULT_SCALES
-    #: Добавлять ли разность с медианой чипа. Снимает разницу калибровки между сценами.
+    #: Разность с медианой чипа. Снимает разницу калибровки между сценами и остаётся
+    #: относительной величиной, одинаково осмысленной на любом снимке.
     use_chip_contrast: bool = True
+    #: Абсолютные константы уровня чипа (медиана и 5-й процентиль VV). По умолчанию
+    #: выключены: дерево использует их как опознавательный знак сцены и запоминает
+    #: событие вместо того, чтобы учиться отличать воду. На новых событиях это вредит.
+    use_chip_absolute: bool = False
+    #: Медианно отфильтрованные каналы. Спекл в радаре силён, и пороговому методу
+    #: фильтр помогает заметно — проверяем, помогает ли он и модели.
+    despeckle_sizes: tuple[int, ...] = ()
+    #: Приводить ли каналы к собственной статистике чипа перед расчётом контекста.
+    #: Уровень обратного рассеяния зависит от сцены, угла съёмки и типа местности,
+    #: поэтому абсолютные децибелы плохо переносятся между событиями. После вычитания
+    #: медианы чипа признак означает «насколько этот пиксель темнее окружающей сцены»,
+    #: а это свойство воды, одинаковое в Гане и в Испании.
+    per_chip_normalize: bool = False
     names: tuple[str, ...] = field(default=(), compare=False)
 
 
@@ -41,7 +55,11 @@ def feature_names(config: FeatureConfig | None = None) -> list[str]:
             names += [f"{channel}_mean_{scale}", f"{channel}_std_{scale}"]
         names.append(f"vv_minus_mean_{scale}")
     if config.use_chip_contrast:
-        names += ["vv_minus_chip_median", "vh_minus_chip_median", "chip_vv_median", "chip_vv_p05"]
+        names += ["vv_minus_chip_median", "vh_minus_chip_median"]
+    if config.use_chip_absolute:
+        names += ["chip_vv_median", "chip_vv_p05"]
+    for size in config.despeckle_sizes:
+        names += [f"vv_median_{size}", f"vh_median_{size}"]
     return names
 
 
@@ -86,6 +104,12 @@ def build_features(
 
     vv_f = _fill_invalid(vv, median_vv)
     vh_f = _fill_invalid(vh, median_vh)
+    if config.per_chip_normalize:
+        # Разброс берём как межквартильный размах: он устойчив к залитой половине кадра.
+        scale_vv = float(np.subtract(*np.percentile(finite_vv, [75, 25]))) or 1.0
+        scale_vh = float(np.subtract(*np.percentile(finite_vh, [75, 25]))) or 1.0
+        vv_f = (vv_f - median_vv) / scale_vv
+        vh_f = (vh_f - median_vh) / scale_vh
 
     layers: list[np.ndarray] = [vv_f, vh_f, vv_f - vh_f, vv_f + vh_f]
     for scale in config.scales:
@@ -94,11 +118,13 @@ def build_features(
         layers += [vv_mean, vv_std, vh_mean, vh_std, vv_f - vv_mean]
 
     if config.use_chip_contrast:
+        layers += [vv_f - median_vv, vh_f - median_vh]
+    if config.use_chip_absolute:
+        layers += [np.full_like(vv_f, median_vv), np.full_like(vv_f, p05_vv)]
+    for size in config.despeckle_sizes:
         layers += [
-            vv_f - median_vv,
-            vh_f - median_vh,
-            np.full_like(vv_f, median_vv),
-            np.full_like(vv_f, p05_vv),
+            median_filter(vv_f, size=size, mode="nearest"),
+            median_filter(vh_f, size=size, mode="nearest"),
         ]
 
     cube = np.stack(layers, axis=-1).astype(np.float32)

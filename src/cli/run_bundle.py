@@ -183,7 +183,14 @@ def main() -> None:
     print(f"  объектов оценено: {C.ASSET_COUNT - unassessed['count']}, ущерб {total_el:,.0f} руб.", flush=True)
 
     proxy = (
-        proxy_error(asset_rows, assets, chips_mod.target_flood(chip))
+        proxy_error(
+            asset_rows,
+            assets,
+            chips_mod.target_flood(chip),
+            # Пиксели без надёжной ручной метки из проверки исключаются: метка −1 это
+            # не «сухо», а отсутствие метки.
+            label_valid=chips_mod.valid_mask(chip),
+        )
         if chip.jrc is not None
         else {"status": "not_checked", "note": "нет слоя постоянной воды, проверка невозможна"}
     )
