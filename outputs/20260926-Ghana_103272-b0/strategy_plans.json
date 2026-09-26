@@ -1,0 +1,26 @@
+{
+  "A": [],
+  "B": [
+    "cand_r00_c00",
+    "cand_r00_c01",
+    "cand_r00_c02",
+    "cand_r00_c03",
+    "cand_r01_c00",
+    "cand_r01_c01",
+    "cand_r01_c02",
+    "cand_r01_c03",
+    "cand_r02_c00",
+    "cand_r02_c01",
+    "cand_r02_c02",
+    "cand_r02_c03",
+    "cand_r03_c00",
+    "cand_r03_c01",
+    "cand_r03_c02",
+    "cand_r03_c03",
+    "cand_r04_c00",
+    "cand_r04_c01",
+    "cand_r04_c02",
+    "cand_r04_c03"
+  ],
+  "C": []
+}

@@ -231,14 +231,20 @@ def residual_uncertainty(
     coverage: Mapping[str, set[str]],
     losses: Mapping[str, float],
     uncertainty: Mapping[str, float],
+    strategy: str = C.STRATEGY_OPEN,
 ) -> tuple[float | None, str, str]:
     """Остаточная неопределённость портфеля и статус её оценки.
 
-    Для A это исходная взвешенная неопределённость — статус `baseline`.
-    Для B и C считается сценарий: предполагается, что по покрытым объектам съёмка
-    снимет неопределённость полностью, и остаётся взвешенная неопределённость
-    непокрытых. Это гипотеза, а не измерение, поэтому статус `scenario`, и формула
-    публикуется рядом с числом.
+    Статус определяется стратегией, а не тем, что попало в корзину. У A это исходная
+    взвешенная неопределённость со статусом `baseline`. У B и C — сценарий:
+    предполагается, что по покрытым объектам съёмка снимет неопределённость полностью,
+    и остаётся взвешенная неопределённость непокрытых. Это гипотеза, а не измерение,
+    поэтому статус `scenario`, и формула публикуется рядом с числом.
+
+    Отдельный случай: если бюджета не хватило и корзина C пуста, число совпадает с
+    исходной неопределённостью, но статус всё равно остаётся `scenario` — стратегия
+    закупки не превращается в стратегию открытых данных от того, что закупить не
+    удалось. Кейс допускает у B и C только scenario, measured или not_estimated.
     """
     if not uncertainty:
         return None, C.UNC_NOT_ESTIMATED, "нет оценённых объектов с неопределённостью"
@@ -252,17 +258,22 @@ def residual_uncertainty(
     if total_weight <= 0:
         return None, C.UNC_NOT_ESTIMATED, "суммарный оценённый ущерб равен нулю"
 
+    status = C.UNC_BASELINE if strategy == C.STRATEGY_OPEN else C.UNC_SCENARIO
+
     if not candidate_ids:
         value = sum(uncertainty[a] * weights[a] for a in uncertainty) / total_weight
-        return float(value), C.UNC_BASELINE, formula
+        basis = formula if strategy == C.STRATEGY_OPEN else (
+            formula + "; корзина пуста — снижать нечего, но стратегия остаётся закупочной"
+        )
+        return float(value), status, basis
 
     covered = unique_covered(candidate_ids, coverage)
     remaining = [a for a in uncertainty if a not in covered]
     remaining_weight = sum(weights[a] for a in remaining)
     if remaining_weight <= 0:
-        return 0.0, C.UNC_SCENARIO, formula
+        return 0.0, status, formula
     value = sum(uncertainty[a] * weights[a] for a in remaining) / total_weight
-    return float(value), C.UNC_SCENARIO, formula
+    return float(value), status, formula
 
 
 def build_strategies(
@@ -297,7 +308,9 @@ def build_strategies(
         positions.extend(priced)
         data_cost = basket_total(priced)
         covered_rub = covered_loss(ids, coverage, losses)
-        residual, status, basis = residual_uncertainty(ids, coverage, losses, uncertainty)
+        residual, status, basis = residual_uncertainty(
+            ids, coverage, losses, uncertainty, strategy
+        )
         comparison.append(
             {
                 "strategy": strategy,

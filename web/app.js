@@ -212,6 +212,16 @@
     else S.map.setView([0, 0], 3);
   }
 
+  /**
+   * Яркость подложки S1 зависит от того, читается ли поверх неё тематический слой.
+   * На тёмных сценах вероятность видно и поверх полной подложки, а на ярких, вроде
+   * боливийской, спекл перебивает слой с низкими значениями. Приглушаем подложку,
+   * когда поверх неё что-то показывают, и возвращаем полную, когда слой выключен.
+   */
+  function s1Opacity() {
+    return S.layer === 'none' ? 1 : 0.45;
+  }
+
   /** Растровые слои подгружаются по требованию и переиспользуются. */
   function ensureOverlay(kind) {
     if (S.overlays[kind]) return Promise.resolve(S.overlays[kind]);
@@ -219,7 +229,7 @@
       var b = leafletBounds(res.bounds) || leafletBounds(S.summary && S.summary.bounds);
       if (!b) throw new Error('границы слоя ' + kind + ' неизвестны');
       var layer = L.imageOverlay(res.url, b, {
-        opacity: kind === 's1' ? 1 : S.opacity,
+        opacity: kind === 's1' ? s1Opacity() : S.opacity,
         className: 'raster-' + kind,
         interactive: false
       });
@@ -236,6 +246,7 @@
         S.s1ready = true;
         $('s1-note').textContent = '';
         if (!S.map.hasLayer(layer)) layer.addTo(S.map);
+        layer.setOpacity(s1Opacity());
         layer.setZIndex(200);
         reorder();
       }).catch(function (err) {

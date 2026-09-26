@@ -403,18 +403,22 @@ def test_uncertainty_never_reports_measured():
     assert all(row["uncertainty_status"] != "measured" for row in result["comparison"])
 
 
-def test_empty_selective_plan_falls_back_to_baseline_status():
-    """Пограничный случай: бюджета не хватило ни на одну зону, C ничего не заказала.
+def test_empty_selective_plan_keeps_scenario_status():
+    """Бюджета не хватило ни на одну зону: C ничего не заказала.
 
-    Тогда C получает статус baseline, а не scenario: снижать нечего, новых
-    наблюдений нет. Поведение зафиксировано тестом сознательно — формально контракт
-    говорит «у B и C scenario», и на защите это расхождение надо уметь объяснить.
+    Число остаточной неопределённости при этом равно исходному — снижать нечего, —
+    но статус остаётся scenario. Стратегия закупки не превращается в стратегию
+    открытых данных от того, что закупить не удалось, а кейс допускает у B и C
+    только scenario, measured или not_estimated.
     """
     catalog, assets, rows = simple_case()
     result = build_strategies(catalog, assets, rows, config(budget="10"))
     c = by_strategy(result)[STRATEGY_SELECTIVE]
+    a = by_strategy(result)[STRATEGY_OPEN]
     assert result["plans"][STRATEGY_SELECTIVE] == []
-    assert c["uncertainty_status"] == UNC_BASELINE
+    assert c["uncertainty_status"] == UNC_SCENARIO
+    assert a["uncertainty_status"] == UNC_BASELINE
+    assert c["residual_uncertainty"] == a["residual_uncertainty"]
     assert c["covered_expected_loss_rub"] == 0.0
 
 

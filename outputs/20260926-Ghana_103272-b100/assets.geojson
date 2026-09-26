@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.141623978823294,
+          9.4354995025136
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Ghana_103272",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1204237381180733,
+          9.473498239031857
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Ghana_103272",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1283289126183251,
+          9.457867553088176
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Ghana_103272",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1328204890389226,
+          9.471072787764733
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Ghana_103272",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1335391412662184,
+          9.445111476053679
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Ghana_103272",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1135067104303529,
+          9.436487649326132
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Ghana_103272",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1082066502540477,
+          9.44232669867291
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Ghana_103272",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.141713810351706,
+          9.4415182149172
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Ghana_103272",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1197949174191897,
+          9.435230007928364
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Ghana_103272",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -1.1361442555901649,
+          9.470174472480615
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Ghana_103272",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}
