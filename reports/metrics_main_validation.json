@@ -2,7 +2,7 @@
   "target": "временное затопление",
   "trained_on_chips": 251,
   "calibrated_on_chips": 90,
-  "threshold": 0.25,
+  "threshold": 0.15,
   "validation_at_threshold": {
     "iou": 0.31074787536552173,
     "f1": 0.47415354425635065,
@@ -155,5 +155,7 @@
       0.03880376344086022
     ]
   ],
-  "seconds": 1333.8
+  "seconds": 1333.8,
+  "min_component_px": 800,
+  "threshold_note": "Порог и размер минимальной связной области выбраны совместно командой tune_postprocess по макро-F1; таблица перебора — postprocess_sweep.csv. Метрики ниже относятся к моменту обучения, до постобработки."
 }

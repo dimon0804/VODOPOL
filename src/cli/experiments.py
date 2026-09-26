@@ -272,9 +272,17 @@ def append_journal(key: str, title: str, args, results: dict) -> None:
         f"{args.limit_valid or 'вся'} чипов; пикселей на чип {args.pixels}; "
         f"деревьев {args.trees}; цель — {args.target}.",
         "",
-        "| Вариант | F1 | IoU | Precision | Recall | Порог | Прочее |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
+    metric_rows = [
+        (name, row)
+        for name, row in results.items()
+        if isinstance(row, dict) and "f1" in row
+    ]
+    if metric_rows:
+        lines += [
+            "| Вариант | F1 | IoU | Precision | Recall | Порог | Прочее |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
+        ]
     for name, row in results.items():
         if not isinstance(row, dict) or "f1" not in row:
             continue

@@ -154,6 +154,20 @@ def main() -> None:
         model.threshold = float(chosen["threshold"])
         model.config.min_component_px = int(chosen["min_component_px"])
         model.save(args.model)
+        # Файл метрик обучения хранит порог, выбранный до постобработки, а README шлёт
+        # жюри именно в него за критериями 9 и 10. Обновляем, чтобы не расходилось.
+        metrics_path = Path("reports/metrics_main_validation.json")
+        if metrics_path.exists():
+            payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+            payload["threshold"] = model.threshold
+            payload["min_component_px"] = model.config.min_component_px
+            payload["threshold_note"] = (
+                "Порог и размер минимальной связной области выбраны совместно командой "
+                "tune_postprocess по макро-F1; таблица перебора — postprocess_sweep.csv."
+            )
+            metrics_path.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
         print(
             f"\nзаписано в модель: порог {model.threshold:.2f}, минимальная область "
             f"{model.config.min_component_px} px (выбор по {args.apply}-F1)"
