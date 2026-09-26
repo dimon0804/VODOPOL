@@ -861,6 +861,7 @@
     var parts = [];
     parts.push('<span class="kv">чип <b>' + esc(s.chip_id || DASH) + '</b></span>');
     parts.push('<span class="kv">событие <b>' + esc(s.event_id || DASH) + '</b></span>');
+    parts.push('<span class="kv">съёмка <b>' + esc(s.observation_date || DASH) + '</b></span>');
     parts.push('<span class="kv">срок решения <b>' + esc(s.decision_deadline || DASH) + '</b></span>');
     parts.push('<span class="kv">класс <b>' + esc(s.target_class || DASH) + '</b></span>');
     parts.push('<span class="kv">порог <b>' + fmt(s.threshold, 2) + '</b></span>');
@@ -900,6 +901,7 @@
     html += '<dt>run_id</dt><dd>' + esc(s.run_id || DASH) + '</dd>';
     html += '<dt>chip_id</dt><dd>' + esc(s.chip_id || DASH) + '</dd>';
     html += '<dt>событие</dt><dd>' + esc(s.event_id || DASH) + '</dd>';
+    html += '<dt>дата съёмки S1</dt><dd>' + esc(s.observation_date || DASH) + '</dd>';
     html += '<dt>срок решения</dt><dd>' + esc(s.decision_deadline || DASH) + ' ' + mark('scenario', 'сценарная дата') + '</dd>';
     html += '<dt>порог</dt><dd>' + fmt(s.threshold, 2) + ' ' + mark('model', 'подобран на validation') + '</dd>';
     html += '<dt>границы, °</dt><dd>' + (s.bounds ? s.bounds.map(function (v) { return Number(v).toFixed(4); }).join(', ') : DASH) + '</dd>';
@@ -925,6 +927,7 @@
       sources.forEach(function (src) {
         html += '<li><code>' + esc(src.id || '') + '</code> ' + esc(src.purpose || '') +
           (src.url ? '<br><a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + '</a>' : '') +
+          (src.observation_date ? '<br>съёмка: ' + esc(src.observation_date) : '') +
           (src.license ? '<br>' + esc(src.license) : '') + '</li>';
       });
       html += '</ul></details>';

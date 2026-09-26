@@ -137,11 +137,19 @@ class RunContext:
         # sources содержит словарь с ключом sources. Так и было, пока не поймали.
         manifest = _read_json(self.run_dir / C.F_SOURCE_MANIFEST)
         sources = manifest.get("sources", []) if isinstance(manifest, dict) else manifest
+        # Дата съёмки — обязательная часть подписи результата наравне с chip_id.
+        # В манифесте она есть у каждого слоя, но наружу нужна именно съёмка S1.
+        observation_date = ""
+        for source in sources if isinstance(sources, list) else []:
+            if str(source.get("id", "")).endswith(C.LAYER_S1):
+                observation_date = source.get("observation_date") or ""
+                break
         return {
             "demo": False,
             "run_id": meta.get("run_id"),
             "chip_id": meta.get("chip_id"),
             "event_id": meta.get("event_id"),
+            "observation_date": observation_date,
             # Путь к исходному снимку нужен сервису для подложки карты.
             "s1_path": meta.get("s1_path") or meta.get("source_chip_path"),
             "threshold": meta.get("threshold"),
@@ -273,8 +281,12 @@ class RunContext:
     def bundle_zip(self) -> bytes:
         """Весь комплект одним архивом — кнопка выгрузки в интерфейсе."""
         buffer = io.BytesIO()
+        # Сверх обязательных двенадцати кладём растр неопределённости и таблицу сдвига
+        # приоритетов: README отправляет жюри за критерием 14 именно в неё, и странно,
+        # если скачанный архив её не содержит.
+        extra = ("uncertainty.tif", "sensitivity_ranks.csv")
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-            for name in C.BUNDLE_FILES:
+            for name in tuple(C.BUNDLE_FILES) + extra:
                 path = self.run_dir / name
                 if path.exists():
                     archive.write(path, arcname=name)

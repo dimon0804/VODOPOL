@@ -197,7 +197,7 @@
     -65.21912693153185,
     -14.212066446998126
   ],
-  "commit": "dde24877670ce4466bf445050854d4ad8126053f",
+  "commit": "3cc247ebbd3b849b3f3aa5d28ed03e9fee4441b1",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",
