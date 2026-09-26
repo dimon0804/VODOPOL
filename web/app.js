@@ -1693,6 +1693,9 @@
         var label = (r.chip_id || r.run_id);
         if (r.observation_date) label += ' · ' + r.observation_date;
         if (r.part) label += ' · ' + r.part;
+        // Цель пишем только когда она не основная: иначе она повторялась бы в
+        // каждой строке и ничего не различала.
+        if (r.purpose && r.purpose !== 'response') label += ' · ' + (r.purpose_title || r.purpose);
         return '<option value="' + esc(r.run_id) + '"' +
           (r.run_id === chosen ? ' selected' : '') + '>' + esc(label) + '</option>';
       }).join('');

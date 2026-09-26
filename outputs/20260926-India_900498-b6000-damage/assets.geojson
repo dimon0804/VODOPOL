@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.74346689547164,
+          26.729146700155333
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "India_900498",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.76466713617685,
+          26.767145436673587
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "India_900498",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.7567619616766,
+          26.751514750729907
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "India_900498",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.75227038525601,
+          26.764719985406465
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "India_900498",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.75155173302872,
+          26.73875867369541
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "India_900498",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.77158416386457,
+          26.730134846967864
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "India_900498",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.77688422404088,
+          26.73597389631464
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "India_900498",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.74337706394323,
+          26.73516541255893
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "India_900498",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.76529595687575,
+          26.728877205570097
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "India_900498",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          93.74894661870476,
+          26.763821670122343
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "India_900498",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}
