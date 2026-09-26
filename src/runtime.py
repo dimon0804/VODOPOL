@@ -132,7 +132,11 @@ class RunContext:
         if self.is_demo:
             return self._demo_payload["summary"]
         meta = _read_json(self.run_dir / C.F_RUN_METADATA)
-        sources = _read_json(self.run_dir / C.F_SOURCE_MANIFEST)
+        # Манифест на диске — объект с ключом sources. Наружу отдаём сам список:
+        # иначе сервису приходится разворачивать вложенность, а поле с именем
+        # sources содержит словарь с ключом sources. Так и было, пока не поймали.
+        manifest = _read_json(self.run_dir / C.F_SOURCE_MANIFEST)
+        sources = manifest.get("sources", []) if isinstance(manifest, dict) else manifest
         return {
             "demo": False,
             "run_id": meta.get("run_id"),
