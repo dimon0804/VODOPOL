@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=31">
+  <link rel="stylesheet" href="styles.css?v=38">
 </head>
 <body>
 
@@ -149,10 +149,12 @@
             <label class="mpill"><input type="checkbox" id="chk-assets" checked><span>Объекты</span></label>
             <label class="mpill"><input type="checkbox" id="chk-zones" checked><span>Зоны</span></label>
             <button type="button" class="mpill mbtn" id="btn-overview" title="Регион события: все его чипы сразу">Регион</button>
+            <button type="button" class="mpill mbtn world" id="btn-world" title="Весь мир: все события набора — нажмите на любое, чтобы открыть его регион">Все события</button>
           </div>
           <!-- Легенда прямо на карте, как в «Фенологе»: что значит цвет, видно,
                не отрывая глаз от снимка. -->
           <div class="map-legend" id="map-legend">
+            <div class="ml-chip">
             <div class="ml-h">Приоритет проверки</div>
             <div class="ml-i"><i class="ml-a high"></i>Высокий</div>
             <div class="ml-i"><i class="ml-a mid"></i>Средний</div>
@@ -161,6 +163,7 @@
             <div class="ml-h">Зоны съёмки</div>
             <div class="ml-i"><i class="ml-z plan"></i>В плане</div>
             <div class="ml-i"><i class="ml-z cat"></i>Каталог</div>
+            </div>
             <div class="ml-region hidden" id="ml-region">
               <div class="ml-h">Чипы события</div>
               <div class="ml-i"><i class="ml-c cur"></i>Открыт</div>
@@ -397,6 +400,6 @@
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
 <script src="app.js?v=34"></script>
-<script src="pages.js?v=33"></script>
+<script src="pages.js?v=38"></script>
 </body>
 </html>

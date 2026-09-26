@@ -401,7 +401,30 @@ def create_app(state: RunState | None = None) -> FastAPI:
                 }
             )
         events, source = _event_footprints(app)
-        return json_ok({"current": current, "chips": chips, "events": events, "events_source": source})
+        # Имя события в метаданных сводим к имени в сплите — иначе Mekong на карте
+        # назывался бы Cambodia и не открывался бы кликом.
+        events = {
+            **events,
+            "features": [
+                {**f, "properties": {**(f.get("properties") or {}),
+                                     "event": config.EVENT_ALIASES.get((f.get("properties") or {}).get("location"),
+                                                                       (f.get("properties") or {}).get("location"))}}
+                for f in events.get("features", [])
+            ],
+        }
+        # По каждому событию: сколько размеченных чипов в наборе и сколько собрано.
+        # Обзор мира показывает события, а не отдельные чипы: чип выбирают уже в
+        # регионе события, где он виден среди соседей.
+        stats: dict[str, dict[str, Any]] = {}
+        for chip_id, event in config.all_split_chips():
+            item = stats.setdefault(event, {"chips": 0, "built": 0, "part": parts.get(event, "")})
+            item["chips"] += 1
+        for chip in chips:
+            if chip["event_id"] in stats:
+                stats[chip["event_id"]]["built"] += 1
+        return json_ok(
+            {"current": current, "chips": chips, "events": events, "events_source": source, "event_stats": stats}
+        )
 
     @app.get("/api/event-chips", summary="Все чипы одного события с контурами — как поля региона")
     def event_chips(event: str = Query(..., description="Событие Sen1Floods11, например Bolivia")) -> JSONResponse:

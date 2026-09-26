@@ -189,3 +189,8 @@ def all_split_chips() -> list[tuple[str, str]]:
                 if chip:
                     out.append((chip, event))
     return out
+
+#: Имена событий в метаданных набора и в списках сплита расходятся: одно и то же
+#: событие в Sen1Floods11_Metadata.geojson записано по стране (Cambodia), а в
+#: сплите и в идентификаторах чипов — по реке (Mekong). Сводим к имени сплита.
+EVENT_ALIASES = {"Cambodia": "Mekong"}

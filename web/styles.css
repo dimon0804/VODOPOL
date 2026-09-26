@@ -651,3 +651,22 @@ details.more[open] summary { margin-bottom: 12px; }
 .pick-x:hover { color: var(--ink); }
 .pick-body .popup h4 { font-size: 16px; }
 .pick-body .popup dl { grid-template-columns: max-content 1fr; }
+
+/* Пилюли событий на обзоре мира: кликабельны, открывают регион события. */
+.mbtn.world::before { content: "◍"; }
+.evpill span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap; cursor: pointer;
+  background: rgba(255,255,255,.96); color: var(--ink); border-radius: 999px; padding: 3px 11px;
+  font: 500 11.5px var(--sans); box-shadow: 0 2px 8px rgba(34,37,79,.3); border: 1.5px solid var(--primary);
+}
+.evpill span b { font-weight: 750; }
+.evpill span:hover { background: var(--primary); color: #fff; }
+.evpill.on span { border-color: var(--orange); box-shadow: 0 0 0 2px var(--orange), 0 2px 8px rgba(34,37,79,.3); }
+.evpill.empty span { border-style: dashed; border-color: var(--muted-2); color: var(--muted); cursor: default; }
+.evpill.empty span:hover { background: rgba(255,255,255,.96); color: var(--muted); }
+
+.map-legend.lv-world { display: none; }
+.map-legend.lv-region .ml-chip { display: none; }
+.map-legend.lv-region .ml-region .ml-h { margin-top: 0; }
+.evpill span i { font-style: normal; color: var(--muted); }
+.evpill span:hover i { color: #dcdcf5; }
