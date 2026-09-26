@@ -514,3 +514,32 @@ table.grid .empty { color: var(--none); }
   .mapcol { height: 62vh; }
   #map { position: absolute; }
 }
+
+/* ── кривая «бюджет → покрытый ущерб» ─────────────────────────────────────
+   Одна серия — легенды нет, её называет заголовок. Линия цветом акцента, всё
+   остальное — текстовыми и линейными токенами, чтобы глаз шёл за кривой. */
+.curve { position: relative; width: 100%; margin: 4px 0 2px; }
+.curve svg { display: block; overflow: visible; }
+.curve .c-grid { stroke: var(--line-soft); stroke-width: 1; }
+.curve .c-tick { fill: var(--muted-2); font: 10.5px var(--mono); }
+.curve .c-axis { fill: var(--muted); font: 10.5px var(--sans); }
+.curve .c-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.curve .c-area { fill: var(--accent); opacity: .08; }
+.curve .c-sat { fill: var(--panel); stroke: var(--accent); stroke-width: 2; }
+.curve .c-label { fill: var(--text); font: 500 11px var(--sans); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+.curve .c-now { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.curve .c-now-label { fill: var(--muted); font: 10.5px var(--sans); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+.curve .c-cross { stroke: var(--muted-2); stroke-width: 1; }
+.curve .c-dot { fill: var(--accent); stroke: var(--panel); stroke-width: 2; }
+.curve .c-hit { fill: transparent; cursor: crosshair; }
+.curve .hidden { display: none; }
+.curve .c-tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--panel-3); border: 1px solid var(--line); border-radius: 4px;
+  padding: 6px 8px; font: 11.5px var(--sans); color: var(--text); white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0,0,0,.35);
+}
+.curve .c-tip.hidden { display: none; }
+.curve .c-tip .sub { color: var(--muted); margin-top: 2px; }
+.curve-table summary { cursor: pointer; color: var(--muted); font-size: 11.5px; margin-top: 6px; }
+.curve-table summary:hover { color: var(--text); }

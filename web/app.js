@@ -814,6 +814,8 @@
   function onBudgetInput() {
     S.budget = Number($('rng-budget').value);
     $('budget-num').textContent = fmt(S.budget, 0);
+    // Маркер «сейчас» на кривой двигается сразу, без запроса: кривая от бюджета не зависит.
+    if (S.curve) drawCurve();
     if (S.budgetTimer) clearTimeout(S.budgetTimer);
     S.budgetTimer = setTimeout(reloadStrategies, 220);
   }
@@ -841,6 +843,203 @@
       .then(function () {
         if (seq === S.reqSeq) $('recalc').classList.add('hidden');
       });
+  }
+
+  // ── кривая «бюджет → покрытый ущерб» ─────────────────────────────────────
+  //
+  // Ответ на главный вопрос заседания: сколько ущерба покрывает каждый рубль и после
+  // какой суммы доплачивать бессмысленно. Ничего не считается в панели: каждая точка —
+  // отдельный вызов /api/strategies?budget=, то есть тот же пересчёт, что за слайдером.
+  // Панель только раскладывает ответы по оси и читает, где кривая перестаёт расти.
+
+  var CURVE_POINTS = 24;       // точек выборки от нуля до стоимости полной закупки
+  var CURVE_PARALLEL = 4;      // одновременных запросов — не забивать сервис на старте
+
+  function fullPurchaseCost() {
+    var rows = (S.strategies && S.strategies.comparison) || [];
+    var b = rows.filter(function (r) { return r.strategy === 'B'; })[0];
+    return b ? toNum(b.decision_cost_rub) : null;
+  }
+
+  function buildCurve() {
+    var full = fullPurchaseCost();
+    if (!full || full <= 0) {
+      $('curve-status').textContent = 'нет стоимости полной закупки — кривую строить не по чему';
+      return;
+    }
+    var budgets = [];
+    for (var i = 0; i <= CURVE_POINTS; i++) budgets.push(Math.round(full * i / CURVE_POINTS * 100) / 100);
+    var results = new Array(budgets.length);
+    var next = 0, done = 0;
+
+    return new Promise(function (resolve) {
+      function pump() {
+        if (next >= budgets.length) return;
+        var idx = next++;
+        getJSON('/api/strategies?budget=' + encodeURIComponent(budgets[idx]))
+          .then(function (data) {
+            var c = (data.comparison || []).filter(function (r) { return r.strategy === 'C'; })[0] || {};
+            results[idx] = {
+              budget: budgets[idx],
+              covered: toNum(c.covered_expected_loss_rub),
+              share: toNum(c.coverage_share),
+              cost: toNum(c.decision_cost_rub),
+              zones: ((data.plans && data.plans.C) || []).length
+            };
+          })
+          .catch(function () { results[idx] = null; })
+          .then(function () {
+            done++;
+            $('curve-status').textContent = 'строится… ' + done + ' из ' + budgets.length;
+            if (done === budgets.length) resolve(results); else pump();
+          });
+      }
+      for (var k = 0; k < CURVE_PARALLEL; k++) pump();
+    }).then(function (points) {
+      S.curve = points.filter(function (p) { return p && p.covered !== null; });
+      S.curveFull = full;
+      if (!S.curve.length) {
+        $('curve-status').textContent = 'сервис не отдал ни одной точки';
+        return;
+      }
+      $('curve-status').innerHTML = S.curve.length + ' точек · ' +
+        mark('scenario', 'сценарная ставка', 'Цена зон считается по сценарной ставке БРЕ, поэтому и то, сколько ущерба покупается за рубль, — сценарное');
+      drawCurve();
+      renderCurveTable();
+    });
+  }
+
+  /** Бюджет, с которого покрытие перестаёт расти: первая точка, достигшая максимума. */
+  function curveSaturation() {
+    var pts = S.curve || [];
+    var top = pts.reduce(function (m, p) { return Math.max(m, p.covered); }, 0);
+    for (var i = 0; i < pts.length; i++) if (pts[i].covered >= top - 0.5) return pts[i];
+    return null;
+  }
+
+  /** Круглый шаг делений: 1, 2, 2,5 или 5 на нужный порядок. */
+  function niceStep(raw) {
+    var pow = Math.pow(10, Math.floor(Math.log10(raw || 1)));
+    var n = raw / pow;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * pow;
+  }
+
+  function shortRub(v) {
+    if (v >= 1e6) return (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' млн';
+    if (v >= 1e3) return (v / 1e3).toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' тыс.';
+    return fmt(v, 0);
+  }
+
+  function drawCurve() {
+    var box = $('curve');
+    var pts = S.curve;
+    if (!box || !pts || !pts.length) return;
+    var W = Math.max(320, box.clientWidth), H = 230;
+    var m = { l: 62, r: 18, t: 16, b: 34 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var xMax = S.curveFull;
+    var yTop = pts.reduce(function (a, p) { return Math.max(a, p.covered); }, 0) || 1;
+    var yStep = niceStep(yTop / 4), xStep = niceStep(S.curveFull / 5);
+    var yMax = Math.ceil(yTop * 1.04 / yStep) * yStep;
+    var X = function (v) { return m.l + Math.min(v, xMax) / xMax * iw; };
+    var Y = function (v) { return m.t + ih - v / yMax * ih; };
+
+    var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
+    // сетка и подписи — приглушённые, чтобы не спорить с линией
+    for (var gy = 0; gy <= yMax + 1e-6; gy += yStep) {
+      var py = Y(gy);
+      svg += '<line class="c-grid" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + py + '" y2="' + py + '"/>';
+      svg += '<text class="c-tick" x="' + (m.l - 8) + '" y="' + (py + 4) + '" text-anchor="end">' + shortRub(gy) + '</text>';
+    }
+    for (var bx = 0; bx <= xMax + 1e-6; bx += xStep) {
+      svg += '<text class="c-tick" x="' + X(bx) + '" y="' + (H - 12) + '" text-anchor="middle">' + shortRub(bx) + '</text>';
+    }
+    svg += '<text class="c-axis" x="' + (W - m.r) + '" y="' + (H - 1) + '" text-anchor="end">бюджет, ₽</text>';
+
+    // ступенька: покрытие держится до следующей точки выборки
+    var d = 'M' + X(pts[0].budget) + ',' + Y(pts[0].covered);
+    for (var i = 1; i < pts.length; i++) d += 'H' + X(pts[i].budget) + 'V' + Y(pts[i].covered);
+    svg += '<path class="c-area" d="' + d + 'V' + Y(0) + 'H' + X(pts[0].budget) + 'Z"/>';
+    svg += '<path class="c-line" d="' + d + '"/>';
+
+    // насыщение: единственная прямая подпись на кривой
+    var sat = curveSaturation();
+    if (sat) {
+      var sx = X(sat.budget), sy = Y(sat.covered);
+      svg += '<circle class="c-sat" cx="' + sx + '" cy="' + sy + '" r="5"/>';
+      var anchor = sx > W * 0.6 ? 'end' : 'start', off = anchor === 'end' ? -10 : 10;
+      svg += '<text class="c-label" x="' + (sx + off) + '" y="' + (sy + 18) + '" text-anchor="' + anchor + '">насыщение ≈ ' + shortRub(sat.budget) + ' ₽</text>';
+    }
+
+    // текущий бюджет со слайдера
+    var cur = S.budget || 0;
+    var cx = X(cur);
+    svg += '<line class="c-now" x1="' + cx + '" x2="' + cx + '" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>';
+    svg += '<text class="c-now-label" x="' + (cx + (cx > W * 0.75 ? -6 : 6)) + '" y="' + (m.t + 10) + '" text-anchor="' + (cx > W * 0.75 ? 'end' : 'start') + '">' +
+      (cur > xMax ? 'сейчас: выше полной закупки' : 'сейчас ' + shortRub(cur) + ' ₽') + '</text>';
+
+    // слой наведения: вся площадь графика — мишень, а не только линия
+    svg += '<line class="c-cross hidden" id="c-cross" y1="' + m.t + '" y2="' + (m.t + ih) + '"/>';
+    svg += '<circle class="c-dot hidden" id="c-dot" r="4.5"/>';
+    svg += '<rect class="c-hit" x="' + m.l + '" y="' + m.t + '" width="' + iw + '" height="' + ih + '"/>';
+    svg += '</svg><div class="c-tip hidden" id="c-tip"></div>';
+    box.innerHTML = svg;
+
+    var hit = box.querySelector('.c-hit'), tip = $('c-tip'), cross = $('c-cross'), dot = $('c-dot');
+    hit.addEventListener('mousemove', function (e) {
+      var r = box.getBoundingClientRect();
+      var bx = (e.clientX - r.left - m.l) / iw * xMax;
+      // ступенька: значение на бюджете bx — у последней точки не правее bx
+      var j = 0;
+      for (var k = 0; k < pts.length; k++) if (pts[k].budget <= bx + 1e-6) j = k;
+      var p = pts[j], prev = pts[j - 1];
+      var px = X(p.budget), py = Y(p.covered);
+      cross.setAttribute('x1', px); cross.setAttribute('x2', px); cross.classList.remove('hidden');
+      dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.classList.remove('hidden');
+      var gain = prev && p.budget > prev.budget ? (p.covered - prev.covered) / (p.budget - prev.budget) * 1000 : null;
+      tip.innerHTML =
+        '<b>бюджет ' + money(p.budget) + ' ₽</b>' +
+        '<div>покрыто ' + money(p.covered) + ' ₽ · ' + pct(p.share) + ' портфеля</div>' +
+        '<div>зон в заказе: ' + p.zones + ', стоимость ' + money(p.cost) + ' ₽</div>' +
+        (gain !== null ? '<div class="sub">на этом шаге: +' + shortRub(Math.max(gain, 0)) + ' ₽ покрытия на 1 000 ₽</div>' : '');
+      tip.classList.remove('hidden');
+      var tx = px + 14, tw = tip.offsetWidth;
+      if (tx + tw > W) tx = px - tw - 14;
+      tip.style.left = Math.max(0, tx) + 'px';
+      tip.style.top = Math.max(0, py - 20) + 'px';
+    });
+    hit.addEventListener('mouseleave', function () {
+      tip.classList.add('hidden'); cross.classList.add('hidden'); dot.classList.add('hidden');
+    });
+
+    renderCurveNote(sat);
+  }
+
+  function renderCurveNote(sat) {
+    var pts = S.curve || [];
+    if (!sat) { $('curve-note').textContent = ''; return; }
+    // Предельная отдача перед насыщением — отношение двух ответов сервиса, не новый расчёт.
+    var i = pts.indexOf(sat), before = null;
+    for (var k = i - 1; k >= 0; k--) if (pts[k].covered < sat.covered - 0.5) { before = pts[k]; break; }
+    var html = 'С бюджета около <b>' + money(sat.budget) + ' ₽</b> стратегия C покрывает <b>' + money(sat.covered) +
+      ' ₽</b> ожидаемого ущерба (' + pct(sat.share) + ' портфеля); дальше рост бюджета покрытия не добавляет. ';
+    if (before) {
+      var gain = (sat.covered - before.covered) / (sat.budget - before.budget) * 1000;
+      html += 'На последнем шаге до насыщения каждая 1 000 ₽ покупала около ' + shortRub(gain) + ' ₽ покрытия. ';
+    }
+    html += 'Шаг выборки — ' + money(S.curveFull / CURVE_POINTS) + ' ₽, поэтому точка насыщения указана с этой точностью. ' +
+      'Каждая точка — тот же пересчёт, что за слайдером: модель не переобучается, порог не меняется. ' +
+      mark('scenario', 'сценарное', 'Цены зон — по сценарной ставке БРЕ; при другой ставке кривая сдвинется по горизонтали');
+    $('curve-note').innerHTML = html;
+  }
+
+  function renderCurveTable() {
+    var html = '<thead><tr><th>бюджет, ₽</th><th>зон</th><th>стоимость, ₽</th><th>покрыто, ₽</th><th>доля</th></tr></thead><tbody>';
+    (S.curve || []).forEach(function (p) {
+      html += '<tr><td class="num">' + money(p.budget) + '</td><td class="num">' + p.zones + '</td><td class="num">' +
+        money(p.cost) + '</td><td class="num">' + money(p.covered) + '</td><td class="num">' + pct(p.share) + '</td></tr>';
+    });
+    $('tbl-curve').innerHTML = html + '</tbody>';
   }
 
   // ── события интерфейса ───────────────────────────────────────────────────
@@ -906,6 +1105,7 @@
       renderStrategies();
       renderSensitivity();
       setupBudget();
+      buildCurve();
       syncLayers();
       $('zone-body').innerHTML = '<div class="empty-hint">Нажмите зону на карте — здесь появятся цена, площадь, сроки и коэффициенты ПП РФ № 840.</div>';
     }).catch(function (err) {
@@ -939,6 +1139,12 @@
       $('runline').innerHTML = '<span class="muted">комплект не загружен</span>';
     });
   }
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () { if (S.curve) drawCurve(); }, 150);
+  });
 
   document.addEventListener('DOMContentLoaded', boot);
 })();
