@@ -11,6 +11,7 @@
     "pixels_per_chip": 4000,
     "calibration_pixels": 20000,
     "positive_share": 0.5,
+    "event_balanced": true,
     "seed": 42,
     "features": {
       "scales": [
@@ -19,7 +20,10 @@
         25,
         51
       ],
-      "use_chip_contrast": true
+      "use_chip_contrast": true,
+      "use_chip_absolute": false,
+      "despeckle_sizes": [],
+      "per_chip_normalize": false
     },
     "target_name": "временное затопление"
   },
@@ -49,9 +53,7 @@
     "vh_std_51",
     "vv_minus_mean_51",
     "vv_minus_chip_median",
-    "vh_minus_chip_median",
-    "chip_vv_median",
-    "chip_vv_p05"
+    "vh_minus_chip_median"
   ],
   "threshold": 0.25,
   "trained_on": [

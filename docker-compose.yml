@@ -1,0 +1,16 @@
+services:
+  vodopol:
+    build: .
+    container_name: vodopol
+    ports:
+      - "8000:8000"
+    volumes:
+      # Комплекты запусков и веса подключаются снаружи: образ пересобирать не нужно.
+      - ./outputs:/app/outputs:ro
+      - ./models:/app/models:ro
+      # Данные нужны только для подложки S1 на карте.
+      - ./data/cache:/app/data/cache:ro
+    environment:
+      # Конкретный комплект; без переменной сервис берёт свежий из outputs.
+      FLOODVALUE_RUN: ${FLOODVALUE_RUN:-}
+    restart: unless-stopped

@@ -56,15 +56,21 @@ def main() -> None:
     parser.add_argument("--pixels-per-chip", type=int, default=4000)
     parser.add_argument("--ensemble", type=int, default=3)
     parser.add_argument("--trees", type=int, default=400)
+    parser.add_argument("--positive-share", type=float, default=0.5)
+    parser.add_argument("--despeckle", type=int, nargs="*", default=[])
     parser.add_argument("--out", type=Path, default=Path("models/main"))
     parser.add_argument("--metrics", type=Path, default=Path("reports/metrics_main_validation.json"))
     parser.add_argument("--sweep", type=Path, default=Path("reports/threshold_sweep.csv"))
     args = parser.parse_args()
 
+    from src.methods.features import FeatureConfig
+
     config = MainModelConfig(
         n_estimators=args.trees,
         ensemble_size=args.ensemble,
         pixels_per_chip=args.pixels_per_chip,
+        positive_share=args.positive_share,
+        features=FeatureConfig(despeckle_sizes=tuple(args.despeckle)),
         target_name="временное затопление" if args.target == "flood" else "вода вообще",
     )
     model = MainModel(config)
