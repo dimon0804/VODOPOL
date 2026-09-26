@@ -7,6 +7,91 @@
     "despeckle_size": 5
   },
   "main_threshold": 0.25,
+  "calibration_on_this_part": {
+    "note": "Посчитано на части, не использованной для обучения калибратора: это и есть проверка надёжности вероятностей, а не их подгонка.",
+    "n_pixels": 1680000,
+    "ece": 0.017887814259418308,
+    "brier": 0.07232789842477497,
+    "reliability": [
+      {
+        "bin_low": 0.0,
+        "bin_high": 0.1,
+        "n_pixels": 1276187,
+        "mean_predicted": 0.02020651378844901,
+        "observed_fraction": 0.036860585478460446
+      },
+      {
+        "bin_low": 0.1,
+        "bin_high": 0.2,
+        "n_pixels": 118942,
+        "mean_predicted": 0.14950225984277118,
+        "observed_fraction": 0.16753543744009686
+      },
+      {
+        "bin_low": 0.2,
+        "bin_high": 0.30000000000000004,
+        "n_pixels": 95904,
+        "mean_predicted": 0.24620784574486923,
+        "observed_fraction": 0.23928094761428095
+      },
+      {
+        "bin_low": 0.30000000000000004,
+        "bin_high": 0.4,
+        "n_pixels": 115789,
+        "mean_predicted": 0.3499812846514712,
+        "observed_fraction": 0.3134494641114441
+      },
+      {
+        "bin_low": 0.4,
+        "bin_high": 0.5,
+        "n_pixels": 63323,
+        "mean_predicted": 0.43023955796058716,
+        "observed_fraction": 0.4435355242171091
+      },
+      {
+        "bin_low": 0.5,
+        "bin_high": 0.6000000000000001,
+        "n_pixels": 9608,
+        "mean_predicted": 0.5224694541588016,
+        "observed_fraction": 0.6145920066611157
+      },
+      {
+        "bin_low": 0.6000000000000001,
+        "bin_high": 0.7000000000000001,
+        "n_pixels": 247,
+        "mean_predicted": 0.621207305052985,
+        "observed_fraction": 0.7489878542510121
+      },
+      {
+        "bin_low": 0.7000000000000001,
+        "bin_high": 0.8,
+        "n_pixels": 0,
+        "mean_predicted": NaN,
+        "observed_fraction": NaN
+      },
+      {
+        "bin_low": 0.8,
+        "bin_high": 0.9,
+        "n_pixels": 0,
+        "mean_predicted": NaN,
+        "observed_fraction": NaN
+      },
+      {
+        "bin_low": 0.9,
+        "bin_high": 1.0,
+        "n_pixels": 0,
+        "mean_predicted": NaN,
+        "observed_fraction": NaN
+      }
+    ]
+  },
+  "uncertainty_on_this_part": {
+    "auc_uncertainty_vs_error": 0.8862269213990523,
+    "mean_uncertainty_on_errors": 0.5380111336708069,
+    "mean_uncertainty_on_correct": 0.1602575182914734,
+    "n_pixels": 1680000,
+    "n_errors": 232550
+  },
   "totals": {
     "baseline_flood": {
       "iou": 0.34640556918403054,
