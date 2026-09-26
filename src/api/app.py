@@ -295,15 +295,16 @@ def create_app(state: RunState | None = None) -> FastAPI:
                 png, bounds = _guard(f"Слой {kind}", lambda: ctx.raster_png(kind))
             except HTTPException as exc:
                 if kind == "s1":
-                    # Известный дефект точки входа: путь s1_path лежит в
-                    # run_metadata.json, но RunContext.summary() его не отдаёт,
-                    # поэтому подложку построить нечем. Панель работает без неё.
+                    # Исходный чип S1Hand в комплект не входит: он лежит в data/cache
+                    # и появляется только после python -m src.cli.fetch_data. Путь к
+                    # нему паспорт отдаёт, отсутствует сам файл. Панель работает без
+                    # подложки, и оператору надо сказать, как её вернуть.
                     raise HTTPException(
                         status_code=503,
                         detail=(
-                            "Подложка S1 недоступна: паспорт запуска не отдаёт путь "
-                            "к исходному чипу S1Hand. Карта работает без радарной "
-                            "подложки, остальные слои не затронуты. "
+                            "Подложка S1 недоступна: исходный чип S1Hand не выкачан. "
+                            "Выполните python -m src.cli.fetch_data — подложка появится "
+                            "без перезапуска. Остальные слои карты не затронуты. "
                             f"Ответ расчёта: {exc.detail}"
                         ),
                     ) from exc
@@ -334,7 +335,7 @@ def create_app(state: RunState | None = None) -> FastAPI:
             run_id = str(ctx.summary().get("run_id") or "run")
         except Exception:  # pragma: no cover — имя файла не повод ронять выгрузку
             pass
-        name = f"floodvalue_{run_id}.zip"
+        name = f"vodopol_{run_id}.zip"  # имя продукта, а не технического пакета
         return Response(
             content=archive,
             media_type="application/zip",
