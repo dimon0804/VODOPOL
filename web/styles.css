@@ -550,3 +550,10 @@ table.grid .empty { color: var(--none); }
 .order-btns { margin-left: auto; display: flex; gap: 6px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 #btn-request { margin-left: auto; }
+
+/* Цепочка «от пикселя до рубля» в попапе объекта. */
+.chain { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--line); }
+.chain-h { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
+.chain ol { margin: 0; padding-left: 16px; }
+.chain li { margin: 0 0 4px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
+.chain li b { color: var(--text); font-weight: 600; }

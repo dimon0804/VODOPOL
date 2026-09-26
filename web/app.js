@@ -414,7 +414,49 @@
     return set;
   }
 
-  function assetPopup(props) {
+  /**
+   * Цепочка «от пикселя до рубля» для одного объекта. Ничего не пересчитывает:
+   * p, V, q и ущерб — из /api/assets, позиции и цены — из /api/strategies. Панель
+   * только ставит их в одну строку, чтобы было видно, откуда берётся каждое число.
+   */
+  function assetChain(props, geometry, ok) {
+    var c = (geometry && geometry.coordinates) || [];
+    var thr = toNum(S.summary && S.summary.threshold);
+    var h = '<div class="chain"><div class="chain-h">почему такой ущерб</div><ol>';
+    if (!ok) {
+      h += '<li>В пикселе объекта растр вероятности пуст или его окрестность покрыта нет-данными больше чем наполовину. ' +
+        'Оценки нет — ранг и ущерб не выставляются и нулём не заменяются.</li></ol></div>';
+      return h;
+    }
+    var p = toNum(props.p_flood);
+    h += '<li><b>p = ' + fmt(p, 4) + '</b> — значение вероятностного растра основного метода в пикселе объекта' +
+      (c.length ? ' (' + c[0].toFixed(5) + ', ' + c[1].toFixed(5) + ')' : '') + ', калибровано на validation.</li>';
+    h += '<li><b>V = ' + fmt(props.asset_value_rub, 0) + ' ₽</b>, <b>q = ' + fmt(props.vulnerability_coef, 2) + '</b> — стоимость и уязвимость из условия кейса.</li>';
+    h += '<li><b>EL = p × V × q</b> = ' + fmt(p, 4) + ' × ' + fmt(props.asset_value_rub, 0) + ' × ' + fmt(props.vulnerability_coef, 2) +
+      ' = <b>' + money(props.expected_loss_rub) + ' ₽</b> → ранг ' + (props.rank == null ? DASH : props.rank) + ' из 10.</li>';
+    if (thr !== null && p !== null) {
+      h += '<li>На маске объект ' + (p >= thr ? '<b>в зоне затопления</b> (p ≥ ' : '<b>вне зоны затопления</b> (p < ') + fmt(thr, 2) +
+        '), но на ущерб это не влияет: ущерб считается по вероятности, а не по маске, и низкое p его не обнуляет.</li>';
+    }
+    var plan = {};
+    ((S.strategies && S.strategies.plans && S.strategies.plans[S.strategy]) || []).forEach(function (id) { plan[id] = true; });
+    var price = {};
+    ((S.strategies && S.strategies.positions) || []).forEach(function (pos) { if (pos.strategy === S.strategy) price[pos.candidate_id] = pos.cost_rub; });
+    var zones = ((S.candidates && S.candidates.features) || []).filter(function (z) {
+      return plan[z.properties.candidate_id] && (z.properties.covered_asset_ids || []).indexOf(props.asset_id) >= 0;
+    });
+    if (zones.length) {
+      h += '<li>В стратегии ' + esc(S.strategy) + ' проверяется съёмкой: ' + zones.map(function (z) {
+        var id = z.properties.candidate_id;
+        return '<b>' + esc(id) + '</b>' + (price[id] != null ? ' — ' + money(price[id]) + ' ₽ в этой корзине' : '');
+      }).join(', ') + ' ' + mark('scenario', 'сценарная ставка') + '.</li>';
+    } else {
+      h += '<li>В стратегии ' + esc(S.strategy) + ' заказанной съёмкой <b>не проверяется</b> — подтверждение только на месте.</li>';
+    }
+    return h + '</ol></div>';
+  }
+
+  function assetPopup(props, geometry) {
     var status = props.status || 'no_data';
     var ok = status === 'ok';
     var covered = !!coveredSet()[props.asset_id];
@@ -430,6 +472,7 @@
     html += '<dt>уязвимость q</dt><dd>' + fmt(props.vulnerability_coef, 2) + ' ' + mark('case', 'условие кейса') + '</dd>';
     html += '<dt>покрытие в ' + esc(S.strategy) + '</dt><dd>' + (covered ? 'да' : 'нет') + '</dd>';
     html += '</dl>';
+    html += assetChain(props, geometry, ok);
     if (!ok) {
       html += '<p class="pnote">Статус «' + esc(ASSET_STATUS_WORD[status] || status) +
         '»: p, ущерб и ранг пустые. Это не ноль — ущерб неизвестен.</p>';
@@ -459,7 +502,7 @@
           (ASSET_TITLES[feature.properties.asset_class] || feature.properties.asset_class),
           { direction: 'top', offset: [0, -6] });
         layer.on('click', function () {
-          layer.bindPopup(assetPopup(feature.properties), { maxWidth: 340 }).openPopup();
+          layer.bindPopup(assetPopup(feature.properties, feature.geometry), { maxWidth: 340 }).openPopup();
         });
       }
     });
@@ -517,7 +560,7 @@
         S.assetsLayer.eachLayer(function (layer) {
           if (layer.feature && layer.feature.properties.asset_id === id) {
             S.map.setView(layer.getLatLng(), Math.max(S.map.getZoom(), 14));
-            layer.bindPopup(assetPopup(layer.feature.properties), { maxWidth: 340 }).openPopup();
+            layer.bindPopup(assetPopup(layer.feature.properties, layer.feature.geometry), { maxWidth: 340 }).openPopup();
           }
         });
       });
