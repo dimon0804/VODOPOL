@@ -40,6 +40,36 @@
       "url": "https://github.com/cloudtostreet/Sen1Floods11",
       "purpose": "официальный источник набора",
       "license": "Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. 2020. Sen1Floods11: a georeferenced dataset to train and test deep learning flood algorithms for Sentinel-1. CVPR Workshops."
+    },
+    {
+      "id": "copernicus_s1_grd_example",
+      "url": "https://dataspace.copernicus.eu/",
+      "dataset": "Sentinel-1 GRD, Copernicus Data Space Ecosystem",
+      "purpose": "альтернативный радарный снимок той же территории",
+      "observation_date": "укажите дату съёмки сцены",
+      "license": "Copernicus Open Licence, цитирование ESA обязательно",
+      "limits": "перед запуском перевести в дБ и нарезать на кадры 512x512 с шагом 10 м",
+      "declared_by": "оператор запуска"
+    },
+    {
+      "id": "roscosmos_kanopus_v_example",
+      "url": "https://gptl.ru/",
+      "dataset": "Канопус-В, Геопортал Роскосмоса",
+      "purpose": "оптическая съёмка высокого разрешения для проверки зон заказа",
+      "observation_date": "укажите дату съёмки",
+      "license": "по условиям предоставления Роскосмоса",
+      "limits": "оптика не проходит сквозь облака; в основной метод не подаётся",
+      "declared_by": "оператор запуска"
+    },
+    {
+      "id": "osm_buildings_example",
+      "url": "https://www.openstreetmap.org/",
+      "dataset": "OpenStreetMap, слой зданий",
+      "purpose": "реальные здания вместо условного портфеля объектов",
+      "observation_date": "срез базы на дату выгрузки",
+      "license": "ODbL, указание авторства OpenStreetMap обязательно",
+      "limits": "полнота покрытия неравномерна по регионам; стоимость объектов в OSM отсутствует",
+      "declared_by": "оператор запуска"
     }
   ]
 }

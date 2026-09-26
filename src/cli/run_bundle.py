@@ -35,6 +35,7 @@ from src.assets import (
 )
 from src.data import chips as chips_mod
 from src import impact as impact_mod
+from src.data import external as external_mod
 from src.data import fetch
 from src.export.bundle import assemble, new_run_id
 from src.methods.baseline_threshold import BaselineThreshold
@@ -68,6 +69,32 @@ def _quality_percent() -> dict:
     main["baseline"] = baseline
     main["source_file"] = path.as_posix()
     return main
+
+
+def build_external_manifest(chip_id: str, path: Path) -> list[dict]:
+    """Манифест для снимка, пришедшего не из Sen1Floods11.
+
+    Тут всего одна запись, и она описывает ровно то, что известно про файл: его
+    геометрию, каналы и размер. Оператора, дату съёмки и условия использования
+    подставляет пользователь через --sources: выдумывать их за него нельзя.
+    """
+    passport = external_mod.describe(path)
+    return [
+        {
+            "id": f"{chip_id}_S1_external",
+            **passport,
+            "dataset": "внешний источник",
+            "purpose": "исходный радарный снимок, единственный вход основного метода",
+            "observation_date": "",
+            "license": "определяется поставщиком снимка",
+            "limits": (
+                "Ручной разметки к этому снимку нет, поэтому метрики качества на нём "
+                "не считаются. Применимость модели к этому источнику не измерена: "
+                "она обучена на Sen1Floods11, и перенос на другой источник — "
+                "предположение до тех пор, пока не проверен на размеченных данных."
+            ),
+        }
+    ]
 
 
 def priority_raster(prob: np.ndarray, uncertainty: np.ndarray) -> np.ndarray:
@@ -124,6 +151,33 @@ def scenario_dates(event: str, deadline: str) -> dict[str, str]:
         "archive_observation_at": (base - timedelta(days=180)).isoformat(),
         "archive_available_at": decision,
     }
+
+
+def load_extra_sources(path: Path | None) -> list[dict]:
+    """Дополнительные источники из файла пользователя.
+
+    Эксперты на чекпоинте заметили, что список источников у нас прибит гвоздями.
+    Это правда для обучения — оно уже состоялось на конкретном наборе, и переписать
+    его задним числом нельзя. Но для конкретного запуска источники объявляет тот,
+    кто запуск делает: снимок оператора, слой зданий, архивная сцена. Файл с их
+    описанием подставляется флагом --sources и целиком попадает в манифест.
+
+    Мы намеренно ничего не додумываем за пользователя: поля берутся как есть.
+    Выдуманные за него дата съёмки или лицензия были бы хуже их отсутствия.
+    """
+    if path is None:
+        return []
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    items = raw.get("sources", raw) if isinstance(raw, dict) else raw
+    if not isinstance(items, list):
+        raise SystemExit(
+            f"{path}: ожидался список источников или объект с ключом sources."
+        )
+    for item in items:
+        if not isinstance(item, dict) or not item.get("id"):
+            raise SystemExit(f"{path}: у каждого источника должен быть непустой id.")
+        item.setdefault("declared_by", "оператор запуска")
+    return items
 
 
 def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
@@ -319,16 +373,41 @@ def main() -> None:
     parser.add_argument("--deadline", default="", help="срок принятия решения, ГГГГ-ММ-ДД")
     parser.add_argument("--cell-km", type=float, default=1.2)
     parser.add_argument("--outputs", type=Path, default=Path("outputs"))
+    parser.add_argument(
+        "--s1-file",
+        type=Path,
+        default=None,
+        help=(
+            "свой радарный снимок вместо чипа из набора: GeoTIFF 512×512 с каналами "
+            "VV и VH в дБ. Метрики на нём не считаются — разметки к нему нет"
+        ),
+    )
+    parser.add_argument("--vv-band", type=int, default=1, help="номер канала VV в --s1-file")
+    parser.add_argument("--vh-band", type=int, default=2, help="номер канала VH в --s1-file")
+    parser.add_argument(
+        "--sources",
+        type=Path,
+        default=None,
+        help="json со списком дополнительных источников для манифеста запуска",
+    )
     parser.add_argument("--skip-validate", action="store_true")
     args = parser.parse_args()
 
     print(f"чип: {args.chip}, бюджет: {args.budget:,.2f} руб.", flush=True)
+    external_input = args.s1_file is not None
     try:
-        chip = chips_mod.load_chip(args.chip)
+        if external_input:
+            chip = external_mod.load_external_chip(
+                args.s1_file, args.chip, vv_band=args.vv_band, vh_band=args.vh_band
+            )
+            print(f"  снимок из внешнего источника: {args.s1_file}", flush=True)
+        else:
+            chip = chips_mod.load_chip(args.chip)
     except chips_mod.ChipError as error:
         # Понятная одна строка вместо трейсбека: чип задаёт человек, ошибается тоже человек.
         raise SystemExit(str(error))
-    chip_path = fetch.layer_path(args.chip, C.LAYER_S1)
+    chip_path = args.s1_file if external_input else fetch.layer_path(args.chip, C.LAYER_S1)
+    extra_sources = load_extra_sources(args.sources)
 
     # ── вероятность и маска ──────────────────────────────────────────────────
     model = MainModel.load(args.model)
@@ -502,6 +581,17 @@ def main() -> None:
             "availability": "даты сценарные, привязаны к дате события; см. scenario_dates",
             "broad_rule_B": config.broad_rule,
         },
+        "input_source": {
+            "kind": "external" if external_input else "sen1floods11",
+            "path": Path(chip_path).as_posix(),
+            "extra_sources_declared": len(extra_sources),
+            "note": (
+                "Снимок взят не из Sen1Floods11. Модель применяется как есть, но "
+                "качество на этом источнике не измерено: ручной разметки к нему нет."
+                if external_input
+                else "Снимок из официального набора Sen1Floods11."
+            ),
+        },
         "total_expected_loss_rub": total_el,
         # Одно событие в трёх единицах сразу. Рубль не единственный язык, на
         # котором про паводок разговаривают: дежурному важнее школы и клиники,
@@ -547,7 +637,14 @@ def main() -> None:
             "strategy_comparison": strategies["comparison"],
             "sensitivity": sensitivity,
             "run_metadata": metadata,
-            "source_manifest": build_source_manifest(args.chip, chip_path),
+            "source_manifest": (
+                (
+                    build_external_manifest(args.chip, chip_path)
+                    if external_input
+                    else build_source_manifest(args.chip, chip_path)
+                )
+                + extra_sources
+            ),
         },
     )
 

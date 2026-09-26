@@ -135,6 +135,12 @@
     "availability": "даты сценарные, привязаны к дате события; см. scenario_dates",
     "broad_rule_B": "все зоны каталога, относящиеся к наблюдению события: широкое покрытие территории чипа без отбора по ожидаемому ущербу"
   },
+  "input_source": {
+    "kind": "sen1floods11",
+    "path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
+    "extra_sources_declared": 3,
+    "note": "Снимок из официального набора Sen1Floods11."
+  },
   "total_expected_loss_rub": 197628.00245080143,
   "impact": {
     "units": [
@@ -418,7 +424,7 @@
     45.34983015126263,
     3.771486888847399
   ],
-  "commit": "534ef58b6d9c637ab2c5a80ec9b9395e1895b54e",
+  "commit": "6a0bafe92733b01934b1743abe26580e0468bd90",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",

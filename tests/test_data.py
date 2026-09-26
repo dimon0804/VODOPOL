@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.contracts import CHIP_SIZE_PX, EVENT_CHIP_COUNTS, LABEL_INVALID, LAYER_LABEL
+from src.contracts import CHIP_SIZE_PX, EVENT_CHIP_COUNTS, LABEL_INVALID, LAYER_LABEL, LAYER_S1
 from src.data import fetch, splits as splits_mod
 from src.data.chips import (
     ChipError,
@@ -242,3 +242,62 @@ def test_author_split_has_event_leakage() -> None:
     assert report["events_shared_by_all_three_count"] >= 10
     for info in report["pairwise"].values():
         assert info["shared_chips"] == 0, "по чипам авторы не пересекаются — утечка на событиях"
+
+
+# ── снимок из стороннего источника ───────────────────────────────────────────
+# Эксперты на чекпоинте заметили, что источники прибиты к Sen1Floods11. Для
+# обучения это так и есть по определению, а для применения — нет: на вход идут
+# два канала в дБ, и происхождение файла модели безразлично. Проверяем, что
+# произвольный GeoTIFF читается, а негодный отвергается внятно, а не молча.
+
+def test_внешний_снимок_читается_как_чип(tmp_path: Path) -> None:
+    import rasterio
+    from src.data import external, fetch
+
+    source = fetch.layer_path("India_900498", LAYER_S1)
+    if not source.exists():
+        pytest.skip("набор не выкачан: python -m src.cli.fetch_data")
+
+    chip = external.load_external_chip(source, "Foreign_1")
+    assert chip.vv.shape == chip.vh.shape == (512, 512)
+    assert chip.label is None and chip.jrc is None, "разметки у чужого снимка быть не может"
+    assert np.isfinite(chip.vv).any()
+
+
+def test_не_децибелы_отвергаются_с_объяснением(tmp_path: Path) -> None:
+    """Линейная интенсивность вместо дБ — числа другого порядка и мусор на выходе."""
+    import rasterio
+    from rasterio.transform import from_origin
+    from src.data import external
+    from src.data.chips import ChipError
+
+    path = tmp_path / "linear.tif"
+    data = np.full((2, 512, 512), 0.05, dtype="float32")
+    with rasterio.open(
+        path, "w", driver="GTiff", height=512, width=512, count=2,
+        dtype="float32", crs="EPSG:4326", transform=from_origin(77.0, 20.0, 9e-05, 9e-05),
+    ) as dst:
+        dst.write(data)
+
+    with pytest.raises(ChipError) as err:
+        external.load_external_chip(path, "Linear_1")
+    assert "децибел" in str(err.value)
+
+
+def test_чужой_размер_кадра_отвергается(tmp_path: Path) -> None:
+    import rasterio
+    from rasterio.transform import from_origin
+    from src.data import external
+    from src.data.chips import ChipError
+
+    path = tmp_path / "small.tif"
+    data = np.full((2, 100, 100), -15.0, dtype="float32")
+    with rasterio.open(
+        path, "w", driver="GTiff", height=100, width=100, count=2,
+        dtype="float32", crs="EPSG:4326", transform=from_origin(77.0, 20.0, 9e-05, 9e-05),
+    ) as dst:
+        dst.write(data)
+
+    with pytest.raises(ChipError) as err:
+        external.load_external_chip(path, "Small_1")
+    assert "512" in str(err.value)
