@@ -50,8 +50,8 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 12px;
-  height: 46px;
+  padding: 6px 12px;
+  min-height: 46px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
@@ -66,8 +66,10 @@ body {
   gap: 14px;
   flex: 1 1 auto;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  /* Перенос, а не прокрутка со спрятанной полосой: на 1280 объявленный бюджет
+     уезжал за край, и ничто не подсказывало, что строку можно докрутить. */
+  flex-wrap: wrap;
+  row-gap: 2px;
   font-size: 11.5px;
 }
 .runline::-webkit-scrollbar { display: none; }
