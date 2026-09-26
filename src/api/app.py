@@ -514,6 +514,41 @@ def create_app(state: RunState | None = None) -> FastAPI:
             },
         )
 
+    # ── отдельные файлы комплекта и отчёты модели ────────────────────────────
+    #
+    # Обе ручки ничего не считают: отдают готовые файлы байт в байт. Список имён
+    # закрыт — путь собирается только из белого списка, выйти за каталог нельзя.
+
+    @app.get("/api/files/{name}", summary="Один файл комплекта как есть")
+    def run_file(
+        name: str,
+        run: str | None = Query(default=None, description="Идентификатор комплекта."),
+    ) -> Response:
+        if name not in config.RUN_FILES:
+            raise HTTPException(status_code=404, detail=f"файла {name} в списке выгружаемых нет")
+        ctx = _select_ctx(app.state.run, run)
+        path = Path(ctx.run_dir) / name
+        if ctx.is_demo or not path.is_file():
+            raise HTTPException(status_code=404, detail=f"в комплекте нет файла {name}")
+        return Response(
+            content=path.read_bytes(),
+            media_type=config.RUN_FILES[name],
+            headers={"Content-Disposition": f'attachment; filename="{name}"'},
+        )
+
+    @app.get("/api/reports/{name}", summary="Отчёт по качеству модели как есть")
+    def report_file(name: str) -> Response:
+        rel = config.REPORT_FILES.get(name)
+        if rel is None:
+            raise HTTPException(status_code=404, detail=f"отчёта {name} в списке нет")
+        path = config.PROJECT_ROOT / rel
+        if not path.is_file():
+            raise HTTPException(
+                status_code=404,
+                detail=f"отчёт {rel} не найден: в Docker каталог reports/ монтируется томом",
+            )
+        return Response(content=path.read_bytes(), media_type="application/json")
+
     # ── статика панели ───────────────────────────────────────────────────────
 
     if config.WEB_DIR.is_dir():

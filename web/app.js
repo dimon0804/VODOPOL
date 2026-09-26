@@ -158,10 +158,13 @@
    * первую очередь, нижняя — то, до чего доходят, если останутся деньги.
    */
   var PRIORITY_TIERS = [
-    { key: 'high', title: 'высокий', color: '#e5484d', text: 'проверять в первую очередь' },
-    { key: 'mid', title: 'средний', color: '#f5a524', text: 'проверять, если позволяет бюджет' },
-    { key: 'low', title: 'низкий', color: '#30a46c', text: 'можно отложить' },
-    { key: 'none', title: 'нет оценки', color: '#6c7686', text: 'оценка не построена' }
+    // Светлая тема: один тон разной силы, а не светофор. Срочность читается по
+    // насыщенности и по подписи рядом; красный на карте паводка кричал бы «беда»
+    // там, где речь идёт о порядке проверки.
+    { key: 'high', title: 'высокий', color: '#3d4180', text: 'проверять в первую очередь' },
+    { key: 'mid', title: 'средний', color: '#8185bd', text: 'проверять, если позволяет бюджет' },
+    { key: 'low', title: 'низкий', color: '#c3c5e0', text: 'можно отложить' },
+    { key: 'none', title: 'нет оценки', color: '#a3a6bd', text: 'оценка не построена' }
   ];
 
   function priorityTier(rank, total) {
@@ -381,7 +384,11 @@
 
   /** Лучший (то есть самый срочный) ранг среди объектов, попавших в зону. */
   function zoneTier(props) {
-    var ids = String(props.covered_asset_ids || '').split(';').filter(Boolean);
+    // В каталоге covered_asset_ids — массив; в CSV-представлении — строка через «;».
+    // Раньше массив превращался в «a04,a10» и не совпадал ни с одним объектом:
+    // все заказанные зоны красились как «нет оценки».
+    var raw = props.covered_asset_ids || [];
+    var ids = Array.isArray(raw) ? raw.slice() : String(raw).split(';').filter(Boolean);
     if (!ids.length) return PRIORITY_TIERS[3];
     var rows = ((S.assets || {}).features) || [];
     var best = null;
@@ -404,20 +411,21 @@
       // оператор видит на карте не «куплено/не куплено», а «куплено ради чего».
       var tier = zoneTier(feature.properties);
       return {
-        color: picked ? '#ffffff' : tier.color,
-        weight: picked ? 2.6 : 1.8,
-        opacity: 0.95,
+        color: picked ? '#1f2250' : '#3d4180',
+        weight: picked ? 3 : 2,
+        opacity: 1,
+        dashArray: null,  // setStyle не сбрасывает пунктир сам — зона из каталога осталась бы пунктирной
         fillColor: tier.color,
-        fillOpacity: picked ? 0.34 : 0.24
+        fillOpacity: picked ? 0.22 : 0.12
       };
     }
     return {
-      color: picked ? '#e0f2fe' : '#93a1b3',
-      weight: picked ? 2 : 0.8,
-      opacity: 0.55,
-      fillColor: '#93a1b3',
-      fillOpacity: 0.04,
-      dashArray: '3 3'
+      color: picked ? '#1f2250' : '#ffffff',
+      weight: picked ? 2.4 : 1.4,
+      opacity: 0.95,
+      fillColor: '#ffffff',
+      fillOpacity: 0.02,
+      dashArray: '5 4'
     };
   }
 
@@ -585,13 +593,20 @@
       pointToLayer: function (feature, latlng) {
         var p = feature.properties;
         var ok = p.status === 'ok';
-        return L.circleMarker(latlng, {
-          radius: ok ? rankRadius(p.rank) : 5,
-          color: ok ? '#0b0e12' : '#c8d0dc',
-          weight: ok ? 1.2 : 1.4,
-          dashArray: ok ? null : '2 2',
-          fillColor: ok ? rankColor(p.rank) : '#39414e',
-          fillOpacity: ok ? 0.92 : 0.5
+        // Номер объекта в круге. Верхняя треть по ущербу — заливка, остальные —
+        // белый круг с обводкой; объект без оценки — пунктир. Это DOM, а не canvas:
+        // номер должен читаться, а подписи на canvas Leaflet не рисует.
+        var num = String(p.asset_id || '').replace(/^a0*/, '') || '?';
+        var tier = ok ? priorityTier(p.rank, rankedCount()).key : 'none';
+        return L.marker(latlng, {
+          icon: L.divIcon({
+            className: 'amark amark-' + tier,
+            html: '<span>' + esc(num) + '</span>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          }),
+          riseOnHover: true,
+          keyboard: false
         });
       },
       onEachFeature: function (feature, layer) {
@@ -864,6 +879,7 @@
     restyleZones();
     renderAssetTable();
     renderSensitivity();
+    emit('strategy');
     if (S.selectedZone && S.candidates) {
       var f = S.candidates.features.filter(function (x) { return x.properties.candidate_id === S.selectedZone; })[0];
       if (f) showZoneCard(f);
@@ -916,42 +932,25 @@
 
   function renderLegend() {
     var threshold = toNum(S.summary && S.summary.threshold);
+    var tick = threshold === null ? '' :
+      '<i class="lg-tick" style="left:' + (threshold * 100).toFixed(1) + '%"></i>' +
+      '<span class="lg-tau" style="left:' + (threshold * 100).toFixed(1) + '%">τ = ' + fmt(threshold, 2) + '</span>';
     var html = '';
     if (S.layer === 'probability') {
-      html += '<h3>Вероятность затопления</h3>';
-      html += '<div class="bar" style="background:' + gradient(PROB_STOPS) + '"></div>';
-      html += '<div class="ticks"><span>0,00</span><span>0,25</span><span>0,50</span><span>0,75</span><span>1,00</span></div>';
-      html += '<div class="lnote">Прозрачность растёт вместе со значением. Порог бинаризации ' +
-        (threshold === null ? DASH : fmt(threshold, 2)) + ' подобран на validation ' + mark('model', 'расчёт модели') + '</div>';
+      html = '<div class="lg-scale"><div class="lg-bar lg-prob" style="background:' + gradient(PROB_STOPS) + '"></div>' + tick +
+        '<span class="lg-0">0</span><span class="lg-1">1</span></div>' +
+        '<div class="lg-text">вероятность временного затопления · τ зафиксирован на validation ' + mark('model', 'расчёт модели') + '</div>';
     } else if (S.layer === 'uncertainty') {
-      html += '<h3>Неопределённость</h3>';
-      html += '<div class="bar" style="background:' + gradient(UNC_STOPS) + '"></div>';
-      html += '<div class="ticks"><span>0,00</span><span>0,25</span><span>0,50</span><span>0,75</span><span>1,00</span></div>';
-      html += '<div class="lnote">Безразмерная величина 0…1: энтропия вероятности и разброс ансамбля ' + mark('model', 'расчёт модели') + '</div>';
+      html = '<div class="lg-scale"><div class="lg-bar" style="background:' + gradient(UNC_STOPS) + '"></div>' +
+        '<span class="lg-0">0</span><span class="lg-1">1</span></div>' +
+        '<div class="lg-text">неопределённость: 0,7 × энтропия вероятности + 0,3 × разброс трёх моделей ' + mark('model', 'расчёт модели') + '</div>';
     } else if (S.layer === 'mask') {
-      html += '<h3>Бинарная маска</h3>';
-      html += '<div class="rowitem"><span class="swatch" style="background:' + MASK_COLOR + '"></span>' +
-        'временное затопление, p ≥ ' + (threshold === null ? DASH : fmt(threshold, 2)) + '</div>';
-      html += '<div class="lnote">Целевой класс — временное затопление, постоянная вода исключена на стороне разметки</div>';
+      html = '<div class="lg-mask"><span class="swatch" style="background:' + MASK_COLOR + '"></span>' +
+        'временное затопление, p ≥ ' + (threshold === null ? DASH : fmt(threshold, 2)) + '</div>' +
+        '<div class="lg-text">постоянная вода исключена на стороне разметки · на ущерб маска не влияет</div>';
     } else {
-      html += '<h3>Слои</h3><div class="lnote">Тематический слой выключен</div>';
+      html = '<div class="lg-text">радарная подложка Sentinel-1, канал VV, дБ · тематический слой выключен</div>';
     }
-
-    html += '<div class="rowitem" style="margin-top:7px">зоны стратегии ' + esc(S.strategy) + ' по срочности:</div>';
-    for (var ti = 0; ti < 3; ti++) {
-      var t = PRIORITY_TIERS[ti];
-      html += '<div class="rowitem"><span class="swatch" style="background:' + t.color +
-        '55;border-color:' + t.color + '"></span>' + esc(t.title) + ' — ' + esc(t.text) + '</div>';
-    }
-    html += '<div class="rowitem"><span class="swatch" style="background:transparent;border-color:#93a1b3;border-style:dashed"></span>каталог зон, не заказаны</div>';
-    html += '<div class="ranks">';
-    [1, 3, 5, 7, 10].forEach(function (rank) {
-      var d = Math.round(rankRadius(rank) * 2);
-      html += '<i style="width:' + d + 'px;height:' + d + 'px;background:' + rankColor(rank) + '"></i>';
-    });
-    html += '</div><div class="lnote">размер и цвет точки — ранг ожидаемого ущерба, слева 1 (наибольший), справа 10. ' +
-      'Серая пунктирная точка — объект без оценки</div>';
-
     $('legend').innerHTML = html;
   }
 
@@ -1083,7 +1082,9 @@
       html += '<tr><td>' + esc(r.title_ru || r.asset_class) + '</td>' +
         '<td class="n">' + fmt(r.expected_objects, 2) + '</td>' +
         '<td class="n">' + money(r.expected_loss_rub) +
-        '<span class="bar" style="width:' + Math.round(share * 100) + '%"></span></td></tr>';
+        // Дорожка фиксированной ширины: полоска в процентах от ячейки стояла в одну
+        // строку с числом и у самого крупного объекта вылезала за край карточки.
+        '<span class="ibar"><i style="width:' + Math.round(share * 100) + '%"></i></span></td></tr>';
     });
     html += '</tbody>';
     $('impact-classes').innerHTML = html;
@@ -1169,6 +1170,7 @@
   function onBudgetInput() {
     S.budget = Number($('rng-budget').value);
     $('budget-num').textContent = fmt(S.budget, 0);
+    emit('budget-input');
     renderBudgetContext();
     // Маркер «сейчас» на кривой двигается сразу, без запроса: кривая от бюджета не зависит.
     if (S.curve) drawCurve();
@@ -1186,6 +1188,7 @@
         renderStrategies();
         restyleZones();
         renderAssetTable();
+        emit('strategies');
         if (S.selectedZone && S.candidates) {
           var f = S.candidates.features.filter(function (x) { return x.properties.candidate_id === S.selectedZone; })[0];
           if (f) showZoneCard(f);
@@ -1905,6 +1908,7 @@
       setupBudget();
       buildCurve();
       syncLayers();
+      emit('boot');
       $('zone-body').innerHTML = '<div class="empty-hint">Нажмите зону на карте — здесь появятся цена, площадь, сроки и коэффициенты ПП РФ № 840.</div>';
     }).catch(function (err) {
       banner('Панель не загружена: ' + err.message +
@@ -1938,6 +1942,7 @@
 
       // Шапка иначе навсегда остаётся в состоянии «загрузка…».
       $('runline').innerHTML = '<span class="muted">комплект не загружен</span>';
+      emit('error');
     });
   }
 
@@ -1952,6 +1957,24 @@
       if (S.map) { S.map.invalidateSize(); fitChip(); }
     }, 150);
   });
+
+  function emit(reason) {
+    document.dispatchEvent(new CustomEvent('vp:update', { detail: reason }));
+  }
+
+  // Интерфейс для pages.js: страницы из макета дорисовываются там, но работают
+  // на тех же данных и тех же функциях, что и проверенные блоки этого файла.
+  window.VODOPOL = {
+    S: S, $: $, esc: esc, toNum: toNum, fmt: fmt, money: money, pct: pct, mark: mark,
+    getJSON: getJSON, withRun: withRun, currentRunId: currentRunId,
+    setStrategy: setStrategy, setBudget: setBudget, comparisonRow: comparisonRow,
+    selectedSet: selectedSet, coveredSet: coveredSet, priorityTier: priorityTier,
+    rankedCount: rankedCount, fitChip: fitChip, showZoneCard: showZoneCard, restyleZones: restyleZones,
+    assetPopup: assetPopup, fullPurchaseCost: fullPurchaseCost, plural: plural,
+    ASSET_TITLES: ASSET_TITLES, SENSOR_WORD: SENSOR_WORD, ACQ_WORD: ACQ_WORD,
+    ROLE_WORD: ROLE_WORD, USAGE_WORD: USAGE_WORD, STRATEGY_TITLE: STRATEGY_TITLE,
+    PRIORITY_TIERS: PRIORITY_TIERS, DASH: DASH
+  };
 
   document.addEventListener('DOMContentLoaded', boot);
 })();

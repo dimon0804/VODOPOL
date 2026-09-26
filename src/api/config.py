@@ -118,3 +118,30 @@ def host_port() -> tuple[str, int]:
     except ValueError:
         port = 8000
     return host, port
+
+#: Файлы комплекта, которые панель отдаёт по одному — для кнопок «скачать CSV» на
+#: страницах. Имя → тип содержимого. Всё, чего здесь нет, ручка не отдаёт.
+RUN_FILES = {
+    "asset_loss.csv": "text/csv; charset=utf-8",
+    "assets.csv": "text/csv; charset=utf-8",
+    "procurement_plan.csv": "text/csv; charset=utf-8",
+    "strategy_comparison.csv": "text/csv; charset=utf-8",
+    "sensitivity.csv": "text/csv; charset=utf-8",
+    "sensitivity_ranks.csv": "text/csv; charset=utf-8",
+    "run_metadata.json": "application/json",
+    "impact_summary.json": "application/json",
+    "source_manifest.json": "application/json",
+    "strategy_plans.json": "application/json",
+    "assets.geojson": "application/geo+json",
+    "candidate_orders.geojson": "application/geo+json",
+}
+
+#: Отчёты модели для страницы «Методы и качество». Имя в URL → путь от корня
+#: репозитория. Числа там посчитаны при обучении и проверке, панель их не трогает.
+REPORT_FILES = {
+    "metrics_compare.json": "reports/metrics_compare.json",
+    "metrics_compare_holdout.json": "reports/metrics_compare_holdout.json",
+    "metrics_main_validation.json": "reports/metrics_main_validation.json",
+    "experiments.json": "reports/experiments.json",
+    "split_manifest.json": "splits/split_manifest.json",
+}
