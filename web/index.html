@@ -4,52 +4,47 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Водополь — панель оператора</title>
-  <!-- Без этого браузер просит /favicon.ico и получает 404: в консоли на защите
-       висела бы красная строка, не связанная ни с одной настоящей ошибкой. -->
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <!-- Leaflet лежит рядом, а не на unpkg: на защите интернета может не быть,
-       а панель без карты это не панель. Версия 1.9.4, файлы в web/vendor/leaflet. -->
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=21">
 </head>
 <body>
 
+<!-- ── шапка ────────────────────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="brand">
+  <a class="brand" href="#/home" title="Главная">
+    <img class="brand-logo" src="img/logo.png" alt="">
     <span class="brand-name">Водополь</span>
-    <span class="brand-sub">панель оператора · кейс 2</span>
-  </div>
+  </a>
 
-  <div class="runline" id="runline">
-    <span class="kv"><b>загрузка…</b></span>
-  </div>
+  <nav class="nav" id="nav">
+    <a href="#/home" data-page="home">Главная</a>
+    <a href="#/map" data-page="map">Карта</a>
+    <a href="#/objects" data-page="objects">Объекты и ущерб</a>
+    <a href="#/plan" data-page="plan">План съёмки</a>
+    <a href="#/methods" data-page="methods">Методы и качество</a>
+    <a href="#/prices" data-page="prices">Цены и допущения</a>
+  </nav>
 
   <div class="topactions">
-    <!-- Выбор комплекта. Список собирается из /api/runs, то есть из каталога
-         outputs: собрали новый чип командой run_bundle — он появится здесь сам. -->
-    <label class="runpick" for="run-select">
-      <span class="runpick-label">чип</span>
-      <select id="run-select" title="Комплект запуска, открытый в панели">
-        <option value="">загрузка…</option>
-      </select>
+    <!-- Выбор комплекта: список из /api/runs, то есть из каталога outputs. -->
+    <label class="runpick" for="run-select" title="Комплект запуска, открытый в панели">
+      <select id="run-select"><option value="">загрузка…</option></select>
     </label>
-    <button type="button" class="btn btn-icon" id="btn-build-open"
-            title="Собрать комплект по другому чипу">+ чип</button>
+    <button type="button" class="iconbtn" id="btn-build-open" title="Собрать комплект по другому чипу">+</button>
     <span class="pill" id="health-pill">соединение…</span>
-    <a class="btn" id="bundle-link" href="/api/bundle.zip">Выгрузить комплект</a>
   </div>
 </header>
 
 <div class="banner hidden" id="banner"></div>
 
-<!-- Сборка комплекта. Делает ровно то же, что python -m src.cli.run_bundle в
-     терминале: панель показывает протокол этой команды строка в строку. -->
+<!-- Сборка комплекта: то же, что python -m src.cli.run_bundle в терминале. -->
 <dialog id="build-dialog" class="dialog">
   <form method="dialog" class="dialog-head">
     <h2>Собрать комплект</h2>
-    <button class="btn btn-icon" value="cancel" title="Закрыть">×</button>
+    <button class="iconbtn" value="cancel" title="Закрыть">×</button>
   </form>
-
   <div class="dialog-body">
     <p class="dialog-note" id="build-note">
       Выберите чип Sentinel-1 и объявленный бюджет. Сервис выполнит тот же прогон,
@@ -57,65 +52,47 @@
       ущербом, зоны, цены по ПП РФ № 840, сравнение A/B/C и проверка комплекта.
       Модель при этом не переобучается — она только применяется.
     </p>
-
     <div class="buildgrid">
       <label for="build-event">событие</label>
       <select id="build-event"><option value="">все</option></select>
-
       <label for="build-chip">чип</label>
       <span class="buildchip">
-        <input id="build-chip" list="build-chip-list" autocomplete="off"
-               placeholder="например India_900498" spellcheck="false">
+        <input id="build-chip" list="build-chip-list" autocomplete="off" placeholder="например Bolivia_103757" spellcheck="false">
         <datalist id="build-chip-list"></datalist>
         <span class="buildhint" id="build-chip-hint"></span>
       </span>
-
       <label for="build-budget">бюджет, ₽</label>
       <input id="build-budget" type="number" min="0" step="500" value="6000">
     </div>
-
     <div class="dialog-actions">
       <button type="button" class="btn" id="btn-build-start">Собрать</button>
       <span class="buildstate" id="build-state"></span>
     </div>
-
     <pre class="buildlog hidden" id="build-log"></pre>
   </div>
 </dialog>
 
-<main class="layout">
+<main class="pages">
 
-  <!-- ── карта ──────────────────────────────────────────────────────────── -->
-  <section class="mapcol">
-    <div id="map"></div>
-
-    <div class="mapctl" id="mapctl">
-      <div class="mapctl-head">Слои карты</div>
-      <label class="row"><input type="checkbox" id="chk-s1" checked><span>подложка S1 (VV, дБ)</span></label>
-      <div class="sep"></div>
-      <label class="row"><input type="radio" name="thematic" value="probability" checked><span>вероятность затопления</span></label>
-      <label class="row"><input type="radio" name="thematic" value="mask"><span>бинарная маска</span></label>
-      <label class="row"><input type="radio" name="thematic" value="uncertainty"><span>неопределённость</span></label>
-      <label class="row"><input type="radio" name="thematic" value="none"><span>без тематического слоя</span></label>
-      <div class="sep"></div>
-      <label class="row slim"><span>прозрачность</span>
-        <input type="range" id="rng-opacity" min="10" max="100" value="80" step="5">
-        <span class="num" id="lbl-opacity">80%</span>
-      </label>
-      <div class="sep"></div>
-      <label class="row"><input type="checkbox" id="chk-zones" checked><span>каталог зон</span></label>
-      <label class="row"><input type="checkbox" id="chk-assets" checked><span>объекты портфеля</span></label>
-      <div class="mapctl-note" id="s1-note"></div>
+<!-- ════════════════════════ ГЛАВНАЯ ════════════════════════ -->
+<section class="page" id="page-home" data-page="home">
+  <div class="hero card">
+    <img class="hero-logo" src="img/logo.png" alt="">
+    <div class="hero-text">
+      <h1>Водополь</h1>
+      <p class="hero-lead">Оценка ожидаемого ущерба от паводка по одному радарному снимку
+        Sentinel-1 и обоснование, какую дополнительную съёмку заказать в пределах бюджета.</p>
+      <p class="hero-sub">«Водополь» — старое русское слово для половодья, разлива.
+        КосмоХакатон 2026, кейс 2 · команда CLV-DIGITAL.</p>
+      <div class="hero-actions">
+        <a class="btn" href="#/map">Открыть карту</a>
+        <a class="btn ghost" href="#/plan">План съёмки</a>
+        <a class="btn ghost" id="bundle-link" href="/api/bundle.zip">Выгрузить комплект</a>
+      </div>
     </div>
+  </div>
 
-    <div class="legend" id="legend"></div>
-  </section>
-
-  <!-- ── боковая колонка ────────────────────────────────────────────────── -->
-  <aside class="side">
-
-    <!-- Масштаб события: одно и то же считается в рублях, объектах и гектарах.
-         Рубль не единственный язык, на котором про паводок разговаривают. -->
+  <div class="grid-2">
     <section class="card" id="card-impact">
       <div class="card-head">
         <h2>Что под водой</h2>
@@ -126,157 +103,290 @@
       <p class="note" id="impact-note"></p>
     </section>
 
-    <section class="card" id="card-budget">
-      <div class="card-head">
-        <h2>Бюджет на уточняющую съёмку</h2>
-        <span class="recalc hidden" id="recalc">пересчёт…</span>
-      </div>
-      <p class="note" id="budget-purpose">
-        Это <b>не</b> стоимость ликвидации последствий. Это деньги на то, чтобы
-        <b>узнать точнее</b>: заказать съёмку высокого разрешения там, где спутникового
-        снимка 10 м не хватает, чтобы понять, залит объект или нет.
-      </p>
-      <div class="budget-value">
-        <span class="big num" id="budget-num">—</span>
-        <span class="unit">₽</span>
-        <span class="mark case" title="Бюджет объявляется командой до расчёта">условие кейса</span>
-        <button class="btn ghost" id="btn-budget-reset" type="button">объявленный</button>
-      </div>
-      <input type="range" id="rng-budget" min="0" max="60000" step="250" value="20000">
-      <div class="scale" id="budget-scale"></div>
-      <div class="budget-context" id="budget-context"></div>
-      <div class="budget-jumps">
-        <button class="btn ghost" id="btn-budget-full" type="button">закрыть весь ущерб</button>
-        <button class="btn ghost" id="btn-budget-broad" type="button">заказать всё</button>
-      </div>
-      <p class="note">
-        Слайдер пересчитывает только отбор зон, их цену по ПП РФ № 840 и сравнение стратегий.
-        Модель <b>не переобучается</b>, порог бинаризации, карта вероятностей и портфель объектов
-        <b>не меняются</b>.
-      </p>
+    <section class="card">
+      <div class="card-head"><h2>Как это работает</h2></div>
+      <ol class="steps">
+        <li><b>Снимок.</b> Один чип Sentinel-1 из официального Sen1Floods11: радар видит сквозь облака.</li>
+        <li><b>Вероятность.</b> Наша модель LightGBM даёт для каждого пикселя вероятность временного затопления и неопределённость.</li>
+        <li><b>Ущерб.</b> Для десяти объектов EL = p × V × q — по вероятности, а не по маске.</li>
+        <li><b>План съёмки.</b> Нарезаем зоны, считаем цену по ПП РФ № 840 и сравниваем стратегии A/B/C при бюджете.</li>
+      </ol>
+      <div class="runline" id="runline"><span class="kv">загрузка…</span></div>
     </section>
+  </div>
 
-    <section class="card" id="card-strategies">
-      <div class="card-head">
-        <h2>Стратегии закупки A / B / C</h2>
-        <button class="btn ghost" id="btn-request" type="button" title="Заявка на съёмку по корзине выбранной стратегии: печатный документ">заявка на съёмку</button>
-        <div class="segmented" id="strategy-switch">
-          <button type="button" data-strategy="A">A</button>
-          <button type="button" data-strategy="B">B</button>
-          <button type="button" data-strategy="C" class="active">C</button>
+  <section class="card" id="card-meta">
+    <div class="card-head"><h2>Паспорт запуска</h2></div>
+    <div id="meta-body" class="meta-body"></div>
+  </section>
+</section>
+
+<!-- ════════════════════════ КАРТА ════════════════════════ -->
+<section class="page" id="page-map" data-page="map">
+  <div class="split">
+    <section class="card mapcard">
+      <div class="mapcard-head">
+        <div>
+          <div class="mapcard-title" id="map-title">Sentinel-1</div>
+          <div class="mapcard-sub" id="map-sub">512 × 512 пикс. · 10 м · EPSG:4326</div>
+        </div>
+        <!-- Режимы слоя. Это те же радиокнопки, что читает syncLayers, только
+             нарисованные как переключатель; «S1» — подложка без тематического слоя. -->
+        <div class="segmented seg-layers" id="mapctl">
+          <label><input type="radio" name="thematic" value="probability" checked><span>Вероятность</span></label>
+          <label><input type="radio" name="thematic" value="mask"><span>Маска</span></label>
+          <label><input type="radio" name="thematic" value="uncertainty"><span>Неопределённость</span></label>
+          <label><input type="radio" name="thematic" value="none"><span>S1</span></label>
+          <input type="checkbox" id="chk-s1" checked hidden>
+          <input type="range" id="rng-opacity" min="10" max="100" value="80" step="5" hidden>
+          <span id="lbl-opacity" hidden>80%</span>
         </div>
       </div>
-      <div class="strategy-legend">
-        <span><b>A</b> только открытые данные</span>
-        <span><b>B</b> широкая закупка по объявленному правилу</span>
-        <span><b>C</b> выборочная по приоритетам в пределах бюджета</span>
+
+      <div class="mapslot" data-slot="map">
+        <div class="mapwrap" id="mapwrap">
+          <div id="map"></div>
+          <div class="map-pills">
+            <label class="mpill"><input type="checkbox" id="chk-assets" checked><span>Объекты</span></label>
+            <label class="mpill"><input type="checkbox" id="chk-zones" checked><span>Зоны</span></label>
+          </div>
+          <div class="map-north" title="север сверху">▲</div>
+          <div class="mapctl-note" id="s1-note"></div>
+        </div>
       </div>
+      <div class="legend" id="legend"></div>
+    </section>
+
+    <div class="stack">
+      <section class="card kpis" id="card-kpi"></section>
+
+      <section class="card" id="card-budget-mini">
+        <div class="card-head">
+          <h2>Бюджет съёмки</h2>
+          <span class="big-money"><span id="budget-num">—</span> ₽</span>
+        </div>
+        <div class="budget-slot" data-slot="map">
+          <div class="budget-core" id="budget-core">
+            <input type="range" id="rng-budget" min="0" max="60000" step="250" value="6000">
+            <div class="scale" id="budget-scale"></div>
+            <span class="recalc hidden" id="recalc">пересчёт…</span>
+          </div>
+        </div>
+        <div class="segmented seg-strat" id="strategy-switch">
+          <button type="button" data-strategy="A">A · без съёмки</button>
+          <button type="button" data-strategy="B">B · широкая</button>
+          <button type="button" data-strategy="C" class="active">C · выборочная</button>
+        </div>
+        <dl class="rows" id="budget-rows"></dl>
+        <div class="card-foot">
+          <a class="link" href="#/plan">Открыть план →</a>
+          <span class="muted small">пересчёт без переобучения · <span class="mark scenario">ставка сценарная</span></span>
+        </div>
+      </section>
+
+      <section class="card" id="card-first">
+        <div class="card-head">
+          <h2>Проверить в первую очередь</h2>
+          <a class="link" href="#/objects">Все 10 →</a>
+        </div>
+        <ol class="firstlist" id="first-list"></ol>
+        <div class="card-foot small muted">
+          <span>Учебный прототип · не официальная оценка ущерба</span>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════ ОБЪЕКТЫ И УЩЕРБ ════════════════════════ -->
+<section class="page" id="page-objects" data-page="objects">
+  <div class="page-head">
+    <h1>Объекты и ожидаемый ущерб</h1>
+    <div class="page-actions">
+      <button class="btn ghost" id="btn-order-print" type="button" title="Наряд на обследование: печатная страница для бригады">Наряд · печать</button>
+      <button class="btn ghost" id="btn-order-csv" type="button" title="Наряд на обследование таблицей CSV">Наряд · CSV</button>
+      <a class="btn dl" data-file="asset_loss.csv" href="/api/files/asset_loss.csv">asset_loss.csv</a>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="tablewrap"><table class="objtable" id="obj-table"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Чувствительность приоритетов</h2>
+      <span class="muted small">модель не переобучается · меняется один вход за раз</span>
+    </div>
+    <div class="senscards" id="rank-sens"></div>
+    <details class="more">
+      <summary>Чувствительность решения по стратегиям — все сценарии <span class="muted" id="sens-count"></span></summary>
       <div class="tablewrap">
-        <table class="grid abc" id="tbl-strategies"></table>
-      </div>
-      <p class="note" id="strategy-note"></p>
-    </section>
-
-    <section class="card" id="card-curve">
-      <div class="card-head">
-        <h2>Бюджет → покрытый ущерб, стратегия C</h2>
-        <span class="muted" id="curve-status">строится…</span>
-      </div>
-      <div class="curve" id="curve" role="img" aria-label="Ступенчатая кривая: сколько ожидаемого ущерба покрывает стратегия C при каждом бюджете"></div>
-      <p class="note" id="curve-note"></p>
-      <details class="curve-table">
-        <summary>Точки кривой таблицей</summary>
-        <div class="tablewrap"><table class="grid" id="tbl-curve"></table></div>
-      </details>
-    </section>
-
-    <section class="card" id="card-timeline">
-      <div class="card-head">
-        <h2>Успеете ли к сроку решения</h2>
-        <span class="muted" id="timeline-status"></span>
-      </div>
-      <div class="timeline" id="timeline" role="img" aria-label="Полоса времени: даты съёмки и доступности зон относительно срока решения"></div>
-      <div class="tablewrap"><table class="grid" id="tbl-timeline"></table></div>
-      <p class="note" id="timeline-note"></p>
-    </section>
-
-    <section class="card" id="card-assets">
-      <div class="card-head">
-        <h2>Объекты портфеля — ожидаемый ущерб</h2>
-        <span class="muted" id="assets-total"></span>
-        <div class="order-btns">
-          <button class="btn ghost" id="btn-order-print" type="button" title="Наряд на обследование: печатная страница для бригады">наряд · печать</button>
-          <button class="btn ghost" id="btn-order-csv" type="button" title="Наряд на обследование таблицей CSV">наряд · CSV</button>
-        </div>
-      </div>
-      <div class="tablewrap scroll-220">
-        <table class="grid" id="tbl-assets">
-          <thead>
-            <tr>
-              <th>ранг</th>
-              <th>объект</th>
-              <th class="r">p<br><span class="mark model">расчёт модели</span></th>
-              <th class="r">ущерб, ₽<br><span class="mark model">p × V × q</span></th>
-              <th class="r">неопр.<br><span class="mark model">расчёт модели</span></th>
-              <th>статус</th>
-              <th>покрыт</th>
-            </tr>
-          </thead>
+        <table class="grid" id="tbl-sensitivity">
+          <thead><tr><th>сценарий</th><th>стр.</th><th>что изменено</th>
+            <th class="r">стоимость, ₽ <span class="mark scenario">сценарная ставка</span></th>
+            <th class="r">покрытый ущерб, ₽</th><th>итог</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
-      <p class="note">
-        V и q — учебные значения из таблицы кейса, к реальному имуществу не относятся.
-        У статусов <b>partial</b> и <b>no_data</b> поля p, ущерба и ранга пустые (прочерк), а не нулевые:
-        ущерб там не равен нулю, он неизвестен.
-      </p>
+    </details>
+  </section>
+
+  <!-- Старая таблица объектов: её заполняет проверенный код и по ней работают
+       переходы «строка → объект на карте». На странице скрыта, данные те же. -->
+  <table class="hidden" id="tbl-assets"><tbody></tbody></table>
+  <span class="hidden" id="assets-total"></span>
+</section>
+
+<!-- ════════════════════════ ПЛАН СЪЁМКИ ════════════════════════ -->
+<section class="page" id="page-plan" data-page="plan">
+  <div class="page-head">
+    <h1>План дополнительной съёмки</h1>
+    <div class="page-actions">
+      <button class="btn ghost" id="btn-request" type="button" title="Заявка на съёмку по корзине выбранной стратегии">Заявка на съёмку</button>
+      <a class="btn dl" data-file="procurement_plan.csv" href="/api/files/procurement_plan.csv">procurement_plan.csv</a>
+    </div>
+  </div>
+
+  <section class="card budgetbar">
+    <div class="budgetbar-val">
+      <div class="muted small">Бюджет</div>
+      <div class="big-money"><span id="budget-num-plan">—</span> ₽</div>
+    </div>
+    <div class="budgetbar-track">
+      <div class="budget-slot" data-slot="plan"></div>
+      <div class="budget-marks" id="budget-marks"></div>
+    </div>
+  </section>
+
+  <div class="plan-grid">
+    <section class="card">
+      <div class="card-head"><h2>Зоны на чипе</h2></div>
+      <div class="mapslot" data-slot="plan"></div>
+      <div class="zlegend">
+        <span><i class="zl plan"></i>в плане</span>
+        <span><i class="zl cat"></i>каталог</span>
+        <span><i class="zl obj"></i>объект</span>
+      </div>
+      <p class="note">Зоны ≥ 1 км², без вырезов, цена по контуру · перекрытия не дублируют пользу.
+        Без новых снимков фактическое снижение неопределённости не заявляется.</p>
     </section>
 
+    <div class="stack">
+      <div class="stratcards" id="strat-cards"></div>
+      <section class="card">
+        <div class="card-head">
+          <h2>Каталог зон</h2>
+          <span class="muted small" id="catalog-note"></span>
+        </div>
+        <div class="tablewrap scroll-360"><table class="cattable" id="cat-table"></table></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="grid-2">
     <section class="card" id="card-zone">
       <div class="card-head"><h2>Зона съёмки</h2><span class="muted" id="zone-hint">выберите зону на карте</span></div>
       <div id="zone-body" class="zone-body"></div>
     </section>
 
-    <section class="card" id="card-sensitivity">
-      <div class="card-head">
-        <h2>Чувствительность</h2>
-        <span class="muted" id="sens-count"></span>
+    <section class="card" id="card-budget">
+      <div class="card-head"><h2>Зачем этот бюджет</h2>
+        <button class="btn ghost" id="btn-budget-reset" type="button">объявленный</button></div>
+      <p class="note" id="budget-purpose">
+        Это <b>не</b> стоимость ликвидации последствий. Это деньги на то, чтобы
+        <b>узнать точнее</b>: заказать съёмку высокого разрешения там, где снимка 10 м не
+        хватает, чтобы понять, залит объект или нет.
+      </p>
+      <div class="budget-context" id="budget-context"></div>
+      <div class="budget-jumps">
+        <button class="btn ghost" id="btn-budget-full" type="button">закрыть весь ущерб</button>
+        <button class="btn ghost" id="btn-budget-broad" type="button">заказать всё</button>
       </div>
-      <div class="tablewrap scroll-220">
-        <table class="grid" id="tbl-sensitivity">
-          <thead>
-            <tr>
-              <th>сценарий</th>
-              <th>стр.</th>
-              <th>что изменено</th>
-              <th class="r">стоимость, ₽<br><span class="mark scenario">сценарная ставка</span></th>
-              <th class="r">покрытый ущерб, ₽</th>
-              <th>итог</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <p class="note">Все строки — пересчёт входов при неизменной модели и неизменном пороге.</p>
     </section>
+  </div>
 
-    <section class="card" id="card-meta">
-      <div class="card-head"><h2>Паспорт запуска</h2></div>
-      <div id="meta-body" class="meta-body"></div>
-    </section>
+  <section class="card" id="card-curve">
+    <div class="card-head">
+      <h2>Бюджет → покрытый ущерб, стратегия C</h2>
+      <span class="muted" id="curve-status">строится…</span>
+    </div>
+    <div class="curve" id="curve" role="img" aria-label="Ступенчатая кривая: сколько ожидаемого ущерба покрывает стратегия C при каждом бюджете"></div>
+    <p class="note" id="curve-note"></p>
+    <details class="more">
+      <summary>Точки кривой таблицей</summary>
+      <div class="tablewrap"><table class="grid" id="tbl-curve"></table></div>
+    </details>
+  </section>
 
-  </aside>
+  <section class="card" id="card-timeline">
+    <div class="card-head">
+      <h2>Успеете ли к сроку решения</h2>
+      <span class="muted" id="timeline-status"></span>
+    </div>
+    <div class="timeline" id="timeline" role="img" aria-label="Полоса времени: даты съёмки и доступности зон относительно срока решения"></div>
+    <div class="tablewrap"><table class="grid" id="tbl-timeline"></table></div>
+    <p class="note" id="timeline-note"></p>
+  </section>
+
+  <section class="card" id="card-strategies">
+    <details class="more" open>
+      <summary><b>Сравнение A / B / C подробно</b></summary>
+      <div class="tablewrap"><table class="grid abc" id="tbl-strategies"></table></div>
+      <p class="note" id="strategy-note"></p>
+    </details>
+  </section>
+</section>
+
+<!-- ════════════════════════ МЕТОДЫ И КАЧЕСТВО ════════════════════════ -->
+<section class="page" id="page-methods" data-page="methods">
+  <div class="page-head">
+    <h1>Методы и качество</h1>
+    <div class="page-actions">
+      <a class="btn dl" href="/api/reports/metrics_compare.json" download="metrics_compare.json">metrics.json</a>
+    </div>
+  </div>
+  <div class="tabs" data-tabs="methods">
+    <a href="#/methods/quality" data-tab="quality">Качество карты</a>
+    <a href="#/methods/proba" data-tab="proba">Вероятности и неопределённость</a>
+    <a href="#/methods/data" data-tab="data">Данные и эксперименты</a>
+  </div>
+  <div class="tab" data-tab="quality" id="m-quality"></div>
+  <div class="tab" data-tab="proba" id="m-proba"></div>
+  <div class="tab" data-tab="data" id="m-data"></div>
+</section>
+
+<!-- ════════════════════════ ЦЕНЫ И ДОПУЩЕНИЯ ════════════════════════ -->
+<section class="page" id="page-prices" data-page="prices">
+  <div class="page-head">
+    <h1>Цены и допущения</h1>
+    <div class="page-actions">
+      <a class="btn dl" data-file="run_metadata.json" href="/api/files/run_metadata.json">run_metadata.json</a>
+    </div>
+  </div>
+  <div class="tabs" data-tabs="prices">
+    <a href="#/prices/cost" data-tab="cost">Стоимость и нормативы</a>
+    <a href="#/prices/about" data-tab="about">О прототипе</a>
+  </div>
+  <div class="tab" data-tab="cost" id="p-cost"></div>
+  <div class="tab" data-tab="about" id="p-about"></div>
+</section>
+
 </main>
 
 <footer class="footer">
-  <span class="mark model">расчёт модели</span> получено из вероятностного растра запуска
-  <span class="mark scenario">сценарное</span> опирается на сценарную ставку БРЕ или сценарные даты, подтверждением не является
-  <span class="mark case">условие кейса</span> задано постановкой (V, q, бюджет)
-  <span class="mark measured">измерено</span> проверено по фактическим новым наблюдениям
-  <span class="mark none">нет оценки</span> значение пустое, нулём не заменяется
+  <span class="mark model">расчёт модели</span>
+  <span class="mark scenario">сценарное</span>
+  <span class="mark case">условие кейса</span>
+  <span class="mark measured">измерено</span>
+  <span class="mark none">нет оценки</span>
+  <span class="foot-sep"></span>
+  <span class="muted">Учебный прототип · не официальная оценка ущерба ·
+    <a href="https://github.com/dimon0804/VODOPOL#readme" target="_blank" rel="noopener">README</a></span>
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=21"></script>
+<script src="pages.js?v=21"></script>
 </body>
 </html>
