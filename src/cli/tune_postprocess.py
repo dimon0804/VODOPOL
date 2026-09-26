@@ -58,9 +58,18 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=0)
     parser.add_argument("--out", type=Path, default=Path("reports/postprocess_sweep.csv"))
     parser.add_argument("--json", type=Path, default=Path("reports/postprocess_best.json"))
+    parser.add_argument(
+        "--apply",
+        choices=("none", "micro", "macro"),
+        default="none",
+        help="записать выбранные порог и размер области обратно в модель",
+    )
     args = parser.parse_args()
 
     model = MainModel.load(args.model)
+    # Кэшируем сырые вероятности: иначе модель применила бы постобработку сама и
+    # перебор мерил бы её дважды.
+    model.config.min_component_px = 0
     baseline = BaselineThreshold.load(args.baseline)
 
     print("инференс по validation…", flush=True)
@@ -75,7 +84,7 @@ def main() -> None:
     print(f"  всего {len(cached)} чипов", flush=True)
 
     thresholds = [round(x, 2) for x in np.arange(0.15, 0.81, 0.05)]
-    min_sizes = (1, 4, 9, 16, 30, 60, 120)
+    min_sizes = (1, 16, 60, 120, 300, 500, 800, 1500, 3000, 6000, 10000)
     rows: list[dict] = []
 
     for min_size in min_sizes:
@@ -139,6 +148,16 @@ def main() -> None:
         f"лучшее по макро-F1:    {best_macro['f1_macro']:.4f}  (порог {best_macro['threshold']:.2f}, "
         f"область {best_macro['min_component_px']} px, микро {best_macro['f1_micro']:.4f})"
     )
+
+    if args.apply != "none":
+        chosen = best if args.apply == "micro" else best_macro
+        model.threshold = float(chosen["threshold"])
+        model.config.min_component_px = int(chosen["min_component_px"])
+        model.save(args.model)
+        print(
+            f"\nзаписано в модель: порог {model.threshold:.2f}, минимальная область "
+            f"{model.config.min_component_px} px (выбор по {args.apply}-F1)"
+        )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     columns = list(rows[0])

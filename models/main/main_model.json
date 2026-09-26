@@ -12,6 +12,7 @@
     "calibration_pixels": 20000,
     "positive_share": 0.5,
     "event_balanced": true,
+    "min_component_px": 800,
     "seed": 42,
     "features": {
       "scales": [
@@ -26,6 +27,10 @@
       "per_chip_normalize": false
     },
     "target_name": "временное затопление"
+  },
+  "postprocess": {
+    "min_component_px": 800,
+    "applied_to": "вероятность, не маску — инвариант mask = (p >= threshold) сохранён"
   },
   "feature_names": [
     "vv",
@@ -55,7 +60,7 @@
     "vv_minus_chip_median",
     "vh_minus_chip_median"
   ],
-  "threshold": 0.25,
+  "threshold": 0.15,
   "trained_on": [
     "Ghana_83200",
     "India_273873",

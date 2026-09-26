@@ -4,7 +4,7 @@
   "event_id": "Bolivia",
   "source_chip_path": "data/cache/S1Hand/Bolivia_103757_S1Hand.tif",
   "s1_path": "data/cache/S1Hand/Bolivia_103757_S1Hand.tif",
-  "threshold": 0.25,
+  "threshold": 0.15,
   "budget_rub": 6000.0,
   "decision_deadline": "2018-02-16",
   "scenario_dates": {
@@ -170,10 +170,10 @@
     "seed": 2026,
     "n_points": 39,
     "n_skipped_without_label": 11,
-    "mae_rub": 881913.7206856305,
-    "rmse_rub": 1535918.2397655384,
-    "bias_rub": -346901.8940330268,
-    "sum_predicted_rub": 19670826.132711954,
+    "mae_rub": 883694.3832375348,
+    "rmse_rub": 1580678.7295192275,
+    "bias_rub": -385138.29711621674,
+    "sum_predicted_rub": 18179606.412467547,
     "sum_reference_rub": 33200000.0,
     "rule": "Первые чипы части test, по десять объектов на чип, размещение тем же правилом и зерном, что у демонстрационного портфеля. Точки без надёжной ручной метки исключены и посчитаны отдельно.",
     "why": "Эти чипы не участвовали ни в обучении, ни в калибровке, ни в выборе порога. Именно это число и следует считать оценкой качества перехода «вероятность → рубли»."
@@ -197,7 +197,7 @@
     -65.21912693153185,
     -14.212066446998126
   ],
-  "commit": "e72f2c7e0bedd3628cef3ad9c7e65f19b65c4b0b",
+  "commit": "dde24877670ce4466bf445050854d4ad8126053f",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",

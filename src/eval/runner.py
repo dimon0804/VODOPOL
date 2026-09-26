@@ -71,3 +71,38 @@ def collect_samples(
     root: Path = fetch.DEFAULT_ROOT,
 ) -> list[Sample]:
     return list(iter_samples(part, target, limit, split_dir, root))
+
+
+def iter_samples_decomposed(
+    part: str,
+    limit: int | None = None,
+    split_dir: Path | str = "splits",
+    root: Path = fetch.DEFAULT_ROOT,
+) -> Iterator[tuple[str, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
+    """Итератор для разложенной модели: вода и постоянная вода отдаются раздельно.
+
+    Одноголовая модель получает сразу готовую цель «временное затопление». Здесь
+    цели две, потому что и голов две: одна учится находить воду, вторая — отличать
+    среди неё постоянную.
+    """
+    ids = part_chip_ids(part, split_dir)
+    if limit:
+        ids = ids[:limit]
+    for chip_id in ids:
+        try:
+            chip = chips_mod.load_chip(chip_id, root)
+        except chips_mod.ChipError:
+            continue
+        if chip.jrc is None or chip.label is None:
+            continue
+        valid = chips_mod.valid_mask(chip)
+        if not valid.any():
+            continue
+        yield (
+            chip_id,
+            chip.vv,
+            chip.vh,
+            chips_mod.target_water(chip),
+            chips_mod.permanent_water(chip),
+            valid,
+        )

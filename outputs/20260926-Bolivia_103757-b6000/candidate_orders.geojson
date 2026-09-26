@@ -149,7 +149,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 682.3213031024084,
+        "priority_score": 619.3156683549628,
         "covered_asset_count": 0,
         "covered_asset_ids": [],
         "grid_row": 0,
@@ -201,7 +201,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 974.1352429222679,
+        "priority_score": 876.1029238161063,
         "covered_asset_count": 1,
         "covered_asset_ids": [
           "a04"
@@ -359,7 +359,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 1518.7651292418818,
+        "priority_score": 1517.5925463398676,
         "covered_asset_count": 0,
         "covered_asset_ids": [],
         "grid_row": 1,
@@ -411,7 +411,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 448.24820778101093,
+        "priority_score": 283.57676345437176,
         "covered_asset_count": 0,
         "covered_asset_ids": [],
         "grid_row": 1,
@@ -567,7 +567,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 1109.7058181802327,
+        "priority_score": 1062.4345547298485,
         "covered_asset_count": 2,
         "covered_asset_ids": [
           "a06",
@@ -622,7 +622,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 848.5700916693713,
+        "priority_score": 801.1049884305503,
         "covered_asset_count": 0,
         "covered_asset_ids": [],
         "grid_row": 2,
@@ -778,7 +778,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 553.1016744582003,
+        "priority_score": 458.1906453354305,
         "covered_asset_count": 1,
         "covered_asset_ids": [
           "a01"
@@ -832,7 +832,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 1655.1067236724048,
+        "priority_score": 1648.670601269856,
         "covered_asset_count": 3,
         "covered_asset_ids": [
           "a02",
@@ -940,7 +940,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 216.22141741526355,
+        "priority_score": 214.44763170492877,
         "covered_asset_count": 0,
         "covered_asset_ids": [],
         "grid_row": 4,
@@ -992,7 +992,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 1477.3579206496797,
+        "priority_score": 1475.233021210166,
         "covered_asset_count": 2,
         "covered_asset_ids": [
           "a03",
@@ -1047,7 +1047,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 1287.2571778779966,
+        "priority_score": 1244.1117016112548,
         "covered_asset_count": 1,
         "covered_asset_ids": [
           "a08"
@@ -1101,7 +1101,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 4166.4843079802085,
+        "priority_score": 3970.400789765685,
         "covered_asset_count": 6,
         "covered_asset_ids": [
           "a01",
@@ -1160,7 +1160,7 @@
         "base_rate_rub_km2": 788.64,
         "base_rate_status": "scenario",
         "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
-        "priority_score": 3623.469883047569,
+        "priority_score": 3296.5879019653084,
         "covered_asset_count": 1,
         "covered_asset_ids": [
           "a04"

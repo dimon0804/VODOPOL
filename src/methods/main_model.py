@@ -37,6 +37,36 @@ from src.methods.features import (
 )
 
 
+def drop_small_components_prob(
+    prob: np.ndarray, threshold: float, min_pixels: int
+) -> np.ndarray:
+    """Обнуляет вероятность в связных областях меньше заданного размера.
+
+    Вода — связное тело. Отдельные тёмные пятна размером в несколько пикселей это
+    почти всегда спекл, тень рельефа или сухая гладкая поверхность, а не затопление.
+
+    Принципиально, что чистится именно вероятность, а не маска: если бы мы убирали
+    пиксели из маски, нарушилось бы требование кейса «mask = 1 тогда и только тогда,
+    когда p не ниже порога». Обнулив вероятность, мы получаем тот же результат и
+    сохраняем равенство — маска, построенная по порогу, этих пикселей уже не содержит.
+    """
+    from scipy import ndimage
+
+    if min_pixels <= 1:
+        return prob
+    mask = prob >= threshold
+    labels, count = ndimage.label(mask)
+    if count == 0:
+        return prob
+    sizes = np.bincount(labels.ravel())
+    small = np.flatnonzero(sizes < min_pixels)
+    if small.size == 0:
+        return prob
+    cleaned = prob.copy()
+    cleaned[np.isin(labels, small) & mask] = 0.0
+    return cleaned
+
+
 def stable_hash(text: str) -> int:
     """Детерминированный хеш строки, не зависящий от PYTHONHASHSEED."""
     return int.from_bytes(hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest(), "big")
@@ -63,6 +93,11 @@ class MainModelConfig:
     #: половины обучающего материала, и модель настраивается на их условия съёмки.
     #: При выравнивании каждое событие получает одинаковый пиксельный бюджет.
     event_balanced: bool = True
+    #: Минимальный размер связной области воды в пикселях. Ноль отключает постобработку.
+    #: Применяется к ВЕРОЯТНОСТИ, а не к маске: у пикселей отброшенных областей
+    #: вероятность обнуляется, поэтому равенство «маска = 1 тогда и только тогда,
+    #: когда p не ниже порога» сохраняется само собой, а пакет остаётся валидным.
+    min_component_px: int = 0
     seed: int = 42
     features: FeatureConfig = field(default_factory=FeatureConfig)
     target_name: str = "временное затопление"
@@ -266,7 +301,13 @@ class MainModel:
         entropy = -(p * np.log2(p) + (1 - p) * np.log2(1 - p))
         uncertainty = np.clip(0.7 * entropy + 0.3 * (spread / 0.5), 0.0, 1.0).astype(np.float32)
 
-        return prob.reshape(height, width), uncertainty.reshape(height, width)
+        prob_map = prob.reshape(height, width)
+        unc_map = uncertainty.reshape(height, width)
+        if self.config.min_component_px > 1 and self.threshold is not None:
+            prob_map = drop_small_components_prob(
+                prob_map, float(self.threshold), self.config.min_component_px
+            )
+        return prob_map, unc_map
 
     def predict_mask(self, prob: np.ndarray, threshold: float | None = None) -> np.ndarray:
         """Бинарная маска строго по правилу mask = 1 ⟺ p >= threshold."""
@@ -286,6 +327,10 @@ class MainModel:
             )
         meta = {
             "config": self.config.to_json(),
+            "postprocess": {
+                "min_component_px": self.config.min_component_px,
+                "applied_to": "вероятность, не маску — инвариант mask = (p >= threshold) сохранён",
+            },
             "feature_names": self.feature_names,
             "threshold": self.threshold,
             "trained_on": self.trained_on,
