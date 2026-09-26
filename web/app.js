@@ -257,7 +257,18 @@
   }
 
   function initMap() {
-    S.map = L.map('map', { preferCanvas: true, zoomControl: true, minZoom: 3 });
+    // zoomSnap: 0 — дробный зум. С целым шагом Leaflet не может подогнать кадр под
+    // окно и оставляет его занимать чуть больше половины площади: чип 512×512 просто
+    // не попадает ни в один целый уровень. Оператор при этом видит снимок в полтора
+    // раза мельче, чем мог бы, и половина карты уходит под пустую подложку.
+    S.map = L.map('map', {
+      preferCanvas: true,
+      zoomControl: true,
+      minZoom: 3,
+      zoomSnap: 0,
+      zoomDelta: 0.5,
+      wheelPxPerZoomLevel: 120
+    });
     // Leaflet 1.9 вставляет в подпись собственный флаг. В панели оценки ущерба ему
     // делать нечего, а ссылка на библиотеку остаётся — лицензия требует именно её.
     S.map.attributionControl.setPrefix(
@@ -269,8 +280,13 @@
       attribution: '© OpenStreetMap · снимок Sentinel-1, Sen1Floods11'
     }).addTo(S.map);
 
+    fitChip();
+  }
+
+  /** Показывает кадр целиком, во всю доступную площадь карты. */
+  function fitChip() {
     var b = leafletBounds(S.summary && S.summary.bounds);
-    if (b) S.map.fitBounds(b, { padding: [8, 8] });
+    if (b) S.map.fitBounds(b, { padding: [6, 6], animate: false });
     else S.map.setView([0, 0], 3);
   }
 
@@ -1925,7 +1941,13 @@
   var resizeTimer = null;
   window.addEventListener('resize', function () {
     if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (S.curve) drawCurve(); renderTimeline(); }, 150);
+    resizeTimer = setTimeout(function () {
+      if (S.curve) drawCurve();
+      renderTimeline();
+      // Карта пересобирает размеры сама, но подогнать кадр под новую площадь
+      // она не догадается — иначе после разворота окна снимок остаётся мелким.
+      if (S.map) { S.map.invalidateSize(); fitChip(); }
+    }, 150);
   });
 
   document.addEventListener('DOMContentLoaded', boot);
