@@ -616,3 +616,139 @@ table.grid .empty { color: var(--none); }
   .runpick-label { display: none; }
   #run-select { max-width: 180px; }
 }
+
+
+/* ── сборка комплекта ───────────────────────────────────────────────────── */
+/* Диалог, а не отдельная страница: сборка это побочное действие над тем, что
+   уже открыто, и уводить оператора со сводки ради неё незачем. */
+/* Кнопки-приписки к другому элементу: «+ чип» рядом со списком и крестик в
+   шапке диалога. Акцентная заливка здесь мешает — она перетягивает внимание с
+   того, что рядом, поэтому берут контур. */
+.btn-icon {
+  padding: 4px 10px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line);
+}
+
+.btn-icon:hover {
+  color: var(--text);
+  border-color: var(--muted-2);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  filter: none;
+}
+
+.dialog {
+  width: min(680px, calc(100vw - 32px));
+  padding: 0;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.dialog::backdrop {
+  background: rgba(8, 11, 15, 0.66);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.dialog-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.buildgrid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.buildgrid label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.buildgrid input,
+.buildgrid select {
+  width: 100%;
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.buildchip {
+  display: block;
+  min-width: 0;
+}
+
+.buildhint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted-2);
+  min-height: 15px;
+}
+
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.buildstate {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.buildstate.bad { color: var(--bad); }
+.buildstate.ok { color: var(--ok); }
+
+/* Протокол прогона: тот же текст, что вывела бы команда в терминале. Высота
+   ограничена, прокрутка своя — иначе окно растёт на весь экран к концу сборки. */
+.buildlog {
+  max-height: 240px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}

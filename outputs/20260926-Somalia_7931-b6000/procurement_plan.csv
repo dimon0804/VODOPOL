@@ -1,0 +1,23 @@
+strategy,candidate_id,area_km2,base_rate_rub_km2,base_rate_status,processing_level,usage_type,guaranteed_purchase,processing_coef,usage_coef,freshness_coef,discount_coef,discount_group_id,group_area_km2,unit_price_rub_km2,cost_rub,formula,legal_edition
+B,cand_r00_c00,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r00_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r00_c02,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r00_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r01_c00,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r01_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r01_c02,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r01_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r02_c00,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r02_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r02_c02,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r02_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r03_c00,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r03_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r03_c02,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r03_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r04_c00,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r04_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r04_c02,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+B,cand_r04_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,28.800,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+C,cand_r03_c03,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,2.880,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025
+C,cand_r00_c01,1.440,788.64,scenario,L2,internal,true,1.2,1,1.8,1.000000000,sar_r3_2026,2.880,1703.46,2452.98,RP = B * K * O * P * T * R,ПП РФ № 840 в ред. от 27.08.2025

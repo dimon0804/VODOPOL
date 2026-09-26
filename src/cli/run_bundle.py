@@ -55,15 +55,24 @@ def priority_raster(prob: np.ndarray, uncertainty: np.ndarray) -> np.ndarray:
     return (np.clip(prob, 0, 1) * np.clip(uncertainty, 0, 1)).astype(np.float32)
 
 
+#: Имена событий в идентификаторах чипов и в метаданных набора совпадают не везде.
+#: Событие, которое чипы называют Mekong, метаданные называют по стране — Cambodia.
+#: Без этой строки дата съёмки у тридцати чипов просто не находилась, и панель
+#: показывала прочерк там, где постановка требует дату.
+EVENT_ALIASES: dict[str, str] = {"mekong": "cambodia"}
+
+
 def event_date(event: str) -> date | None:
     """Дата съёмки события из Sen1Floods11_Metadata.geojson официального набора."""
     path = fetch.DEFAULT_ROOT / "Sen1Floods11_Metadata.geojson"
     if not path.exists():
         return None
+    wanted = event.lower()
+    wanted = EVENT_ALIASES.get(wanted, wanted)
     payload = json.loads(path.read_text(encoding="utf-8"))
     for feature in payload.get("features", []):
         props = feature.get("properties", {})
-        if str(props.get("location", "")).lower() == event.lower():
+        if str(props.get("location", "")).lower() == wanted:
             raw = str(props.get("s1_date", ""))
             try:
                 return date(*(int(part) for part in raw.split("/")))

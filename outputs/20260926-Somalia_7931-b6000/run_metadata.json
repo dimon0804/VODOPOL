@@ -1,0 +1,210 @@
+{
+  "run_id": "20260926-Somalia_7931-b6000",
+  "chip_id": "Somalia_7931",
+  "event_id": "Somalia",
+  "source_chip_path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
+  "s1_path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
+  "threshold": 0.15,
+  "budget_rub": 6000.0,
+  "decision_deadline": "2018-05-08",
+  "scenario_dates": {
+    "event_date": "2018-05-07",
+    "decision_deadline": "2018-05-08",
+    "new_observation_at": "2018-05-08",
+    "new_available_at": "2018-05-08",
+    "archive_observation_at": "2017-11-08",
+    "archive_available_at": "2018-05-08"
+  },
+  "dates_status": "сценарные: привязаны к дате съёмки события из Sen1Floods11_Metadata.geojson, подтверждением поставщика не являются",
+  "target_class": "временное затопление",
+  "permanent_water_source": "JRCWaterHand из официального набора, только на стороне разметки",
+  "inference_inputs": "только Sentinel-1 VV/VH, дополнительные слои не требуются",
+  "seed": 2026,
+  "placement_rule": "Равномерная выборка пикселя по всей сетке чипа генератором numpy PCG64 с фиксированным зерном. Пиксель принимается, если оба канала S1 в нём конечны (валидная область исходного снимка) и он ещё не занят другим объектом; иначе выборка повторяется. Ручные метки, вероятностный растр и карта ущерба при размещении не используются. Объекты назначаются типам в порядке таблицы кейса.",
+  "probability_rule": "p_flood берётся из flood_probability.tif в пикселе, содержащем координату объекта, без сглаживания и независимо от бинарной маски.",
+  "loss_model": "EL = p_flood × V × q, p из flood_probability.tif независимо от маски",
+  "chip_split_part": "test",
+  "split": {
+    "dataset": "Sen1Floods11 v1.1",
+    "seed": 2026,
+    "rule": "leave-event-out: части не имеют общих событий; Bolivia целиком отложена под проверку переноса и не участвует ни в обучении, ни в подборе порога, ни в финальной оценке",
+    "parts": [
+      "train",
+      "validation",
+      "test",
+      "holdout"
+    ],
+    "events": {
+      "train": [
+        "Ghana",
+        "India",
+        "Paraguay",
+        "USA"
+      ],
+      "validation": [
+        "Nigeria",
+        "Spain",
+        "Sri-Lanka"
+      ],
+      "test": [
+        "Mekong",
+        "Pakistan",
+        "Somalia"
+      ],
+      "holdout": [
+        "Bolivia"
+      ]
+    },
+    "counts": {
+      "train": 257,
+      "validation": 90,
+      "test": 84,
+      "holdout": 15
+    },
+    "total_chips": 446,
+    "files": {
+      "train": "train.csv",
+      "validation": "validation.csv",
+      "test": "test.csv",
+      "holdout": "holdout.csv"
+    }
+  },
+  "methods": {
+    "baseline": {
+      "kind": "пороговый по Sentinel-1",
+      "channel": "VV",
+      "threshold_db": -14.850000000001714,
+      "despeckle_size": 5,
+      "selection": "grid по validation, метрика F1"
+    },
+    "main": {
+      "kind": "ансамбль LightGBM по признакам S1 с пространственным контекстом",
+      "features": [
+        "vv",
+        "vh",
+        "vv_minus_vh",
+        "vv_plus_vh",
+        "vv_mean_3",
+        "vv_std_3",
+        "vh_mean_3",
+        "vh_std_3",
+        "vv_minus_mean_3",
+        "vv_mean_9",
+        "vv_std_9",
+        "vh_mean_9",
+        "vh_std_9",
+        "vv_minus_mean_9",
+        "vv_mean_25",
+        "vv_std_25",
+        "vh_mean_25",
+        "vh_std_25",
+        "vv_minus_mean_25",
+        "vv_mean_51",
+        "vv_std_51",
+        "vh_mean_51",
+        "vh_std_51",
+        "vv_minus_mean_51",
+        "vv_minus_chip_median",
+        "vh_minus_chip_median"
+      ],
+      "ensemble_size": 3,
+      "calibration": "изотоническая, на validation",
+      "trained_on_chips": 251,
+      "trained_on_note": "Число обученных чипов может быть меньше числа чипов в train: чипы, где после отбора валидных пикселей не осталось ни одного пригодного образца, в обучение не попадают. Это не потеря данных, а отсев пустых кадров.",
+      "threshold_selected_on": "validation"
+    }
+  },
+  "uncertainty": {
+    "definition": "0,7 × нормированная энтропия вероятности + 0,3 × разброс ансамбля",
+    "units": "безразмерная величина от 0 до 1",
+    "checked": "AUC связи с ошибками, см. reports/metrics_main_validation.json"
+  },
+  "pricing": {
+    "formula": "RP = B * K * O * P * T * R",
+    "legal_edition": "ПП РФ № 840 в ред. от 27.08.2025",
+    "legal_check_date": "2026-09-26",
+    "base_rate_rub_km2": 788.64,
+    "base_rate_status": "scenario",
+    "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+    "rounding": "площадь 0,001 км², скидка 9 знаков, деньги до копеек, ROUND_HALF_UP",
+    "discount_grouping": "тип данных + разрешение + календарный год"
+  },
+  "zones": {
+    "rule": "сетка ячеек 1.2 км по приоритету «вероятность × неопределённость»",
+    "min_area_km2": 1.0,
+    "availability": "даты сценарные, привязаны к дате события; см. scenario_dates",
+    "broad_rule_B": "все зоны каталога, относящиеся к наблюдению события: широкое покрытие территории чипа без отбора по ожидаемому ущербу"
+  },
+  "total_expected_loss_rub": 197628.00245080143,
+  "unassessed_exposure": {
+    "asset_ids": [],
+    "count": 0,
+    "value_rub": 0.0,
+    "note": "Объекты без надёжной оценки: ущерб не равен нулю, он неизвестен."
+  },
+  "proxy_check": {
+    "n_points": 8,
+    "n_skipped_without_label": 2,
+    "skipped_asset_ids": [
+      "a02",
+      "a09"
+    ],
+    "status": "checked",
+    "mae_rub": 22715.670501929708,
+    "rmse_rub": 41067.55160808441,
+    "bias_rub": 22715.670501929708,
+    "sum_predicted_rub": 181725.36401543766,
+    "sum_reference_rub": 0.0,
+    "rule": "Контрольные точки — те же десять объектов, размещённые случайно до расчёта."
+  },
+  "proxy_check_note": "Демонстрационный чип может входить в обучающую часть — он выбирается по наглядности. Поэтому рядом лежит проверка на независимом чипе из части test; именно её и следует считать оценкой качества перехода «вероятность → рубли».",
+  "proxy_check_independent": {
+    "status": "checked",
+    "split_part": "test",
+    "chips": [
+      "Pakistan_1036366",
+      "Somalia_7931",
+      "Somalia_685158",
+      "Pakistan_70625",
+      "Mekong_1443339"
+    ],
+    "seed": 2026,
+    "n_points": 39,
+    "n_skipped_without_label": 11,
+    "mae_rub": 883694.3832375348,
+    "rmse_rub": 1580678.7295192275,
+    "bias_rub": -385138.29711621674,
+    "sum_predicted_rub": 18179606.412467547,
+    "sum_reference_rub": 33200000.0,
+    "rule": "Первые чипы части test, по десять объектов на чип, размещение тем же правилом и зерном, что у демонстрационного портфеля. Точки без надёжной ручной метки исключены и посчитаны отдельно.",
+    "why": "Эти чипы не участвовали ни в обучении, ни в калибровке, ни в выборе порога. Именно это число и следует считать оценкой качества перехода «вероятность → рубли»."
+  },
+  "rank_sensitivity": {
+    "file": "sensitivity_ranks.csv",
+    "notes": [
+      "p_uncertain_x0.7 — сменили позицию: a02, a03, a04, a05, a08",
+      "p_uncertain_x1.3 — сменили позицию: a04, a09",
+      "V_clinic_x0.5 — сменили позицию: a02, a06, a08",
+      "V_telecom_node_x3.0 — сменили позицию: a01, a02, a08, a09",
+      "V_substation_x0.6 — приоритеты не изменились",
+      "q_workshop_x0.4 — сменили позицию: a01, a02, a08",
+      "q_school_x2.0 — приоритеты не изменились",
+      "no_data_top1 — сменили позицию: a01, a02, a03, a04, a05, a06, a08, a09, a10; ушли из ранжирования: a07"
+    ]
+  },
+  "bounds": [
+    45.30383640871571,
+    3.7254931463004795,
+    45.34983015126263,
+    3.771486888847399
+  ],
+  "commit": "",
+  "generated_at": "2026-09-26",
+  "reproduce": [
+    "python -m src.cli.fetch_data",
+    "python -m src.cli.make_splits",
+    "python -m src.cli.train_baseline",
+    "python -m src.cli.train_main",
+    "python -m src.cli.run_bundle --chip Somalia_7931 --budget 6000"
+  ]
+}

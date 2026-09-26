@@ -19,12 +19,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Callable
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from src.api import config
+from src.api import builder, config
 from src.runtime import RunContext
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ def create_app(state: RunState | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=["*"],
         allow_credentials=False,
-        allow_methods=["GET", "OPTIONS"],
+        allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
         expose_headers=["X-Bounds", "X-Run-Id", "Content-Disposition"],
     )
@@ -311,6 +311,59 @@ def create_app(state: RunState | None = None) -> FastAPI:
                 }
             )
         return json_ok({"current": current, "runs": items})
+
+    # ── сборка нового комплекта ──────────────────────────────────────────────
+
+    @app.get("/api/chips", summary="Чипы, доступные для сборки")
+    def chips() -> JSONResponse:
+        """Каталог выкачанных чипов плюс ответ на вопрос, можно ли здесь собирать.
+
+        Признак `writable` панель спрашивает заранее: если каталог outputs
+        смонтирован только на чтение, кнопку сборки честнее погасить сразу, чем
+        уронить прогон на середине непонятной ошибкой прав.
+        """
+        writable, reason = builder.writable_outputs()
+        active = builder.MANAGER.active()
+        return json_ok(
+            {
+                "writable": writable,
+                "reason": reason,
+                "busy": active.payload() if active is not None else None,
+                "chips": builder.available_chips(),
+            }
+        )
+
+    @app.post("/api/build", summary="Собрать комплект по чипу")
+    def build(payload: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
+        """Запускает ту же команду run_bundle, что человек набрал бы в терминале.
+
+        Ответ возвращается сразу, не дожидаясь конца прогона: считает он минуту с
+        лишним, и держать соединение всё это время незачем. Панель опрашивает
+        /api/build/{job_id} и показывает протокол по мере появления строк.
+        """
+        writable, reason = builder.writable_outputs()
+        if not writable:
+            raise HTTPException(status_code=409, detail=reason)
+        try:
+            job = builder.MANAGER.start(
+                str(payload.get("chip_id", "")),
+                payload.get("budget_rub", payload.get("budget")),
+            )
+        except ValueError as exc:  # неверный чип или бюджет — вина запроса
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except RuntimeError as exc:  # занято другой сборкой
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return json_ok(job.payload())
+
+    @app.get("/api/build/{job_id}", summary="Ход сборки")
+    def build_status(job_id: str) -> JSONResponse:
+        job = builder.MANAGER.get(job_id)
+        if job is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Сборка {job_id!r} не найдена: сервис мог быть перезапущен.",
+            )
+        return json_ok(job.payload())
 
     # ── данные ───────────────────────────────────────────────────────────────
 

@@ -283,3 +283,41 @@ def test_выбранный_комплект_подменяет_все_отве�
     archive = client.get("/api/bundle.zip", params={"run": run_id})
     assert archive.status_code == 200
     assert run_id in archive.headers["x-run-id"]
+
+
+# ── каталог чипов и сборка ───────────────────────────────────────────────────
+
+
+def test_chips_перечисляет_выкачанные_чипы(client: TestClient) -> None:
+    payload = client.get("/api/chips").json()
+    assert payload["chips"], "каталог чипов пуст"
+    assert isinstance(payload["writable"], bool)
+    for item in payload["chips"][:5]:
+        assert item["chip_id"]
+        assert item["event_id"]
+
+
+def test_собранные_чипы_помечены_в_каталоге(client: TestClient) -> None:
+    """Оператор должен видеть, что комплект по чипу уже есть, до запуска сборки."""
+    chips = client.get("/api/chips").json()["chips"]
+    built = [item for item in chips if item["run_id"]]
+    assert built, "ни один собранный комплект не отмечен в каталоге"
+
+
+def test_сборка_чужого_чипа_отвергается(client: TestClient) -> None:
+    for bad in ("../../etc", "Nowhere_1", "; rm -rf /", ""):
+        response = client.post("/api/build", json={"chip_id": bad, "budget_rub": 1000})
+        assert response.status_code == 422, bad
+
+
+def test_сборка_с_негодным_бюджетом_отвергается(client: TestClient) -> None:
+    chips = client.get("/api/chips").json()["chips"]
+    chip_id = chips[0]["chip_id"]
+    for bad in (-1, 10**12):
+        response = client.post("/api/build", json={"chip_id": chip_id, "budget_rub": bad})
+        assert response.status_code == 422, bad
+
+
+def test_ход_несуществующей_сборки_это_404(client: TestClient) -> None:
+    response = client.get("/api/build/нет-такой")
+    assert response.status_code == 404

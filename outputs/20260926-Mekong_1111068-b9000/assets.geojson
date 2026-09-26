@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.83982118531146,
+          12.011149085141092
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.86102142601668,
+          12.049147821659348
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.85311625151643,
+          12.033517135715668
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.84862467509583,
+          12.046722370392224
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.84790602286854,
+          12.02076105868117
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.8679384537044,
+          12.012137231953623
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.87323851388071,
+          12.0179762813004
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.83973135378305,
+          12.017167797544692
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.86165024671557,
+          12.010879590555856
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          105.84530090854459,
+          12.045824055108106
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Mekong_1111068",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}

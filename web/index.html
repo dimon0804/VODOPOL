@@ -10,7 +10,7 @@
   <!-- Leaflet лежит рядом, а не на unpkg: на защите интернета может не быть,
        а панель без карты это не панель. Версия 1.9.4, файлы в web/vendor/leaflet. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 
@@ -33,12 +33,55 @@
         <option value="">загрузка…</option>
       </select>
     </label>
+    <button type="button" class="btn btn-icon" id="btn-build-open"
+            title="Собрать комплект по другому чипу">+ чип</button>
     <span class="pill" id="health-pill">соединение…</span>
     <a class="btn" id="bundle-link" href="/api/bundle.zip">Выгрузить комплект</a>
   </div>
 </header>
 
 <div class="banner hidden" id="banner"></div>
+
+<!-- Сборка комплекта. Делает ровно то же, что python -m src.cli.run_bundle в
+     терминале: панель показывает протокол этой команды строка в строку. -->
+<dialog id="build-dialog" class="dialog">
+  <form method="dialog" class="dialog-head">
+    <h2>Собрать комплект</h2>
+    <button class="btn btn-icon" value="cancel" title="Закрыть">×</button>
+  </form>
+
+  <div class="dialog-body">
+    <p class="dialog-note" id="build-note">
+      Выберите чип Sentinel-1 и объявленный бюджет. Сервис выполнит тот же прогон,
+      что и команда <code>run_bundle</code>: вероятность и маска, десять объектов с
+      ущербом, зоны, цены по ПП РФ № 840, сравнение A/B/C и проверка комплекта.
+      Модель при этом не переобучается — она только применяется.
+    </p>
+
+    <div class="buildgrid">
+      <label for="build-event">событие</label>
+      <select id="build-event"><option value="">все</option></select>
+
+      <label for="build-chip">чип</label>
+      <span class="buildchip">
+        <input id="build-chip" list="build-chip-list" autocomplete="off"
+               placeholder="например India_900498" spellcheck="false">
+        <datalist id="build-chip-list"></datalist>
+        <span class="buildhint" id="build-chip-hint"></span>
+      </span>
+
+      <label for="build-budget">бюджет, ₽</label>
+      <input id="build-budget" type="number" min="0" step="500" value="6000">
+    </div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn" id="btn-build-start">Собрать</button>
+      <span class="buildstate" id="build-state"></span>
+    </div>
+
+    <pre class="buildlog hidden" id="build-log"></pre>
+  </div>
+</dialog>
 
 <main class="layout">
 
@@ -212,6 +255,6 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

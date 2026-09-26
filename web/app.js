@@ -1513,10 +1513,162 @@
     });
   }
 
+  // ── сборка комплекта ─────────────────────────────────────────────────────
+
+  var BUILD = { chips: [], writable: false, timer: null, jobId: '' };
+
+  function buildState(text, kind) {
+    var node = $('build-state');
+    if (!node) return;
+    node.className = 'buildstate' + (kind ? ' ' + kind : '');
+    node.textContent = text || '';
+  }
+
+  /** Список чипов в выпадающий список окна, с учётом выбранного события. */
+  function fillChipList() {
+    var event = $('build-event').value;
+    var list = $('build-chip-list');
+    var items = BUILD.chips.filter(function (c) { return !event || c.event_id === event; });
+    list.innerHTML = items.map(function (c) {
+      var note = c.part || '';
+      if (c.run_id) note += (note ? ', ' : '') + 'комплект уже собран';
+      return '<option value="' + esc(c.chip_id) + '"' +
+        (note ? ' label="' + esc(note) + '"' : '') + '></option>';
+    }).join('');
+    $('build-chip-hint').textContent = 'доступно чипов: ' + items.length;
+  }
+
+  /** Подсказка под полем: роль события и то, что комплект уже есть. */
+  function describeChip() {
+    var value = ($('build-chip').value || '').trim();
+    var hint = $('build-chip-hint');
+    if (!value) { fillChipList(); return; }
+    var found = null;
+    for (var i = 0; i < BUILD.chips.length; i++) {
+      if (BUILD.chips[i].chip_id === value) { found = BUILD.chips[i]; break; }
+    }
+    if (!found) {
+      hint.textContent = 'такого чипа нет среди выкачанных';
+      return;
+    }
+    var parts = [found.event_id];
+    if (found.part) parts.push(found.part);
+    if (found.run_id) parts.push('комплект уже собран, сборка перезапишет его свежим');
+    hint.textContent = parts.join(' · ');
+  }
+
+  function loadChips() {
+    return getJSON('/api/chips').then(function (data) {
+      BUILD.chips = (data && data.chips) || [];
+      BUILD.writable = !!(data && data.writable);
+      var events = [];
+      BUILD.chips.forEach(function (c) {
+        if (events.indexOf(c.event_id) < 0) events.push(c.event_id);
+      });
+      events.sort();
+      $('build-event').innerHTML = '<option value="">все события</option>' +
+        events.map(function (e) { return '<option value="' + esc(e) + '">' + esc(e) + '</option>'; }).join('');
+      fillChipList();
+
+      if (!BUILD.writable) {
+        // Честно гасим кнопку вместо падения на середине прогона: каталог
+        // комплектов смонтирован только на чтение, писать результат некуда.
+        $('btn-build-start').disabled = true;
+        buildState(data.reason || 'сборка здесь недоступна', 'bad');
+      }
+      if (data && data.busy && data.busy.status === 'running') {
+        watchBuild(data.busy.job_id);
+      }
+    });
+  }
+
+  function appendLog(lines) {
+    var log = $('build-log');
+    log.classList.remove('hidden');
+    log.textContent = (lines || []).join('\n');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  /** Опрос хода сборки. Секунда — прогон идёт минуту, чаще спрашивать незачем. */
+  function watchBuild(jobId) {
+    BUILD.jobId = jobId;
+    $('btn-build-start').disabled = true;
+    buildState('идёт сборка…');
+    if (BUILD.timer) clearInterval(BUILD.timer);
+    BUILD.timer = setInterval(function () {
+      getJSON('/api/build/' + encodeURIComponent(jobId)).then(function (job) {
+        appendLog(job.lines);
+        if (job.status === 'running') {
+          buildState('идёт сборка, ' + Math.round(job.elapsed_sec) + ' с');
+          return;
+        }
+        clearInterval(BUILD.timer);
+        BUILD.timer = null;
+        $('btn-build-start').disabled = !BUILD.writable;
+        if (job.status === 'done') {
+          buildState('готово за ' + Math.round(job.elapsed_sec) + ' с, открываю…', 'ok');
+          window.location.search = '?run=' + encodeURIComponent(job.run_id);
+        } else {
+          buildState(job.error || 'сборка не удалась', 'bad');
+        }
+      }).catch(function (err) {
+        clearInterval(BUILD.timer);
+        BUILD.timer = null;
+        $('btn-build-start').disabled = !BUILD.writable;
+        buildState('связь со сборкой потеряна: ' + err.message, 'bad');
+      });
+    }, 1000);
+  }
+
+  function startBuild() {
+    var chip = ($('build-chip').value || '').trim();
+    var budget = Number($('build-budget').value);
+    if (!chip) { buildState('выберите чип', 'bad'); return; }
+    if (!isFinite(budget) || budget < 0) { buildState('бюджет должен быть числом от нуля', 'bad'); return; }
+    $('btn-build-start').disabled = true;
+    buildState('запускаю…');
+    $('build-log').textContent = '';
+    fetch(withRun('/api/build'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ chip_id: chip, budget_rub: budget })
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (body) {
+        if (!r.ok) throw new Error(body.error || body.detail || ('HTTP ' + r.status));
+        return body;
+      });
+    }).then(function (job) {
+      watchBuild(job.job_id);
+    }).catch(function (err) {
+      $('btn-build-start').disabled = !BUILD.writable;
+      buildState(err.message, 'bad');
+    });
+  }
+
+  function wireBuild() {
+    var open = $('btn-build-open');
+    var dialog = $('build-dialog');
+    if (!open || !dialog) return;
+    open.addEventListener('click', function () {
+      buildState('');
+      if (typeof dialog.showModal === 'function') dialog.showModal();
+      else dialog.setAttribute('open', 'open');
+      if (!BUILD.chips.length) {
+        loadChips().catch(function (err) {
+          buildState('каталог чипов недоступен: ' + err.message, 'bad');
+        });
+      }
+    });
+    $('build-event').addEventListener('change', fillChipList);
+    $('build-chip').addEventListener('input', describeChip);
+    $('btn-build-start').addEventListener('click', startBuild);
+  }
+
   // ── старт ────────────────────────────────────────────────────────────────
 
   function boot() {
     wire();
+    wireBuild();
     renderRunPicker();
     Promise.all([
       getJSON('/api/health'),

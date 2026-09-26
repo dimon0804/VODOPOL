@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.3120559935654,
+          3.732275426695582
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Somalia_7931",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.33325623427063,
+          3.7702741632138377
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Somalia_7931",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.32535105977038,
+          3.7546434772701582
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Somalia_7931",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.32085948334978,
+          3.7678487119467152
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Somalia_7931",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.32014083112248,
+          3.741887400235661
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Somalia_7931",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.34017326195835,
+          3.7332635735081134
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Somalia_7931",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.34547332213465,
+          3.7391026228548903
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Somalia_7931",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.311966162036995,
+          3.7382941390991826
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Somalia_7931",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.33388505496951,
+          3.7320059321103463
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Somalia_7931",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.31753571679853,
+          3.7669503966625957
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Somalia_7931",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}

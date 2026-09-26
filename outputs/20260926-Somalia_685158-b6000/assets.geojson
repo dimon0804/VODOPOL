@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.49603096375308,
+          3.2263442586794673
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Somalia_685158",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.517231204458305,
+          3.264342995197723
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Somalia_685158",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.50932602995805,
+          3.2487123092540435
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Somalia_685158",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.504834453537455,
+          3.2619175439306005
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Somalia_685158",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.50411580131016,
+          3.235956232219546
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Somalia_685158",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.524148232146025,
+          3.2273324054919987
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Somalia_685158",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.52944829232233,
+          3.2331714548387755
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Somalia_685158",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.49594113222467,
+          3.232362971083068
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Somalia_685158",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.517860025157184,
+          3.2260747640942316
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Somalia_685158",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45.50151068698621,
+          3.261019228646481
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Somalia_685158",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}

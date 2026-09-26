@@ -1,0 +1,1173 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.83160160046175,
+              12.040748013412202
+            ],
+            [
+              105.84403860183521,
+              12.040748013412202
+            ],
+            [
+              105.84403860183521,
+              12.050360535854905
+            ],
+            [
+              105.83160160046175,
+              12.050360535854905
+            ],
+            [
+              105.83160160046175,
+              12.040748013412202
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r00_c00",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 10.114363427680267,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 0,
+        "grid_col": 0,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.84403860183521,
+              12.040748013412202
+            ],
+            [
+              105.85647560320866,
+              12.040748013412202
+            ],
+            [
+              105.85647560320866,
+              12.050360535854905
+            ],
+            [
+              105.84403860183521,
+              12.050360535854905
+            ],
+            [
+              105.84403860183521,
+              12.040748013412202
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r00_c01",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 415.1232534888705,
+        "covered_asset_count": 2,
+        "covered_asset_ids": [
+          "a04",
+          "a10"
+        ],
+        "grid_row": 0,
+        "grid_col": 1,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.040748013412202
+            ],
+            [
+              105.86891260458212,
+              12.040748013412202
+            ],
+            [
+              105.86891260458212,
+              12.050360535854905
+            ],
+            [
+              105.85647560320866,
+              12.050360535854905
+            ],
+            [
+              105.85647560320866,
+              12.040748013412202
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r00_c02",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1510.1924161013158,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a02"
+        ],
+        "grid_row": 0,
+        "grid_col": 2,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.86891260458212,
+              12.040748013412202
+            ],
+            [
+              105.88134960595558,
+              12.040748013412202
+            ],
+            [
+              105.88134960595558,
+              12.050360535854905
+            ],
+            [
+              105.86891260458212,
+              12.050360535854905
+            ],
+            [
+              105.86891260458212,
+              12.040748013412202
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r00_c03",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 264.3251290553537,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 0,
+        "grid_col": 3,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.83160160046175,
+              12.031135826132685
+            ],
+            [
+              105.84403860183521,
+              12.031135826132685
+            ],
+            [
+              105.84403860183521,
+              12.040748013412202
+            ],
+            [
+              105.83160160046175,
+              12.040748013412202
+            ],
+            [
+              105.83160160046175,
+              12.031135826132685
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r01_c00",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 427.36442823657046,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 1,
+        "grid_col": 0,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.84403860183521,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.040748013412202
+            ],
+            [
+              105.84403860183521,
+              12.040748013412202
+            ],
+            [
+              105.84403860183521,
+              12.031135826132685
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r01_c01",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1790.7196498823214,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a03"
+        ],
+        "grid_row": 1,
+        "grid_col": 1,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.86891260458212,
+              12.031135826132685
+            ],
+            [
+              105.86891260458212,
+              12.040748013412202
+            ],
+            [
+              105.85647560320866,
+              12.040748013412202
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r01_c02",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 3415.4426951627247,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 1,
+        "grid_col": 2,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.86891260458212,
+              12.031135826132685
+            ],
+            [
+              105.88134960595558,
+              12.031135826132685
+            ],
+            [
+              105.88134960595558,
+              12.040748013412202
+            ],
+            [
+              105.86891260458212,
+              12.040748013412202
+            ],
+            [
+              105.86891260458212,
+              12.031135826132685
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r01_c03",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1343.1683449566845,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 1,
+        "grid_col": 3,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.83160160046175,
+              12.021523973716784
+            ],
+            [
+              105.84403860183521,
+              12.021523973716784
+            ],
+            [
+              105.84403860183521,
+              12.031135826132685
+            ],
+            [
+              105.83160160046175,
+              12.031135826132685
+            ],
+            [
+              105.83160160046175,
+              12.021523973716784
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r02_c00",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 962.5787768352734,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 2,
+        "grid_col": 0,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.84403860183521,
+              12.021523973716784
+            ],
+            [
+              105.85647560320866,
+              12.021523973716784
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.84403860183521,
+              12.031135826132685
+            ],
+            [
+              105.84403860183521,
+              12.021523973716784
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r02_c01",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1658.2881611303878,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 2,
+        "grid_col": 1,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.021523973716784
+            ],
+            [
+              105.86891260458212,
+              12.021523973716784
+            ],
+            [
+              105.86891260458212,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.021523973716784
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r02_c02",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 2593.6216146430233,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 2,
+        "grid_col": 2,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.86891260458212,
+              12.021523973716784
+            ],
+            [
+              105.88134960595558,
+              12.021523973716784
+            ],
+            [
+              105.88134960595558,
+              12.031135826132685
+            ],
+            [
+              105.86891260458212,
+              12.031135826132685
+            ],
+            [
+              105.86891260458212,
+              12.021523973716784
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r02_c03",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1336.8781917379456,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 2,
+        "grid_col": 3,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.83160160046175,
+              12.011912455865028
+            ],
+            [
+              105.84403860183521,
+              12.011912455865028
+            ],
+            [
+              105.84403860183521,
+              12.021523973716784
+            ],
+            [
+              105.83160160046175,
+              12.021523973716784
+            ],
+            [
+              105.83160160046175,
+              12.011912455865028
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r03_c00",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 10.925006621587343,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a08"
+        ],
+        "grid_row": 3,
+        "grid_col": 0,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.84403860183521,
+              12.011912455865028
+            ],
+            [
+              105.85647560320866,
+              12.011912455865028
+            ],
+            [
+              105.85647560320866,
+              12.021523973716784
+            ],
+            [
+              105.84403860183521,
+              12.021523973716784
+            ],
+            [
+              105.84403860183521,
+              12.011912455865028
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r03_c01",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1464.117017794089,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a05"
+        ],
+        "grid_row": 3,
+        "grid_col": 1,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.011912455865028
+            ],
+            [
+              105.86891260458212,
+              12.011912455865028
+            ],
+            [
+              105.86891260458212,
+              12.021523973716784
+            ],
+            [
+              105.85647560320866,
+              12.021523973716784
+            ],
+            [
+              105.85647560320866,
+              12.011912455865028
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r03_c02",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 1620.7616920553846,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a06"
+        ],
+        "grid_row": 3,
+        "grid_col": 2,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.86891260458212,
+              12.011912455865028
+            ],
+            [
+              105.88134960595558,
+              12.011912455865028
+            ],
+            [
+              105.88134960595558,
+              12.021523973716784
+            ],
+            [
+              105.86891260458212,
+              12.021523973716784
+            ],
+            [
+              105.86891260458212,
+              12.011912455865028
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r03_c03",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 271.29040895388925,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a07"
+        ],
+        "grid_row": 3,
+        "grid_col": 3,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.83160160046175,
+              12.002301272278038
+            ],
+            [
+              105.84403860183521,
+              12.002301272278038
+            ],
+            [
+              105.84403860183521,
+              12.011912455865028
+            ],
+            [
+              105.83160160046175,
+              12.011912455865028
+            ],
+            [
+              105.83160160046175,
+              12.002301272278038
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r04_c00",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 17.68996434683666,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a01"
+        ],
+        "grid_row": 4,
+        "grid_col": 0,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.84403860183521,
+              12.002301272278038
+            ],
+            [
+              105.85647560320866,
+              12.002301272278038
+            ],
+            [
+              105.85647560320866,
+              12.011912455865028
+            ],
+            [
+              105.84403860183521,
+              12.011912455865028
+            ],
+            [
+              105.84403860183521,
+              12.002301272278038
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r04_c01",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 801.5107789531012,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 4,
+        "grid_col": 1,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.002301272278038
+            ],
+            [
+              105.86891260458212,
+              12.002301272278038
+            ],
+            [
+              105.86891260458212,
+              12.011912455865028
+            ],
+            [
+              105.85647560320866,
+              12.011912455865028
+            ],
+            [
+              105.85647560320866,
+              12.002301272278038
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r04_c02",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 601.2491132614268,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a09"
+        ],
+        "grid_row": 4,
+        "grid_col": 2,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.86891260458212,
+              12.002301272278038
+            ],
+            [
+              105.88134960595558,
+              12.002301272278038
+            ],
+            [
+              105.88134960595558,
+              12.011912455865028
+            ],
+            [
+              105.86891260458212,
+              12.011912455865028
+            ],
+            [
+              105.86891260458212,
+              12.002301272278038
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "cand_r04_c03",
+        "sensor_type": "sar",
+        "resolution_m": 3.0,
+        "acquisition_type": "new",
+        "data_role": "event_observation",
+        "observation_at": "2018-08-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L2",
+        "usage_type": "internal",
+        "guaranteed_purchase": true,
+        "area_km2": 1.44,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 230.6365143595619,
+        "covered_asset_count": 0,
+        "covered_asset_ids": [],
+        "grid_row": 4,
+        "grid_col": 3,
+        "cell_km": 1.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.88134960595558,
+              12.031135826132685
+            ],
+            [
+              105.88134960595558,
+              12.050360535854905
+            ],
+            [
+              105.85647560320866,
+              12.050360535854905
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "ctx_r00_c01",
+        "sensor_type": "optical",
+        "resolution_m": 10.0,
+        "acquisition_type": "archive",
+        "data_role": "context",
+        "observation_at": "2018-02-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L1",
+        "usage_type": "internal",
+        "guaranteed_purchase": false,
+        "area_km2": 5.76,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 6533.128585276078,
+        "covered_asset_count": 1,
+        "covered_asset_ids": [
+          "a02"
+        ],
+        "grid_row": 0,
+        "grid_col": 1,
+        "cell_km": 2.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              105.85647560320866,
+              12.011912455865028
+            ],
+            [
+              105.88134960595558,
+              12.011912455865028
+            ],
+            [
+              105.88134960595558,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.031135826132685
+            ],
+            [
+              105.85647560320866,
+              12.011912455865028
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "candidate_id": "ctx_r01_c01",
+        "sensor_type": "optical",
+        "resolution_m": 10.0,
+        "acquisition_type": "archive",
+        "data_role": "context",
+        "observation_at": "2018-02-06",
+        "available_at": "2018-08-06",
+        "processing_level": "L1",
+        "usage_type": "internal",
+        "guaranteed_purchase": false,
+        "area_km2": 5.76,
+        "base_rate_rub_km2": 788.64,
+        "base_rate_status": "scenario",
+        "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+        "priority_score": 5822.551907390243,
+        "covered_asset_count": 2,
+        "covered_asset_ids": [
+          "a06",
+          "a07"
+        ],
+        "grid_row": 1,
+        "grid_col": 1,
+        "cell_km": 2.4
+      }
+    }
+  ]
+}
