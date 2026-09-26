@@ -77,6 +77,22 @@ if [ "$COUNT" -eq 0 ]; then
     echo "    ВНИМАНИЕ: комплектов нет, панель откроется в демо-режиме" >&2
 fi
 
+# ── 3а. Снимки для подложки карты ────────────────────────────────────────────
+# Исходные чипы в репозиторий не кладутся: весь набор это 700 МБ. Но без файла
+# S1Hand подложка карты отвечает 503, и слои вероятности висят поверх пустоты.
+# Докачиваем ровно те чипы, по которым собраны комплекты.
+say "Докачиваю снимки для подложки"
+mkdir -p "$DIR/data/cache/S1Hand"
+BUCKET=https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand
+for run in outputs/*/; do
+    chip=$(basename "$run"); chip=${chip#*-}; chip=${chip%%-b*}
+    dest="$DIR/data/cache/S1Hand/${chip}_S1Hand.tif"
+    if [ ! -s "$dest" ]; then
+        curl -fsS -o "$dest" "$BUCKET/${chip}_S1Hand.tif" && echo "    $chip" || rm -f "$dest"
+    fi
+done
+echo "    всего: $(du -sh "$DIR/data/cache" 2>/dev/null | cut -f1)"
+
 # ── 4. Образ и контейнер ─────────────────────────────────────────────────────
 say "Собираю образ"
 docker build -q -t "$IMAGE" . >/dev/null
@@ -90,8 +106,9 @@ docker run -d --name "$NAME" --restart unless-stopped \
     -p 127.0.0.1:"$PORT":8000 \
     -v "$DIR/outputs":/app/outputs \
     -v "$DIR/models":/app/models:ro \
+    -v "$DIR/reports":/app/reports:ro \
     -v "$DIR/data/cache":/app/data/cache \
-    -e FLOODVALUE_RUN="${FLOODVALUE_RUN:-}" \
+    -e FLOODVALUE_RUN="${FLOODVALUE_RUN:-outputs/20260926-India_900498-b6000}" \
     "$IMAGE" >/dev/null
 
 say "Жду, пока сервис ответит"
@@ -161,6 +178,14 @@ for url in "https://$DOMAIN/api/health" "http://$DOMAIN/api/health"; do
     code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 "$url" || echo 000)
     printf '    %-48s %s\n' "$url" "$code"
     [ "$code" = "200" ] && OK="$url"
+done
+
+# Раздел «Методы и качество» читает метрики из reports/. Каталога нет ни в образе,
+# ни среди томов по умолчанию, и без монтирования страница встречает пустотой —
+# а заходят на неё в первую очередь.
+for f in metrics_compare.json metrics_compare_holdout.json metrics_main_validation.json; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 "https://$DOMAIN/api/reports/$f" || echo 000)
+    printf '    отчёт %-38s %s\n' "$f" "$code"
 done
 
 # Заголовок X-Bounds доходит через прокси? Без него карта пустая.
