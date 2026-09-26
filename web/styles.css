@@ -70,11 +70,13 @@ h1, h2, h3 { color: var(--ink); margin: 0; }
   gap: 36px;
   max-width: 1440px;
   margin: 0 auto;
-  padding: 16px 40px 22px;
+  /* Снизу 42px: подчёркивание активного пункта уходит на 6px ниже текста, а под
+     ним ещё нужен зазор до волны — иначе полоска меню ложится прямо на волну. */
+  padding: 16px 40px 42px;
 }
 .topbar::after {
   content: "";
-  position: absolute; left: 0; right: 0; bottom: -2px; height: 24px;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 24px;
   background: var(--waves) repeat-x;
   opacity: .9;
   pointer-events: none;
@@ -614,7 +616,7 @@ details.more[open] summary { margin-bottom: 12px; }
   .repro { grid-template-columns: 1fr 1fr; }
   .repro .code { grid-column: 1 / -1; }
   .nav { gap: 18px; }
-  .topbar { flex-wrap: wrap; gap: 14px 24px; padding: 14px 20px 20px; }
+  .topbar { flex-wrap: wrap; gap: 14px 24px; padding: 14px 20px 40px; }
   .pages { padding: 18px 16px 30px; }
 }
 @media (max-width: 760px) {
