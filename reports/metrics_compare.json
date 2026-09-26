@@ -66,22 +66,22 @@
         "bin_low": 0.7000000000000001,
         "bin_high": 0.8,
         "n_pixels": 0,
-        "mean_predicted": NaN,
-        "observed_fraction": NaN
+        "mean_predicted": null,
+        "observed_fraction": null
       },
       {
         "bin_low": 0.8,
         "bin_high": 0.9,
         "n_pixels": 0,
-        "mean_predicted": NaN,
-        "observed_fraction": NaN
+        "mean_predicted": null,
+        "observed_fraction": null
       },
       {
         "bin_low": 0.9,
         "bin_high": 1.0,
         "n_pixels": 0,
-        "mean_predicted": NaN,
-        "observed_fraction": NaN
+        "mean_predicted": null,
+        "observed_fraction": null
       }
     ]
   },

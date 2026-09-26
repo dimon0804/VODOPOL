@@ -41,6 +41,23 @@ from src.methods.baseline_threshold import BaselineThreshold
 from src.methods.main_model import MainModel
 
 
+def _clean(value):
+    """Заменяет NaN и Inf на None по всей структуре.
+
+    Постановка прямо запрещает NaN и Inf в JSON, и это не придирка: такой литерал
+    невалиден по RFC 8259, и строгий парсер у жюри на нём упадёт. NaN здесь берётся
+    из пустых корзин диаграммы надёжности — в них просто нет пикселей, и правильное
+    значение там именно «нет данных», а не ноль.
+    """
+    if isinstance(value, dict):
+        return {k: _clean(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_clean(v) for v in value]
+    if isinstance(value, float) and not np.isfinite(value):
+        return None
+    return value
+
+
 def _fp_on_permanent(pred: np.ndarray, target: np.ndarray, permanent: np.ndarray, valid: np.ndarray) -> tuple[int, int]:
     """Сколько ложных срабатываний метода приходится на постоянную воду."""
     false_positive = valid & pred & ~target
@@ -208,6 +225,7 @@ def main() -> None:
 
     args.out_json.write_text(
         json.dumps(
+            _clean(
             {
                 "part": args.part,
                 "chips": len(chip_ids),
@@ -224,8 +242,10 @@ def main() -> None:
                     f"{m}|{t}|{e}": metrics_from_confusion(c) for (m, t, e), c in by_event.items()
                 },
             },
+            ),
             ensure_ascii=False,
             indent=2,
+            allow_nan=False,
         ),
         encoding="utf-8",
     )
