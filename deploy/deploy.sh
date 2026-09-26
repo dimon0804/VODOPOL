@@ -54,6 +54,7 @@ docker run -d \
     -p 127.0.0.1:${PORT}:8000 \
     -v "${ROOT}/outputs":/app/outputs:ro \
     -v "${ROOT}/models":/app/models:ro \
+    -v "${ROOT}/reports":/app/reports:ro \
     -v "${ROOT}/data/cache":/app/data/cache:ro \
     -e FLOODVALUE_HOST=0.0.0.0 \
     -e FLOODVALUE_PORT=8000 \

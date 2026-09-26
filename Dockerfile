@@ -29,7 +29,7 @@ COPY splits/ splits/
 # Точки монтирования создаём заранее. Без них discover_run_dir не находит каталог
 # outputs и панель поднимается пустой, если тома почему-то не подключились —
 # вместо внятного «комплект не найден» получается загадочный экран.
-RUN mkdir -p outputs models data/cache
+RUN mkdir -p outputs models reports data/cache
 
 EXPOSE 8000
 ENV FLOODVALUE_HOST=0.0.0.0 FLOODVALUE_PORT=8000

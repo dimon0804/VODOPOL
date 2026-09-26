@@ -10,6 +10,8 @@ services:
       # и складывать его результат ей некуда, если том только для чтения.
       - ./outputs:/app/outputs
       - ./models:/app/models:ro
+      # Отчёты модели — для страницы «Методы и качество»: панель показывает их как есть.
+      - ./reports:/app/reports:ro
       # Данные нужны только для подложки S1 на карте.
       - ./data/cache:/app/data/cache:ro
     environment:
