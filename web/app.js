@@ -1167,12 +1167,107 @@
     w.document.open(); w.document.write(h); w.document.close();
   }
 
+  // ── заявка на съёмку ─────────────────────────────────────────────────────
+  //
+  // Корзина выбранной стратегии как документ заказа — то, что обсуждают на
+  // технико-экономическом заседании. Все цифры — позиции из /api/strategies
+  // (procurement_plan.csv) и свойства зон из /api/candidates, как есть. Итог берётся из
+  // сравнения стратегий, а не складывается в панели: скидка Р считается на корзину
+  // целиком, и сумма заранее посчитанных цен была бы другим числом.
+
+  var SENSOR_WORD = { sar: 'радар (SAR)', optical: 'оптика' };
+  var ACQ_WORD = { new: 'новая съёмка', operational: 'оперативный архив', archive: 'архив' };
+  var ROLE_WORD = { event_observation: 'наблюдение события', context: 'контекст до события' };
+  var USAGE_WORD = { internal: 'внутреннее', limited: 'ограниченное', unrestricted: 'без ограничений' };
+
+  function zoneRing(feature) {
+    var g = feature && feature.geometry;
+    if (!g) return '';
+    var ring = g.type === 'Polygon' ? g.coordinates[0] : g.type === 'MultiPolygon' ? g.coordinates[0][0] : [];
+    var seen = {}, out = [];
+    ring.forEach(function (c) {
+      var k = c[0].toFixed(5) + ' ' + c[1].toFixed(5);
+      if (!seen[k]) { seen[k] = true; out.push(k); }
+    });
+    return out.join('; ');
+  }
+
+  function openProcurementRequest() {
+    var st = orderStamp();
+    var s = S.summary || {};
+    var positions = ((S.strategies && S.strategies.positions) || []).filter(function (p) { return p.strategy === S.strategy; });
+    var cmp = comparisonRow(S.strategy) || {};
+    var byId = {};
+    ((S.candidates && S.candidates.features) || []).forEach(function (f) { byId[f.properties.candidate_id] = f; });
+    var feasible = cmp.budget_feasible === true;
+    var counterfactual = !feasible && S.strategy === 'B';
+    var rateSource = positions.length && byId[positions[0].candidate_id] ? byId[positions[0].candidate_id].properties.base_rate_source : '';
+
+    var h = '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Заявка на съёмку — ' + esc(st.chip) + ' — ' + esc(st.strategy) + '</title><style>' +
+      'body{font:12px/1.4 system-ui,"Segoe UI",Arial,sans-serif;color:#111;margin:16mm 12mm}' +
+      'h1{font-size:18px;margin:0 0 4px}.sub{color:#555;margin:0 0 12px}h2{font-size:13px;margin:16px 0 6px}' +
+      'dl{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:0 0 10px}dt{color:#555}dd{margin:0;font-weight:600}' +
+      '.stamp{border:2px solid #b42318;color:#b42318;padding:6px 10px;font-weight:700;margin:8px 0;display:inline-block}' +
+      '.scen{background:#fff4e0;border-left:3px solid #d98a00;padding:6px 10px;margin:8px 0;font-size:11px}' +
+      'table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #bbb;padding:4px 5px;vertical-align:top}' +
+      'th{background:#f1f1f1;text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}' +
+      'td.geo{font-size:9.5px;color:#444;max-width:180px}tfoot td{font-weight:700;background:#f7f7f7}' +
+      '.note{color:#444;font-size:10.5px;margin:10px 0 0}.sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:26px}' +
+      '.sign div{border-top:1px solid #333;padding-top:3px;color:#555;font-size:10.5px}@media print{body{margin:9mm}button{display:none}}' +
+      '</style></head><body><button onclick="print()" style="float:right">Печать</button>' +
+      '<h1>Заявка на дополнительную съёмку</h1><p class="sub">Водополь · обоснование заказа ДЗЗ · документ сформирован ' + esc(st.made) + '</p>' +
+      '<dl><dt>запуск</dt><dd>' + esc(st.run) + '</dd><dt>чип / событие</dt><dd>' + esc(st.chip) + ' · ' + esc(st.event) + '</dd>' +
+      '<dt>срок решения</dt><dd>' + esc(st.deadline) + ' (сценарная дата)</dd>' +
+      '<dt>стратегия</dt><dd>' + esc(STRATEGY_TITLE[st.strategy] || st.strategy) + '</dd>' +
+      '<dt>объявленный бюджет</dt><dd>' + money(st.budget) + ' ₽</dd>' +
+      '<dt>правовая основа</dt><dd>' + esc(s.legal_edition || '') + ', РП = Б × К × О × П × Т × Р</dd></dl>';
+    if (counterfactual) {
+      h += '<div class="stamp">КОНТРФАКТИЧЕСКАЯ: стоимость выше бюджета, к исполнению не предлагается</div>';
+    }
+    h += '<div class="scen"><b>Ставка Б сценарная.</b> ' + esc(rateSource || 'Подтверждённый действующий размер БРЕ не установлен.') +
+      ' Цены ниже — расчёт по этой ставке, а не коммерческое предложение поставщика; даты съёмки и доступности тоже сценарные.</div>';
+
+    if (!positions.length) {
+      h += '<p>В стратегии ' + esc(st.strategy) + ' платных позиций нет: решение принимается по открытым данным.</p>';
+    } else {
+      h += '<h2>Позиции заказа</h2><table><thead><tr><th>№</th><th>зона</th><th>контур, долгота широта</th><th>данные</th>' +
+        '<th>обработка / использование</th><th>съёмка / доступно</th><th>Б, ₽/км²</th><th>К, км²</th><th>О</th><th>П</th><th>Т</th><th>Р</th>' +
+        '<th>цена за км², ₽</th><th>цена позиции, ₽</th></tr></thead><tbody>';
+      positions.forEach(function (p, i) {
+        var z = byId[p.candidate_id], zp = z ? z.properties : {};
+        h += '<tr><td class="n">' + (i + 1) + '</td><td><b>' + esc(p.candidate_id) + '</b>' +
+          (zp.covered_asset_ids && zp.covered_asset_ids.length ? '<br><small>объекты: ' + esc(zp.covered_asset_ids.join(', ')) + '</small>' : '') + '</td>' +
+          '<td class="geo">' + esc(zoneRing(z)) + '</td>' +
+          '<td>' + esc(SENSOR_WORD[zp.sensor_type] || zp.sensor_type || '') + ', ' + fmt(zp.resolution_m, 1) + ' м<br><small>' +
+          esc(ACQ_WORD[zp.acquisition_type] || zp.acquisition_type || '') + ' · ' + esc(ROLE_WORD[zp.data_role] || zp.data_role || '') + '</small></td>' +
+          '<td>' + esc(p.processing_level || '') + ' / ' + esc(USAGE_WORD[p.usage_type] || p.usage_type || '') +
+          (p.guaranteed_purchase ? '<br><small>гарантированный выкуп</small>' : '') + '</td>' +
+          '<td>' + esc(zp.observation_at || '') + '<br>' + esc(zp.available_at || '') + '</td>' +
+          '<td class="n">' + money(p.base_rate_rub_km2) + '</td><td class="n">' + fmt(p.area_km2, 3) + '</td>' +
+          '<td class="n">' + fmt(p.processing_coef, 2) + '</td><td class="n">' + fmt(p.usage_coef, 2) + '</td>' +
+          '<td class="n">' + fmt(p.freshness_coef, 2) + '</td><td class="n">' + fmt(p.discount_coef, 2) + '</td>' +
+          '<td class="n">' + money(p.unit_price_rub_km2) + '</td><td class="n">' + money(p.cost_rub) + '</td></tr>';
+      });
+      h += '</tbody><tfoot><tr><td colspan="13">итого по заявке, стоимость данных</td><td class="n">' + money(cmp.data_cost_rub) + '</td></tr>' +
+        '<tr><td colspan="13">прочие затраты</td><td class="n">' + money(cmp.other_cost_rub) + '</td></tr>' +
+        '<tr><td colspan="13">полная стоимость решения · бюджет ' + money(st.budget) + ' ₽ · ' + (feasible ? 'укладывается' : 'выше бюджета') + '</td><td class="n">' + money(cmp.decision_cost_rub) + '</td></tr></tfoot></table>';
+      h += '<p class="note">Покрытие корзиной: ' + money(cmp.covered_expected_loss_rub) + ' ₽ ожидаемого ущерба, ' + pct(cmp.coverage_share) +
+        ' портфеля. Скидка Р считается на площадь группы корзины целиком, поэтому цена позиции зависит от состава заявки: ' +
+        'убрать или добавить зону — значит пересчитать все позиции, а не вычесть одну строку. Итог взят из расчёта сервиса, а не сложен в документе.</p>';
+    }
+    h += '<div class="sign"><div>подготовил</div><div>согласовал</div><div>утвердил</div></div></body></html>';
+    var w = window.open('', '_blank');
+    if (!w) { banner('Браузер заблокировал новое окно: разрешите всплывающие окна для этой страницы.', 'warn'); return; }
+    w.document.open(); w.document.write(h); w.document.close();
+  }
+
   // ── события интерфейса ───────────────────────────────────────────────────
 
   function wire() {
     $('rng-budget').addEventListener('input', onBudgetInput);
     $('btn-order-csv').addEventListener('click', downloadWorkOrderCsv);
     $('btn-order-print').addEventListener('click', openWorkOrderPrint);
+    $('btn-request').addEventListener('click', openProcurementRequest);
     $('btn-budget-reset').addEventListener('click', function () {
       $('rng-budget').value = S.declaredBudget;
       onBudgetInput();
@@ -1261,7 +1356,7 @@
       if (budget) budget.disabled = true;
       var reset = $('btn-budget-reset');
       if (reset) reset.disabled = true;
-      ['btn-order-csv', 'btn-order-print'].forEach(function (id) { if ($(id)) $(id).disabled = true; });
+      ['btn-order-csv', 'btn-order-print', 'btn-request'].forEach(function (id) { if ($(id)) $(id).disabled = true; });
 
       // Шапка иначе навсегда остаётся в состоянии «загрузка…».
       $('runline').innerHTML = '<span class="muted">комплект не загружен</span>';

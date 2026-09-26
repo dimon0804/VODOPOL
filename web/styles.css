@@ -549,3 +549,4 @@ table.grid .empty { color: var(--none); }
 /* Кнопки наряда в шапке карточки объектов — вторичные, не спорят с «Выгрузить комплект». */
 .order-btns { margin-left: auto; display: flex; gap: 6px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
+#btn-request { margin-left: auto; }
