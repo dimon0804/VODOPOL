@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=27">
+  <link rel="stylesheet" href="styles.css?v=29">
 </head>
 <body>
 
@@ -20,6 +20,7 @@
 
   <nav class="nav" id="nav">
     <a href="#/home" data-page="home">Главная</a>
+    <a href="#/overview" data-page="overview">Обзор</a>
     <a href="#/map" data-page="map">Карта</a>
     <a href="#/objects" data-page="objects">Объекты и ущерб</a>
     <a href="#/plan" data-page="plan">План съёмки</a>
@@ -119,6 +120,36 @@
 </section>
 
 <!-- ════════════════════════ КАРТА ════════════════════════ -->
+<!-- ════════════════════════ ОБЗОР ════════════════════════ -->
+<!-- Весь набор и Россия на одном экране. Человек, который видит панель впервые,
+     спрашивает не «какая вероятность в этом пикселе», а «где это всё и при чём
+     тут мы» — ответ должен открываться сразу, без единого клика. -->
+<section class="page" id="page-overview" data-page="overview">
+  <div class="pagehead">
+    <h1>Где это работает</h1>
+    <div class="pageacts">
+      <button type="button" class="btn ghost" id="ov-fit-all">весь набор</button>
+      <button type="button" class="btn ghost" id="ov-fit-ru">Россия</button>
+      <button type="button" class="btn ghost" id="ov-fit-chip">открытый чип</button>
+    </div>
+  </div>
+
+  <section class="card">
+    <div id="overview-map" class="overview-map"></div>
+    <div class="ov-legend" id="overview-legend"></div>
+    <p class="note">
+      Кадров в наборе: <b id="overview-count">—</b>. Нажмите на любой — откроется
+      готовый комплект, а если он ещё не собран, откроется окно сборки с уже
+      подставленным чипом.
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Россия и применимость</h2></div>
+    <p class="note" id="overview-note"></p>
+  </section>
+</section>
+
 <section class="page" id="page-map" data-page="map">
   <div class="split">
     <section class="card mapcard">
@@ -367,7 +398,8 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=27"></script>
-<script src="pages.js?v=27"></script>
+<script src="app.js?v=29"></script>
+<script src="pages.js?v=29"></script>
+<script src="overview.js?v=29"></script>
 </body>
 </html>

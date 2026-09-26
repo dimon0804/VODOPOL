@@ -1702,6 +1702,9 @@
     if (!select) return;
     getJSON('/api/runs').then(function (data) {
       var runs = (data && data.runs) || [];
+      // Обзорная карта помечает кадры, по которым комплект уже собран, поэтому
+      // список нужен не только этому выпадающему меню.
+      S.runs = runs;
       if (!runs.length) {
         select.innerHTML = '<option value="">комплектов нет</option>';
         select.disabled = true;

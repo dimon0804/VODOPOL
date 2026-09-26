@@ -649,3 +649,36 @@ details.more[open] summary { margin-bottom: 12px; }
   border-radius: 50%;
   flex: none;
 }
+
+
+/* ── обзорная карта набора ──────────────────────────────────────────────── */
+/* Высота задана долей экрана, а не пикселями: обзор нужен целиком, а не кусок
+   его с прокруткой — весь смысл страницы в том, чтобы увидеть всё сразу. */
+.overview-map {
+  height: min(62vh, 640px);
+  min-height: 380px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ov-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+}
+
+.ov-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
+.ov-item i {
+  width: 12px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
+}

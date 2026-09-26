@@ -86,6 +86,9 @@
   }
 
   function renderRoute() {
+    // Обзор живёт в своём файле и не зависит от загруженного комплекта:
+    // карта набора рисуется, даже если ни один комплект ещё не собран.
+    if (ROUTE.page === 'overview' && window.VODOPOL_OVERVIEW) window.VODOPOL_OVERVIEW.show();
     if (!V || !V.S.summary) return;
     if (ROUTE.page === 'objects') renderObjects();
     if (ROUTE.page === 'plan') renderPlan();
