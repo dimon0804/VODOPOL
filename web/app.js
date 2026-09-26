@@ -914,6 +914,29 @@
       var pill = $('health-pill');
       pill.className = 'pill bad';
       pill.textContent = 'ошибка';
+
+      // Без комплекта выгружать нечего: ссылка вела бы на 404, а органы управления
+      // картой переключали бы пустоту. Гасим их, чтобы отказ читался как отказ, а не
+      // как сломанная панель — на защите это разные впечатления.
+      var bundle = $('bundle-link');
+      if (bundle) {
+        bundle.classList.add('disabled');
+        bundle.setAttribute('aria-disabled', 'true');
+        bundle.removeAttribute('href');
+        bundle.title = 'Комплект не загружен — выгружать нечего';
+      }
+      var ctl = $('mapctl');
+      if (ctl) {
+        var inputs = ctl.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
+      }
+      var budget = $('rng-budget');
+      if (budget) budget.disabled = true;
+      var reset = $('btn-budget-reset');
+      if (reset) reset.disabled = true;
+
+      // Шапка иначе навсегда остаётся в состоянии «загрузка…».
+      $('runline').innerHTML = '<span class="muted">комплект не загружен</span>';
     });
   }
 

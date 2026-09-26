@@ -111,6 +111,22 @@ body {
 }
 .btn.ghost:hover { color: var(--text); border-color: var(--muted-2); }
 
+/* Кнопка без комплекта: ссылка ведёт на 404, поэтому гасим её заметно, а не
+   оставляем активной на вид. Курсор not-allowed важнее цвета — он сообщает об
+   отказе раньше, чем человек успевает нажать. */
+.btn.disabled,
+.btn.disabled:hover {
+  background: transparent;
+  color: var(--muted-2);
+  border-color: var(--line);
+  cursor: not-allowed;
+  filter: none;
+  pointer-events: none;
+}
+input:disabled + span,
+label:has(input:disabled) { opacity: .45; cursor: not-allowed; }
+input[type="range"]:disabled { opacity: .35; cursor: not-allowed; }
+
 .banner {
   flex: 0 0 auto;
   padding: 6px 12px;
