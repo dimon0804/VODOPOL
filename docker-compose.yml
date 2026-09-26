@@ -12,5 +12,7 @@ services:
       - ./data/cache:/app/data/cache:ro
     environment:
       # Конкретный комплект; без переменной сервис берёт свежий из outputs.
-      FLOODVALUE_RUN: ${FLOODVALUE_RUN:-}
+      # По умолчанию открываем демонстрационный комплект, а не просто свежий:
+      # иначе панель показала бы последний собранный прогон, а жюри ждёт India.
+      FLOODVALUE_RUN: ${FLOODVALUE_RUN:-outputs/20260926-India_900498-b6000}
     restart: unless-stopped
