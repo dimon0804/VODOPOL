@@ -147,6 +147,122 @@ def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
     ]
 
 
+def _split_part_of(chip_id: str, split_dir: Path = Path("splits")) -> str:
+    """К какой части сплита относится чип. Жюри сверит это с составом обучения."""
+    for part in ("train", "validation", "test", "holdout"):
+        path = split_dir / f"{part}.csv"
+        if path.exists() and chip_id in path.read_text(encoding="utf-8"):
+            return part
+    return "вне сплита"
+
+
+def independent_proxy_check(
+    model, seed: int, chips_count: int = 5, split_dir: Path = Path("splits")
+) -> dict:
+    """Прокси-проверка ущерба на чипах, которых модель не видела.
+
+    Демонстрационный чип выбирается по наглядности и вполне может лежать в обучающей
+    части. Проверять на нём качество перехода «вероятность → рубли» — значит мерить
+    себя по своей же выборке. Постановка это предусматривает прямо: если у
+    демонстрационного чипа нет пригодной независимой разметки, проверку выполняют на
+    отдельном размеченном тестовом чипе, не использованном для настройки модели и
+    порогов.
+
+    Правило выбора контрольных точек: берутся первые ``chips_count`` чипов части test
+    в порядке сплита, на каждом размещается портфель из десяти объектов тем же
+    правилом и тем же зерном, что и демонстрационный, с добавлением номера чипа.
+    Точки, попавшие в пиксели без надёжной ручной метки, из проверки исключаются и
+    считаются отдельно — метка −1 это не «сухо», а отсутствие метки. Подбора точек по
+    прогнозу нет нигде: портфели размещаются до расчёта.
+    """
+    import numpy as _np
+
+    manifest = split_dir / "split_manifest.json"
+    if not manifest.exists():
+        return {"status": "not_checked", "note": "нет сплита, независимые чипы не выбрать"}
+
+    from src.eval.runner import part_chip_ids
+
+    try:
+        candidates = part_chip_ids("test", split_dir)
+    except (KeyError, FileNotFoundError):
+        return {"status": "not_checked", "note": "в сплите нет части test"}
+    if not candidates:
+        return {"status": "not_checked", "note": "часть test пуста"}
+
+    predicted: list[float] = []
+    reference: list[float] = []
+    used_chips: list[str] = []
+    skipped = 0
+
+    for index, chip_id in enumerate(candidates[:chips_count]):
+        try:
+            chip = chips_mod.load_chip(chip_id)
+        except chips_mod.ChipError:
+            continue
+        if chip.jrc is None or chip.label is None:
+            continue
+
+        prob, uncertainty = model.predict_chip(chip.vv, chip.vh)
+        valid_s1 = _np.isfinite(chip.vv) & _np.isfinite(chip.vh)
+        prob_out = prob.astype(_np.float32).copy()
+        prob_out[~valid_s1] = C.PROB_NODATA
+
+        assets = place_assets(chip_id, chip.vv, chip.vh, chip.transform, seed + index)
+        rows = evaluate_assets(assets, prob_out, uncertainty)
+        report = proxy_error(
+            rows, assets, chips_mod.target_flood(chip), label_valid=chips_mod.valid_mask(chip)
+        )
+        skipped += int(report.get("n_skipped_without_label", 0))
+        if report.get("status") != "checked":
+            continue
+
+        used_chips.append(chip_id)
+        by_id = {a.asset_id: a for a in assets}
+        for row in rows:
+            if row["status"] != C.ASSET_STATUS_OK:
+                continue
+            asset = by_id[row["asset_id"]]
+            if not chips_mod.valid_mask(chip)[asset.row, asset.col]:
+                continue
+            y = float(bool(chips_mod.target_flood(chip)[asset.row, asset.col]))
+            predicted.append(float(row["expected_loss_rub"]))
+            reference.append(C.expected_loss(y, asset.asset_value_rub, asset.vulnerability_coef))
+
+    if not predicted:
+        return {
+            "status": "not_checked",
+            "note": "на тестовых чипах не нашлось контрольных точек с надёжной меткой",
+            "n_skipped_without_label": skipped,
+        }
+
+    p_arr = _np.array(predicted)
+    r_arr = _np.array(reference)
+    return {
+        "status": "checked",
+        "split_part": "test",
+        "chips": used_chips,
+        "seed": seed,
+        "n_points": int(p_arr.size),
+        "n_skipped_without_label": skipped,
+        "mae_rub": float(_np.mean(_np.abs(p_arr - r_arr))),
+        "rmse_rub": float(_np.sqrt(_np.mean((p_arr - r_arr) ** 2))),
+        "bias_rub": float(_np.mean(p_arr - r_arr)),
+        "sum_predicted_rub": float(p_arr.sum()),
+        "sum_reference_rub": float(r_arr.sum()),
+        "rule": (
+            "Первые чипы части test, по десять объектов на чип, размещение тем же "
+            "правилом и зерном, что у демонстрационного портфеля. Точки без надёжной "
+            "ручной метки исключены и посчитаны отдельно."
+        ),
+        "why": (
+            "Эти чипы не участвовали ни в обучении, ни в калибровке, ни в выборе порога. "
+            "Именно это число и следует считать оценкой качества перехода "
+            "«вероятность → рубли»."
+        ),
+    }
+
+
 def _budget(raw: str) -> float:
     """Бюджет проверяется до расчёта, а не после: иначе пайплайн отработает впустую."""
     try:
@@ -203,6 +319,18 @@ def main() -> None:
     total_el = total_expected_loss(asset_rows)
     unassessed = unassessed_exposure(asset_rows, assets)
     print(f"  объектов оценено: {C.ASSET_COUNT - unassessed['count']}, ущерб {total_el:,.0f} руб.", flush=True)
+
+    independent_proxy = independent_proxy_check(model, args.seed)
+    if independent_proxy.get("status") == "checked":
+        print(
+            f"  прокси-проверка на {len(independent_proxy['chips'])} независимых чипах: "
+            f"MAE {independent_proxy['mae_rub']:,.0f} руб. по "
+            f"{independent_proxy['n_points']} точкам "
+            f"(исключено без метки: {independent_proxy['n_skipped_without_label']})",
+            flush=True,
+        )
+    else:
+        print(f"  независимая прокси-проверка: {independent_proxy.get('note', '')}", flush=True)
 
     proxy = (
         proxy_error(
@@ -286,6 +414,7 @@ def main() -> None:
         "placement_rule": PLACEMENT_RULE,
         "probability_rule": PROBABILITY_RULE,
         "loss_model": "EL = p_flood × V × q, p из flood_probability.tif независимо от маски",
+        "chip_split_part": _split_part_of(args.chip),
         "split": json.loads(Path("splits/split_manifest.json").read_text(encoding="utf-8"))
         if Path("splits/split_manifest.json").exists()
         else {},
@@ -339,6 +468,13 @@ def main() -> None:
         "total_expected_loss_rub": total_el,
         "unassessed_exposure": unassessed,
         "proxy_check": proxy,
+        "proxy_check_note": (
+            "Демонстрационный чип может входить в обучающую часть — он выбирается по "
+            "наглядности. Поэтому рядом лежит проверка на независимом чипе из части "
+            "test; именно её и следует считать оценкой качества перехода "
+            "«вероятность → рубли»."
+        ),
+        "proxy_check_independent": independent_proxy,
         "rank_sensitivity": {"file": "sensitivity_ranks.csv", "notes": rank_notes},
         "bounds": _bounds_of(chip.transform, prob.shape),
         "commit": _git_commit(),

@@ -360,6 +360,28 @@ def build(run_dir: Path, reports: Path) -> str:
     else:
         add(f"**Прокси-проверка ущерба.** {proxy.get('note', 'не проведена')}")
     add("")
+    independent = meta.get("proxy_check_independent", {})
+    if independent.get("status") == "checked":
+        add(
+            f"**Та же проверка на независимых чипах.** Демонстрационный чип относится к "
+            f"части «{meta.get('chip_split_part', '—')}» — он выбран по наглядности, и "
+            "мерить на нём качество собственного перехода в рубли было бы проверкой себя "
+            "по своей же выборке. Поэтому рядом считается то же самое на "
+            f"{len(independent.get('chips', []))} чипах части test, которые не участвовали "
+            "ни в обучении, ни в калибровке, ни в выборе порога: "
+            f"{independent['n_points']} контрольных точек, MAE {_money(independent['mae_rub'])} "
+            f"руб., RMSE {_money(independent['rmse_rub'])} руб., смещение "
+            f"{_money(independent['bias_rub'])} руб. Ещё "
+            f"{independent.get('n_skipped_without_label', 0)} точек исключено: они попали в "
+            "пиксели без надёжной ручной метки, а метка −1 это не «сухо», это отсутствие "
+            "метки."
+        )
+        add("")
+        add(f"Правило выбора контрольных точек: {independent.get('rule', '—')}")
+        add("")
+    elif independent:
+        add(f"**Независимая прокси-проверка.** {independent.get('note', 'не проведена')}")
+        add("")
 
     if rank_rows:
         add("### Приоритеты проверки и их устойчивость")
