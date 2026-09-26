@@ -1,13 +1,14 @@
-numpy>=2.0
-scipy>=1.14
-pandas>=2.2
-rasterio>=1.4
-shapely>=2.0
-pyproj>=3.6
-scikit-learn>=1.5
-lightgbm>=4.5
-fastapi>=0.115
-uvicorn[standard]>=0.34
-python-multipart>=0.0.9
-Pillow>=10.0
-matplotlib>=3.9
+# Версии закреплены: веса моделей сохранены через pickle и чувствительны к версии
+# scikit-learn и LightGBM. Диапазон «не ниже» сломал бы воспроизводимость у жюри.
+numpy==2.5.1
+scipy==1.18.1
+rasterio==1.5.1
+shapely==2.1.2
+pyproj==3.7.2
+scikit-learn==1.9.0
+lightgbm==4.7.0
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.9
+Pillow==12.3.0
+pytest==8.3.4

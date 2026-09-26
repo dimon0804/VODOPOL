@@ -1,11 +1,11 @@
 {
-  "run_id": "20260926-India_900498-b20000",
+  "run_id": "20260926-India_900498-b6000",
   "chip_id": "India_900498",
   "event_id": "India",
-  "source_chip_path": "data\\cache\\S1Hand\\India_900498_S1Hand.tif",
-  "s1_path": "data\\cache\\S1Hand\\India_900498_S1Hand.tif",
+  "source_chip_path": "data/cache/S1Hand/India_900498_S1Hand.tif",
+  "s1_path": "data/cache/S1Hand/India_900498_S1Hand.tif",
   "threshold": 0.25,
-  "budget_rub": 20000.0,
+  "budget_rub": 6000.0,
   "decision_deadline": "2016-08-13",
   "scenario_dates": {
     "event_date": "2016-08-12",
@@ -152,19 +152,32 @@
     "sum_reference_rub": 3600000.0,
     "rule": "Контрольные точки — те же десять объектов, размещённые случайно до расчёта."
   },
+  "rank_sensitivity": {
+    "file": "sensitivity_ranks.csv",
+    "notes": [
+      "p_uncertain_x0.7 — приоритеты не изменились",
+      "p_uncertain_x1.3 — приоритеты не изменились",
+      "V_clinic_x0.5 — сменили позицию: a01, a05, a06",
+      "V_telecom_node_x3.0 — приоритеты не изменились",
+      "V_substation_x0.6 — приоритеты не изменились",
+      "q_workshop_x0.4 — сменили позицию: a01, a05, a06, a08",
+      "q_school_x2.0 — сменили позицию: a07, a09",
+      "no_data_top1 — сменили позицию: a01, a02, a03, a04, a05, a06, a07, a08, a10; ушли из ранжирования: a09"
+    ]
+  },
   "bounds": [
     93.73524731062194,
     26.72236441976023,
     93.78124105316887,
     26.76835816230715
   ],
-  "commit": "7470a68998c697c86f4a75ae5cfdde24eea1faa1",
+  "commit": "ea0f08b743f325b9326e81b1ace4493ae280f3ac",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",
     "python -m src.cli.make_splits",
     "python -m src.cli.train_baseline",
     "python -m src.cli.train_main",
-    "python -m src.cli.run_bundle --chip India_900498 --budget 20000"
+    "python -m src.cli.run_bundle --chip India_900498 --budget 6000"
   ]
 }

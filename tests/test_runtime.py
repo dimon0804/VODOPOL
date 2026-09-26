@@ -33,7 +33,24 @@ from src.contracts import (  # noqa: E402
 )
 from src.runtime import RunContext  # noqa: E402
 
-RUN_DIR = PROJECT_ROOT / "outputs" / "20260926-India_900498-b20000"
+def _find_run_dir() -> Path | None:
+    """Ищем любой собранный комплект, а не конкретное имя.
+
+    Имя каталога содержит бюджет, а бюджет — параметр запуска: привязка к нему
+    превращала тесты в пропуски при каждой пересборке пакета с другим числом.
+    """
+    outputs = PROJECT_ROOT / "outputs"
+    if not outputs.exists():
+        return None
+    ready = sorted(
+        (d for d in outputs.iterdir() if d.is_dir() and (d / "run_metadata.json").exists()),
+        key=lambda d: d.name,
+    )
+    india = [d for d in ready if "India" in d.name]
+    return (india or ready)[0] if ready else None
+
+
+RUN_DIR = _find_run_dir() or PROJECT_ROOT / "outputs" / "_нет_комплекта"
 PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
 
 needs_bundle = pytest.mark.skipif(

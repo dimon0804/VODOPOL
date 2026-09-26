@@ -19,6 +19,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import pickle
 from dataclasses import asdict, dataclass, field
@@ -34,6 +35,11 @@ from src.methods.features import (
     sample_pixels,
     sample_pixels_uniform,
 )
+
+
+def stable_hash(text: str) -> int:
+    """Детерминированный хеш строки, не зависящий от PYTHONHASHSEED."""
+    return int.from_bytes(hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest(), "big")
 
 
 @dataclass
@@ -100,7 +106,10 @@ class MainModel:
         chips: list[str] = []
         for chip_id, vv, vh, target, valid in samples:
             cube = build_features(vv, vh, self.config.features)
-            rng = np.random.default_rng(self.config.seed + abs(hash(chip_id)) % 10_000)
+            # Встроенный hash() строк рандомизируется на каждый процесс, поэтому
+            # зерно бралось бы разное при каждом запуске и обучение переставало бы
+            # воспроизводиться. Берём устойчивый хеш.
+            rng = np.random.default_rng(self.config.seed + stable_hash(chip_id) % 10_000)
             x, y = sample_pixels(
                 cube, target, valid, self.config.pixels_per_chip, rng, self.config.positive_share
             )

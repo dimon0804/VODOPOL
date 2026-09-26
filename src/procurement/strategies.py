@@ -206,8 +206,8 @@ def select_selective(
                     C.STRATEGY_SELECTIVE,
                 )
             )
-            if cost > config.budget_rub:
-                continue
+            if cost + config.other_cost_rub > config.budget_rub:
+                continue  # лимит распространяется на полную стоимость решения
             delta = cost - chosen_cost
             ratio = gain / float(delta) if delta > 0 else float("inf")
             if best is None or ratio > best[0]:
@@ -318,8 +318,10 @@ def build_strategies(
                 "other_cost_rub": config.other_cost_rub,
                 "decision_cost_rub": data_cost + config.other_cost_rub,
                 "budget_rub": config.budget_rub,
-                # C обязана соблюдать лимит; B при превышении остаётся контрфактической.
-                "budget_feasible": bool(data_cost <= config.budget_rub),
+                # Бюджет ограничивает полную стоимость решения, а не только данные:
+                # иначе прочие затраты могли бы вывести план за лимит незаметно.
+                # Валидатор пакета проверяет то же самое, и определения должны совпадать.
+                "budget_feasible": bool(data_cost + config.other_cost_rub <= config.budget_rub),
                 "covered_expected_loss_rub": covered_rub,
                 "coverage_share": (covered_rub / total_loss) if total_loss > 0 else None,
                 "residual_uncertainty": residual,

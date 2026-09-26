@@ -37,7 +37,7 @@
 - Бакет `sen1floods11` публичный по HTTPS, `gsutil` не нужен:
   `https://storage.googleapis.com/sen1floods11/v1.1/<path>`.
 - Размеченная часть: 446 чипов, 11 событий. Нужны слои `S1Hand`, `LabelHand`,
-  `JRCWaterHand`, `S1OtsuLabelHand` — это около 0,5 ГБ, а не 14 ГБ из README.
+  `JRCWaterHand`, `S1OtsuLabelHand` — это около 700 МБ, а не 14 ГБ из README.
 - `S1Hand`: 2 канала VV/VH в дБ, float32, nodata = NaN, EPSG:4326, шаг 9e-05°.
 - `LabelHand`: −1 нет метки, 0 не вода, 1 вода. `JRCWaterHand`: 0/1, постоянная вода.
 - Сетки слоёв одного чипа совпадают — перепроецировать для совмещения не нужно.
@@ -74,7 +74,8 @@ python -m src.cli.fetch_data          # выгрузка слоёв из офи�
 python -m src.cli.make_splits         # сплит по событиям
 python -m src.cli.train_baseline      # пороговый baseline
 python -m src.cli.train_main          # основной метод
-python -m src.cli.infer --chip <id>   # inference на произвольном официальном чипе
+python -m src.cli.tune_postprocess    # порог и постобработка на validation
+python -m src.cli.evaluate --part test    # независимая проверка, открывается один раз
 python -m src.cli.run_bundle --chip <id> --budget <rub>   # весь пакет одного запуска
 python -m src.validate_bundle outputs/<run_id>            # проверка пакета
 ```

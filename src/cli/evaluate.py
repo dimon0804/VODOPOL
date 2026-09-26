@@ -27,7 +27,15 @@ from pathlib import Path
 import numpy as np
 
 from src.data import chips as chips_mod
-from src.eval.metrics import Confusion, confusion, metrics_from_confusion
+from src.eval.metrics import (
+    Confusion,
+    brier_score,
+    confusion,
+    expected_calibration_error,
+    metrics_from_confusion,
+    reliability,
+    uncertainty_usefulness,
+)
 from src.eval.runner import part_chip_ids
 from src.methods.baseline_threshold import BaselineThreshold
 from src.methods.main_model import MainModel
@@ -70,6 +78,13 @@ def main() -> None:
     fp_permanent = defaultdict(int)
     fp_total = defaultdict(int)
     per_chip_rows: list[dict] = []
+    # Вероятности, неопределённость и метки копим подвыборкой: полные растры по всей
+    # части не влезут в память, а для калибровочных метрик хватает равномерной выборки.
+    rng = np.random.default_rng(2026)
+    prob_sample: list[np.ndarray] = []
+    target_sample: list[np.ndarray] = []
+    unc_sample: list[np.ndarray] = []
+    pred_sample: list[np.ndarray] = []
 
     for index, chip_id in enumerate(chip_ids, start=1):
         chip = chips_mod.load_chip(chip_id)
@@ -80,8 +95,16 @@ def main() -> None:
         permanent = chips_mod.permanent_water(chip)
 
         pred_baseline = baseline.predict_mask(chip.vv, chip.vh)
-        prob, _ = model.predict_chip(chip.vv, chip.vh)
+        prob, uncertainty = model.predict_chip(chip.vv, chip.vh)
         pred_main = prob >= model.threshold
+
+        flood_target = chips_mod.target_flood(chip)
+        flat = np.flatnonzero(valid.ravel())
+        take = rng.choice(flat, size=min(20_000, flat.size), replace=False)
+        prob_sample.append(prob.ravel()[take])
+        target_sample.append(flood_target.ravel()[take].astype(np.float64))
+        unc_sample.append(uncertainty.ravel()[take])
+        pred_sample.append(pred_main.ravel()[take])
 
         for target_name, target in (
             ("flood", chips_mod.target_flood(chip)),
@@ -108,6 +131,33 @@ def main() -> None:
 
         if index % 10 == 0:
             print(f"  обработано {index}/{len(chip_ids)}", flush=True)
+
+    # ── надёжность вероятностей на НЕЗАВИСИМОЙ части ─────────────────────────
+    flat_prob = np.concatenate(prob_sample)
+    flat_target = np.concatenate(target_sample)
+    flat_unc = np.concatenate(unc_sample)
+    flat_pred = np.concatenate(pred_sample)
+    ones = np.ones_like(flat_prob, dtype=bool)
+    calibration_here = {
+        "note": (
+            "Посчитано на части, не использованной для обучения калибратора: "
+            "это и есть проверка надёжности вероятностей, а не их подгонка."
+        ),
+        "n_pixels": int(flat_prob.size),
+        "ece": expected_calibration_error(flat_prob, flat_target),
+        "brier": brier_score(flat_prob, flat_target),
+        "reliability": reliability(flat_prob, flat_target, bins=10),
+    }
+    uncertainty_here = uncertainty_usefulness(flat_unc, flat_pred, flat_target > 0.5, ones)
+    print(
+        f"\n  надёжность вероятностей на этой части: ECE {calibration_here['ece']:.4f}, "
+        f"Brier {calibration_here['brier']:.4f}"
+    )
+    print(
+        f"  неопределённость против ошибок: AUC "
+        f"{uncertainty_here['auc_uncertainty_vs_error']:.4f} на "
+        f"{uncertainty_here['n_pixels']:,} пикселях"
+    )
 
     # ── вывод ────────────────────────────────────────────────────────────────
     summary: dict[str, dict] = {}
@@ -167,6 +217,8 @@ def main() -> None:
                     "despeckle_size": baseline.config.despeckle_size,
                 },
                 "main_threshold": model.threshold,
+                "calibration_on_this_part": calibration_here,
+                "uncertainty_on_this_part": uncertainty_here,
                 "totals": summary,
                 "by_event": {
                     f"{m}|{t}|{e}": metrics_from_confusion(c) for (m, t, e), c in by_event.items()

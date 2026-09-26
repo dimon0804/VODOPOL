@@ -78,7 +78,7 @@ class Chip:
     event: str
     vv: np.ndarray
     vh: np.ndarray
-    label: np.ndarray
+    label: np.ndarray | None
     jrc: np.ndarray | None
     transform: Affine
     crs: CRS
@@ -151,9 +151,11 @@ def _require_layer(chip_id: str, layer: str, root: Path) -> Path:
 def load_chip(chip_id: str, root: Path = fetch.DEFAULT_ROOT) -> Chip:
     """Читает чип целиком и проверяет, что слои лежат на одной сетке.
 
-    ``JRCWaterHand`` необязателен: если слоя нет, поле ``jrc`` остаётся ``None``,
-    и об этом честно сообщит :func:`target_flood`. Тихой подмены временного
-    затопления водой вообще не происходит нигде.
+    Обязателен только ``S1Hand``: решение должно запускаться на голом радарном
+    снимке, без каких-либо вспомогательных слоёв. ``LabelHand`` и ``JRCWaterHand``
+    необязательны — без них поля ``label`` и ``jrc`` остаются ``None``, а функции,
+    которым метка нужна, честно об этом сообщают. Тихой подмены одного другим не
+    происходит нигде: вероятность считается по S1, метка нужна только для метрик.
     """
     root = Path(root)
     s1_path = _require_layer(chip_id, LAYER_S1, root)
@@ -172,19 +174,21 @@ def load_chip(chip_id: str, root: Path = fetch.DEFAULT_ROOT) -> Chip:
             f"чип {chip_id}: ожидался размер {CHIP_SIZE_PX}x{CHIP_SIZE_PX}, получено {ref_shape}"
         )
 
-    label_path = _require_layer(chip_id, LAYER_LABEL, root)
-    with rasterio.open(label_path) as src:
-        label = src.read(1)
-        _check_grid(
-            chip_id,
-            LAYER_LABEL,
-            (int(src.height), int(src.width)),
-            src.transform,
-            src.crs,
-            ref_shape,
-            ref_transform,
-            ref_crs,
-        )
+    label: np.ndarray | None = None
+    label_path = fetch.layer_path(chip_id, LAYER_LABEL, root)
+    if label_path.exists() and label_path.stat().st_size > 0:
+        with rasterio.open(label_path) as src:
+            label = src.read(1)
+            _check_grid(
+                chip_id,
+                LAYER_LABEL,
+                (int(src.height), int(src.width)),
+                src.transform,
+                src.crs,
+                ref_shape,
+                ref_transform,
+                ref_crs,
+            )
 
     jrc: np.ndarray | None = None
     jrc_path = fetch.layer_path(chip_id, LAYER_JRC, root)
@@ -207,7 +211,7 @@ def load_chip(chip_id: str, root: Path = fetch.DEFAULT_ROOT) -> Chip:
         event=event_of(chip_id),
         vv=np.asarray(s1[0], dtype="float32"),
         vh=np.asarray(s1[1], dtype="float32"),
-        label=np.asarray(label, dtype="int16"),
+        label=None if label is None else np.asarray(label, dtype="int16"),
         jrc=None if jrc is None else np.asarray(jrc, dtype="uint8"),
         transform=ref_transform,
         crs=ref_crs,
@@ -225,8 +229,24 @@ def valid_mask(chip: Chip) -> np.ndarray:
 
     Метка задана (не -1) И оба канала S1 не NaN. Всё остальное — «неизвестно»:
     такие пиксели не попадают ни в обучающую выборку, ни в знаменатель метрик.
+
+    Если слоя меток нет (режим запуска по одному S1), валидными считаются пиксели
+    с радарными данными: метрики в этом режиме всё равно не считаются, а маска
+    нужна интерфейсу и размещению объектов.
     """
+    if chip.label is None:
+        return ~nodata_mask(chip)
     return (chip.label != LABEL_INVALID) & ~nodata_mask(chip)
+
+
+def _require_label(chip: Chip) -> np.ndarray:
+    if chip.label is None:
+        raise MissingLayerError(
+            f"чип {chip.chip_id}: нет слоя {LAYER_LABEL}. Целевой класс и метрики без "
+            "ручной разметки не определены; запуск по одному S1 даёт вероятность и "
+            "маску, но не качество"
+        )
+    return chip.label
 
 
 def target_water(chip: Chip) -> np.ndarray:

@@ -76,7 +76,7 @@ def default_scenarios(
                 scenario_id=f"p_x{factor}",
                 changed={"p_flood_factor": factor, "rule": "p := clip(p * factor, 0, 1)"},
                 interpretation=(
-                    f"Вероятность изменена на {int((factor - 1) * 100):+d} % без переобучения "
+                    f"Вероятность изменена на {round((factor - 1) * 100):+d} % без переобучения "
                     "модели; V и q зафиксированы."
                 ),
                 apply=lambda rows, cfg, f=factor: (_scaled_rows(rows, f), cfg),
@@ -90,7 +90,7 @@ def default_scenarios(
                 changed={f"{field}_factor": factor},
                 interpretation=(
                     f"{'Стоимость объектов' if field == 'V' else 'Уязвимость'} изменена на "
-                    f"{int((factor - 1) * 100):+d} %; вероятность и остальные параметры "
+                    f"{round((factor - 1) * 100):+d} %; вероятность и остальные параметры "
                     "зафиксированы."
                 ),
                 apply=lambda rows, cfg, fl=field, f=factor: (_scaled_value(rows, fl, f), cfg),

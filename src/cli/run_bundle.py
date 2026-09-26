@@ -42,6 +42,7 @@ from src.procurement.candidates import CatalogConfig, build_catalog, selftest_ca
 from src.procurement.pricing import position_row
 from src.procurement.strategies import StrategyConfig, build_strategies
 from src.sensitivity import run_sensitivity
+from src.sensitivity_ranks import COLUMNS as RANK_COLUMNS, run as run_rank_sensitivity
 
 
 def priority_raster(prob: np.ndarray, uncertainty: np.ndarray) -> np.ndarray:
@@ -93,14 +94,16 @@ def scenario_dates(event: str, deadline: str) -> dict[str, str]:
 
 def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
     event = chips_mod.event_of(chip_id)
+    observed = event_date(event)
+    observed_at = observed.isoformat() if observed else ""
     return [
         {
             "id": f"{chip_id}_S1Hand",
-            "file": str(chip_path),
+            "file": chip_path.as_posix(),
             "url": f"{C.DATASET_BUCKET_HTTPS}/v1.1/data/flood_events/HandLabeled/S1Hand/{chip_id}_S1Hand.tif",
             "dataset": f"{C.DATASET_NAME} {C.DATASET_VERSION}",
             "event": event,
-            "observation_date": "см. Sen1Floods11_Metadata.geojson",
+            "observation_date": observed_at,
             "published": "2020",
             "license": "Cloud to Street, открытый доступ, цитирование обязательно",
             "purpose": "обязательный исходный снимок, единственный вход основного метода",
@@ -108,6 +111,8 @@ def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
         },
         {
             "id": f"{chip_id}_LabelHand",
+            "file": fetch.layer_path(chip_id, C.LAYER_LABEL).as_posix(),
+            "observation_date": observed_at,
             "url": f"{C.DATASET_BUCKET_HTTPS}/v1.1/data/flood_events/HandLabeled/LabelHand/{chip_id}_LabelHand.tif",
             "dataset": f"{C.DATASET_NAME} {C.DATASET_VERSION}",
             "published": "2020",
@@ -117,6 +122,8 @@ def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
         },
         {
             "id": f"{chip_id}_JRCWaterHand",
+            "file": fetch.layer_path(chip_id, C.LAYER_JRC).as_posix(),
+            "observation_date": "1984-2020 (период наблюдения JRC Global Surface Water)",
             "url": f"{C.DATASET_BUCKET_HTTPS}/v1.1/data/flood_events/HandLabeled/JRCWaterHand/{chip_id}_JRCWaterHand.tif",
             "dataset": f"{C.DATASET_NAME} {C.DATASET_VERSION}",
             "source": "JRC Global Surface Water, Landsat 1984–2020",
@@ -140,10 +147,21 @@ def build_source_manifest(chip_id: str, chip_path: Path) -> list[dict]:
     ]
 
 
+def _budget(raw: str) -> float:
+    """Бюджет проверяется до расчёта, а не после: иначе пайплайн отработает впустую."""
+    try:
+        value = float(raw)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"бюджет должен быть числом, получено {raw!r}") from error
+    if value < 0:
+        raise argparse.ArgumentTypeError("бюджет не может быть отрицательным")
+    return value
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chip", required=True, help="идентификатор чипа, например India_900498")
-    parser.add_argument("--budget", type=float, required=True, help="объявленный бюджет, руб.")
+    parser.add_argument("--budget", type=_budget, required=True, help="объявленный бюджет, руб.")
     parser.add_argument("--model", type=Path, default=Path("models/main"))
     parser.add_argument("--baseline", type=Path, default=Path("models/baseline.json"))
     parser.add_argument("--seed", type=int, default=2026, help="зерно размещения объектов")
@@ -155,7 +173,11 @@ def main() -> None:
     args = parser.parse_args()
 
     print(f"чип: {args.chip}, бюджет: {args.budget:,.2f} руб.", flush=True)
-    chip = chips_mod.load_chip(args.chip)
+    try:
+        chip = chips_mod.load_chip(args.chip)
+    except chips_mod.ChipError as error:
+        # Понятная одна строка вместо трейсбека: чип задаёт человек, ошибается тоже человек.
+        raise SystemExit(str(error))
     chip_path = fetch.layer_path(args.chip, C.LAYER_S1)
 
     # ── вероятность и маска ──────────────────────────────────────────────────
@@ -231,7 +253,13 @@ def main() -> None:
         )
 
     sensitivity = run_sensitivity(catalog, assets_geojson, asset_rows, config)
+    rank_rows, rank_notes = run_rank_sensitivity(
+        asset_rows, {a.asset_id: a.asset_class for a in assets}
+    )
     print(f"  сценариев чувствительности: {len(sensitivity)}", flush=True)
+    print(f"  сценариев сдвига приоритетов: {len(set(r['scenario_id'] for r in rank_rows))}", flush=True)
+    for note in rank_notes:
+        print(f"    {note}", flush=True)
 
     # ── паспорт запуска ──────────────────────────────────────────────────────
     run_id = new_run_id(args.chip, args.budget)
@@ -240,8 +268,10 @@ def main() -> None:
         "run_id": run_id,
         "chip_id": args.chip,
         "event_id": chips_mod.event_of(args.chip),
-        "source_chip_path": str(chip_path),
-        "s1_path": str(chip_path),
+        # posix-разделители: в контейнере на Linux путь с обратными слешами
+        # превращается в имя одного файла и подложка карты не открывается.
+        "source_chip_path": chip_path.as_posix(),
+        "s1_path": chip_path.as_posix(),
         "threshold": model.threshold,
         "budget_rub": args.budget,
         "decision_deadline": dates["decision_deadline"],
@@ -304,6 +334,7 @@ def main() -> None:
         "total_expected_loss_rub": total_el,
         "unassessed_exposure": unassessed,
         "proxy_check": proxy,
+        "rank_sensitivity": {"file": "sensitivity_ranks.csv", "notes": rank_notes},
         "bounds": _bounds_of(chip.transform, prob.shape),
         "commit": _git_commit(),
         "generated_at": date.today().isoformat(),
@@ -336,6 +367,10 @@ def main() -> None:
         },
     )
 
+    # Сдвиг приоритетов при изменении p, V и q — критерий 14. В обязательный состав
+    # пакета файл не входит, но без него влияние на приоритеты показать нечем.
+    _write_rank_sensitivity(run_dir / "sensitivity_ranks.csv", rank_rows)
+
     # Карта неопределённости не входит в обязательный пакет, но нужна интерфейсу.
     _write_uncertainty(run_dir / "uncertainty.tif", uncertainty, s1_valid, profile)
     print(f"\nпакет собран: {paths.run_dir}", flush=True)
@@ -345,6 +380,17 @@ def main() -> None:
         code = subprocess.call([sys.executable, "-m", "src.validate_bundle", str(run_dir)])
         if code != 0:
             raise SystemExit(code)
+
+
+def _write_rank_sensitivity(path: Path, rows: list[dict]) -> None:
+    """CSV сдвига приоритетов. Пустое значение остаётся пустым, нулём не заменяется."""
+    import csv
+
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(RANK_COLUMNS), lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: ("" if row.get(k) is None else row.get(k)) for k in RANK_COLUMNS})
 
 
 def _bounds_of(transform, shape: tuple[int, int]) -> list[float]:

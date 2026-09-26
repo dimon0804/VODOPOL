@@ -1,20 +1,22 @@
 {
   "sources": [
     {
-      "id": "Ghana_103272_S1Hand",
-      "file": "data\\cache\\S1Hand\\Ghana_103272_S1Hand.tif",
-      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand/Ghana_103272_S1Hand.tif",
+      "id": "India_900498_S1Hand",
+      "file": "data/cache/S1Hand/India_900498_S1Hand.tif",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand/India_900498_S1Hand.tif",
       "dataset": "Sen1Floods11 v1.1",
-      "event": "Ghana",
-      "observation_date": "см. Sen1Floods11_Metadata.geojson",
+      "event": "India",
+      "observation_date": "2016-08-12",
       "published": "2020",
       "license": "Cloud to Street, открытый доступ, цитирование обязательно",
       "purpose": "обязательный исходный снимок, единственный вход основного метода",
       "limits": "два канала VV/VH в дБ, 512×512, шаг 10 м"
     },
     {
-      "id": "Ghana_103272_LabelHand",
-      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/LabelHand/Ghana_103272_LabelHand.tif",
+      "id": "India_900498_LabelHand",
+      "file": "data/cache/LabelHand/India_900498_LabelHand.tif",
+      "observation_date": "2016-08-12",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/LabelHand/India_900498_LabelHand.tif",
       "dataset": "Sen1Floods11 v1.1",
       "published": "2020",
       "license": "Cloud to Street",
@@ -22,8 +24,10 @@
       "limits": "−1 нет метки, 0 не вода, 1 вода; временную и постоянную воду не различает"
     },
     {
-      "id": "Ghana_103272_JRCWaterHand",
-      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/JRCWaterHand/Ghana_103272_JRCWaterHand.tif",
+      "id": "India_900498_JRCWaterHand",
+      "file": "data/cache/JRCWaterHand/India_900498_JRCWaterHand.tif",
+      "observation_date": "1984-2020 (период наблюдения JRC Global Surface Water)",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/JRCWaterHand/India_900498_JRCWaterHand.tif",
       "dataset": "Sen1Floods11 v1.1",
       "source": "JRC Global Surface Water, Landsat 1984–2020",
       "published": "2020",
