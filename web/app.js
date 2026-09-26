@@ -579,7 +579,107 @@
 
   /** Таблица развёрнута: показатели — строки, стратегии — столбцы.
    *  Так все десять показателей видны сразу и сравниваются по вертикали. */
+  // ── таймлайн «успеете ли к сроку» ────────────────────────────────────────
+  //
+  // Кейс требует, чтобы данные, недоступные к сроку решения, не увеличивали
+  // оперативное покрытие. В расчёте это уже так (is_event_observation в
+  // src/procurement/strategies.py), но на экране не было видно. Здесь то же правило
+  // показано на датах из /api/candidates: наблюдение события, доступное не позже
+  // срока, — идёт в покрытие; контекст до события и опоздавшие — нет.
+
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+
+  function zoneTimelineStatus(zp, deadline) {
+    if (zp.data_role !== 'event_observation') return { key: 'context', word: 'контекст — в покрытие не идёт' };
+    if (deadline && zp.available_at && zp.available_at > deadline) return { key: 'late', word: 'не успевает — в покрытие не идёт' };
+    return { key: 'ok', word: 'успевает — идёт в покрытие' };
+  }
+
+  function renderTimeline() {
+    var box = $('timeline');
+    if (!box || !S.candidates) return;
+    var deadline = (S.summary && S.summary.decision_deadline) || '';
+    var plan = {};
+    ((S.strategies && S.strategies.plans && S.strategies.plans[S.strategy]) || []).forEach(function (id) { plan[id] = true; });
+    var groups = {}, order = [];
+    S.candidates.features.forEach(function (f) {
+      var zp = f.properties;
+      var key = [zp.data_role, zp.acquisition_type, zp.observation_at, zp.available_at].join('|');
+      if (!groups[key]) {
+        groups[key] = { zp: zp, status: zoneTimelineStatus(zp, deadline), total: 0, inPlan: 0 };
+        order.push(key);
+      }
+      groups[key].total++;
+      if (plan[zp.candidate_id]) groups[key].inPlan++;
+    });
+    var rows = order.map(function (k) { return groups[k]; })
+      .sort(function (a, b) { return String(a.zp.observation_at).localeCompare(String(b.zp.observation_at)); });
+
+    var dates = [deadline];
+    rows.forEach(function (g) { dates.push(g.zp.observation_at, g.zp.available_at); });
+    var ts = dates.filter(Boolean).map(function (d) { return Date.parse(d); }).filter(isFinite);
+    if (!ts.length) { box.innerHTML = ''; return; }
+    var t0 = Math.min.apply(null, ts), t1 = Math.max.apply(null, ts);
+    var span = Math.max(t1 - t0, 86400000);
+    t0 -= span * 0.06; t1 += span * 0.10;
+
+    var W = Math.max(320, box.clientWidth), rowH = 34, top = 26, H = top + rows.length * rowH + 26;
+    var ml = 12, mr = 12, iw = W - ml - mr;
+    var X = function (d) { return ml + (Date.parse(d) - t0) / (t1 - t0) * iw; };
+    var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
+    // месячные засечки
+    var m = new Date(t0); m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1));
+    while (m.getTime() < t1) {
+      var mx = ml + (m.getTime() - t0) / (t1 - t0) * iw;
+      svg += '<line class="t-grid" x1="' + mx + '" x2="' + mx + '" y1="' + (top - 6) + '" y2="' + (H - 20) + '"/>';
+      svg += '<text class="t-tick" x="' + mx + '" y="' + (H - 6) + '" text-anchor="middle">' +
+        m.toLocaleDateString('ru-RU', { month: 'short', year: '2-digit', timeZone: 'UTC' }) + '</text>';
+      m = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth() + 1, 1));
+    }
+    rows.forEach(function (g, i) {
+      var y = top + i * rowH + rowH / 2, x1 = X(g.zp.observation_at), x2 = X(g.zp.available_at || g.zp.observation_at);
+      svg += '<line class="t-bar t-' + g.status.key + '" x1="' + x1 + '" x2="' + Math.max(x2, x1 + 0.01) + '" y1="' + y + '" y2="' + y + '"/>';
+      svg += '<circle class="t-obs t-' + g.status.key + '" cx="' + x1 + '" cy="' + y + '" r="5"><title>съёмка ' + esc(g.zp.observation_at) + '</title></circle>';
+      svg += '<rect class="t-avail t-' + g.status.key + '" x="' + (x2 - 4) + '" y="' + (y - 4) + '" width="8" height="8"><title>доступно ' + esc(g.zp.available_at) + '</title></rect>';
+      // Подпись у самой полосы: без неё не понять, какая строка о чём, пока не
+      // спустишься к таблице. Справа от кружка, а у правого края — слева.
+      var right = x1 > W * 0.6;
+      var label = (ACQ_WORD[g.zp.acquisition_type] || g.zp.acquisition_type) + ', ' + (SENSOR_WORD[g.zp.sensor_type] || g.zp.sensor_type) +
+        ' · ' + g.total + ' ' + plural(g.total, 'зона', 'зоны', 'зон') + ' · ' + g.status.word;
+      svg += '<text class="t-label" x="' + (right ? Math.min(x1, x2) - 10 : x1 + 10) + '" y="' + (y - 7) + '" text-anchor="' + (right ? 'end' : 'start') + '">' + esc(label) + '</text>';
+    });
+    if (deadline) {
+      var dx = X(deadline);
+      svg += '<line class="t-deadline" x1="' + dx + '" x2="' + dx + '" y1="' + 4 + '" y2="' + (H - 20) + '"/>';
+      svg += '<text class="t-deadline-label" x="' + (dx - 6) + '" y="14" text-anchor="end">срок решения ' + esc(deadline) + '</text>';
+    }
+    box.innerHTML = svg + '</svg>';
+
+    var html = '<thead><tr><th></th><th>данные</th><th>съёмка</th><th>доступно</th><th class="r">зон в каталоге</th><th class="r">в плане ' +
+      esc(S.strategy) + '</th><th>к сроку</th></tr></thead><tbody>';
+    rows.forEach(function (g) {
+      var zp = g.zp;
+      html += '<tr><td><span class="t-key t-' + g.status.key + '"></span></td>' +
+        '<td>' + esc(SENSOR_WORD[zp.sensor_type] || zp.sensor_type || '') + ', ' + fmt(zp.resolution_m, 1) + ' м · ' +
+        esc(ACQ_WORD[zp.acquisition_type] || zp.acquisition_type || '') + ' · ' + esc(ROLE_WORD[zp.data_role] || zp.data_role || '') + '</td>' +
+        '<td>' + esc(zp.observation_at || DASH) + '</td><td>' + esc(zp.available_at || DASH) + '</td>' +
+        '<td class="num">' + g.total + '</td><td class="num">' + g.inPlan + '</td>' +
+        '<td>' + esc(g.status.word) + '</td></tr>';
+    });
+    $('tbl-timeline').innerHTML = html + '</tbody>';
+    $('timeline-status').innerHTML = mark('scenario', 'сценарные даты', 'Даты съёмки и доступности сценарные: привязаны к дате события из метаданных Sen1Floods11, подтверждением поставщика не являются');
+    $('timeline-note').innerHTML = 'Кружок — дата съёмки, квадрат — дата, к которой данные доступны. В оперативное покрытие идёт только наблюдение ' +
+      'события, доступное не позже срока решения; архивный снимок до события — контекст, и высокое разрешение его в наблюдение паводка не превращает. ' +
+      'Опоздавшие к сроку данные покрытие не увеличивают — так же считает и сервис.';
+  }
+
   function renderStrategies() {
+    renderTimeline();
     var plans = (S.strategies && S.strategies.plans) || {};
     var codes = ['A', 'B', 'C'];
     var rowsByCode = {};
@@ -1409,7 +1509,7 @@
   var resizeTimer = null;
   window.addEventListener('resize', function () {
     if (resizeTimer) clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (S.curve) drawCurve(); }, 150);
+    resizeTimer = setTimeout(function () { if (S.curve) drawCurve(); renderTimeline(); }, 150);
   });
 
   document.addEventListener('DOMContentLoaded', boot);

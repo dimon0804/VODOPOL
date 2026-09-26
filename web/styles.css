@@ -557,3 +557,23 @@ table.grid .empty { color: var(--none); }
 .chain ol { margin: 0; padding-left: 16px; }
 .chain li { margin: 0 0 4px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
 .chain li b { color: var(--text); font-weight: 600; }
+
+/* ── таймлайн «успеете ли к сроку» ──────────────────────────────────────
+   Статус несут и цвет, и слово в таблице рядом: цвет не единственный носитель. */
+.timeline { width: 100%; margin: 2px 0 6px; }
+.timeline svg { display: block; }
+.timeline .t-grid { stroke: var(--line-soft); stroke-width: 1; }
+.timeline .t-tick { fill: var(--muted-2); font: 10.5px var(--sans); }
+.timeline .t-bar { stroke-width: 3; stroke-linecap: round; }
+.timeline .t-obs { stroke: var(--panel); stroke-width: 2; }
+.timeline .t-avail { stroke: var(--panel); stroke-width: 1.5; }
+.timeline .t-deadline { stroke: var(--text); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.timeline .t-deadline-label { fill: var(--text); font: 500 11px var(--sans); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+.timeline .t-ok { stroke: var(--ok); fill: var(--ok); }
+.timeline .t-late { stroke: var(--bad); fill: var(--bad); }
+.timeline .t-context { stroke: var(--muted-2); fill: var(--muted-2); }
+.timeline circle.t-ok, .timeline circle.t-late, .timeline circle.t-context,
+.timeline rect.t-ok, .timeline rect.t-late, .timeline rect.t-context { stroke: var(--panel); }
+.t-key { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.t-key.t-ok { background: var(--ok); } .t-key.t-late { background: var(--bad); } .t-key.t-context { background: var(--muted-2); }
+.timeline .t-label { fill: var(--muted); font: 10.5px var(--sans); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
