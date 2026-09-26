@@ -1,0 +1,170 @@
+{
+  "run_id": "20260926-India_900498-b20000",
+  "chip_id": "India_900498",
+  "event_id": "India",
+  "source_chip_path": "data\\cache\\S1Hand\\India_900498_S1Hand.tif",
+  "s1_path": "data\\cache\\S1Hand\\India_900498_S1Hand.tif",
+  "threshold": 0.25,
+  "budget_rub": 20000.0,
+  "decision_deadline": "2016-08-13",
+  "scenario_dates": {
+    "event_date": "2016-08-12",
+    "decision_deadline": "2016-08-13",
+    "new_observation_at": "2016-08-13",
+    "new_available_at": "2016-08-13",
+    "archive_observation_at": "2016-02-14",
+    "archive_available_at": "2016-08-13"
+  },
+  "dates_status": "сценарные: привязаны к дате съёмки события из Sen1Floods11_Metadata.geojson, подтверждением поставщика не являются",
+  "target_class": "временное затопление",
+  "permanent_water_source": "JRCWaterHand из официального набора, только на стороне разметки",
+  "inference_inputs": "только Sentinel-1 VV/VH, дополнительные слои не требуются",
+  "seed": 2026,
+  "placement_rule": "Равномерная выборка пикселя по всей сетке чипа генератором numpy PCG64 с фиксированным зерном. Пиксель принимается, если оба канала S1 в нём конечны (валидная область исходного снимка) и он ещё не занят другим объектом; иначе выборка повторяется. Ручные метки, вероятностный растр и карта ущерба при размещении не используются. Объекты назначаются типам в порядке таблицы кейса.",
+  "probability_rule": "p_flood берётся из flood_probability.tif в пикселе, содержащем координату объекта, без сглаживания и независимо от бинарной маски.",
+  "loss_model": "EL = p_flood × V × q, p из flood_probability.tif независимо от маски",
+  "split": {
+    "dataset": "Sen1Floods11 v1.1",
+    "seed": 2026,
+    "rule": "leave-event-out: части не имеют общих событий; Bolivia целиком отложена под проверку переноса и не участвует ни в обучении, ни в подборе порога, ни в финальной оценке",
+    "parts": [
+      "train",
+      "validation",
+      "test",
+      "holdout"
+    ],
+    "events": {
+      "train": [
+        "Ghana",
+        "India",
+        "Paraguay",
+        "USA"
+      ],
+      "validation": [
+        "Nigeria",
+        "Spain",
+        "Sri-Lanka"
+      ],
+      "test": [
+        "Mekong",
+        "Pakistan",
+        "Somalia"
+      ],
+      "holdout": [
+        "Bolivia"
+      ]
+    },
+    "counts": {
+      "train": 257,
+      "validation": 90,
+      "test": 84,
+      "holdout": 15
+    },
+    "total_chips": 446,
+    "files": {
+      "train": "train.csv",
+      "validation": "validation.csv",
+      "test": "test.csv",
+      "holdout": "holdout.csv"
+    }
+  },
+  "methods": {
+    "baseline": {
+      "kind": "пороговый по Sentinel-1",
+      "channel": "VV",
+      "threshold_db": -14.850000000001714,
+      "despeckle_size": 5,
+      "selection": "grid по validation, метрика F1"
+    },
+    "main": {
+      "kind": "ансамбль LightGBM по признакам S1 с пространственным контекстом",
+      "features": [
+        "vv",
+        "vh",
+        "vv_minus_vh",
+        "vv_plus_vh",
+        "vv_mean_3",
+        "vv_std_3",
+        "vh_mean_3",
+        "vh_std_3",
+        "vv_minus_mean_3",
+        "vv_mean_9",
+        "vv_std_9",
+        "vh_mean_9",
+        "vh_std_9",
+        "vv_minus_mean_9",
+        "vv_mean_25",
+        "vv_std_25",
+        "vh_mean_25",
+        "vh_std_25",
+        "vv_minus_mean_25",
+        "vv_mean_51",
+        "vv_std_51",
+        "vh_mean_51",
+        "vh_std_51",
+        "vv_minus_mean_51",
+        "vv_minus_chip_median",
+        "vh_minus_chip_median"
+      ],
+      "ensemble_size": 3,
+      "calibration": "изотоническая, на validation",
+      "trained_on_chips": 251,
+      "threshold_selected_on": "validation"
+    }
+  },
+  "uncertainty": {
+    "definition": "0,7 × нормированная энтропия вероятности + 0,3 × разброс ансамбля",
+    "units": "безразмерная величина от 0 до 1",
+    "checked": "AUC связи с ошибками, см. reports/metrics_main_validation.json"
+  },
+  "pricing": {
+    "formula": "RP = B * K * O * P * T * R",
+    "legal_edition": "ПП РФ № 840 в ред. от 27.08.2025",
+    "legal_check_date": "2026-09-26",
+    "base_rate_rub_km2": 788.64,
+    "base_rate_status": "scenario",
+    "base_rate_source": "Учебная ставка из постановки кейса КосмоХакатона 2026, контрольная дата 20.09.2026. Подтверждённый действующий размер БРЕ не установлен.",
+    "rounding": "площадь 0,001 км², скидка 9 знаков, деньги до копеек, ROUND_HALF_UP",
+    "discount_grouping": "тип данных + разрешение + календарный год"
+  },
+  "zones": {
+    "rule": "сетка ячеек 1.2 км по приоритету «вероятность × неопределённость»",
+    "min_area_km2": 1.0,
+    "availability": "даты сценарные, привязаны к дате события; см. scenario_dates",
+    "broad_rule_B": "все зоны каталога, относящиеся к наблюдению события: широкое покрытие территории чипа без отбора по ожидаемому ущербу"
+  },
+  "total_expected_loss_rub": 3157188.733574003,
+  "unassessed_exposure": {
+    "asset_ids": [],
+    "count": 0,
+    "value_rub": 0.0,
+    "note": "Объекты без надёжной оценки: ущерб не равен нулю, он неизвестен."
+  },
+  "proxy_check": {
+    "n_points": 10,
+    "n_skipped_without_label": 0,
+    "skipped_asset_ids": [],
+    "status": "checked",
+    "mae_rub": 394103.05104218423,
+    "rmse_rub": 581514.0604479135,
+    "bias_rub": -44281.1266425997,
+    "sum_predicted_rub": 3157188.733574003,
+    "sum_reference_rub": 3600000.0,
+    "rule": "Контрольные точки — те же десять объектов, размещённые случайно до расчёта."
+  },
+  "bounds": [
+    93.73524731062194,
+    26.72236441976023,
+    93.78124105316887,
+    26.76835816230715
+  ],
+  "commit": "7470a68998c697c86f4a75ae5cfdde24eea1faa1",
+  "generated_at": "2026-09-26",
+  "reproduce": [
+    "python -m src.cli.fetch_data",
+    "python -m src.cli.make_splits",
+    "python -m src.cli.train_baseline",
+    "python -m src.cli.train_main",
+    "python -m src.cli.run_bundle --chip India_900498 --budget 20000"
+  ]
+}

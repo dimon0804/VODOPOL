@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22878382083614,
+          -14.250289762337411
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22348376065983,
+          -14.244450712990634
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.23507202782497,
+          -14.251547403735179
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22060915175065,
+          -14.219657211148936
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22285493996095,
+          -14.245528691331577
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.23049061987597,
+          -14.239869305041625
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22716685332472,
+          -14.241755767138276
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22492106511443,
+          -14.255050833343244
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.22842449472249,
+          -14.256038980155775
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.23722798450686,
+          -14.23636587543356
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Bolivia_103757",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}

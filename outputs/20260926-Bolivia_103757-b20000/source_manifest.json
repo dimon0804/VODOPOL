@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "id": "Bolivia_103757_S1Hand",
+      "file": "data\\cache\\S1Hand\\Bolivia_103757_S1Hand.tif",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand/Bolivia_103757_S1Hand.tif",
+      "dataset": "Sen1Floods11 v1.1",
+      "event": "Bolivia",
+      "observation_date": "см. Sen1Floods11_Metadata.geojson",
+      "published": "2020",
+      "license": "Cloud to Street, открытый доступ, цитирование обязательно",
+      "purpose": "обязательный исходный снимок, единственный вход основного метода",
+      "limits": "два канала VV/VH в дБ, 512×512, шаг 10 м"
+    },
+    {
+      "id": "Bolivia_103757_LabelHand",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/LabelHand/Bolivia_103757_LabelHand.tif",
+      "dataset": "Sen1Floods11 v1.1",
+      "published": "2020",
+      "license": "Cloud to Street",
+      "purpose": "ручная разметка воды для обучения и независимой проверки",
+      "limits": "−1 нет метки, 0 не вода, 1 вода; временную и постоянную воду не различает"
+    },
+    {
+      "id": "Bolivia_103757_JRCWaterHand",
+      "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/JRCWaterHand/Bolivia_103757_JRCWaterHand.tif",
+      "dataset": "Sen1Floods11 v1.1",
+      "source": "JRC Global Surface Water, Landsat 1984–2020",
+      "published": "2020",
+      "license": "Cloud to Street / EC JRC, открытый доступ",
+      "purpose": "постоянная вода: используется на стороне разметки для выделения целевого класса «временное затопление». На применении не требуется",
+      "limits": "производный продукт по оптике, ошибается на узких реках и мелководье; построен до событий набора, то есть временно корректен"
+    },
+    {
+      "id": "citation",
+      "url": "https://github.com/cloudtostreet/Sen1Floods11",
+      "purpose": "официальный источник набора",
+      "license": "Bonafilia, D., Tellman, B., Anderson, T., Issenberg, E. 2020. Sen1Floods11: a georeferenced dataset to train and test deep learning flood algorithms for Sentinel-1. CVPR Workshops."
+    }
+  ]
+}
