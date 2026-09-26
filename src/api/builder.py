@@ -49,17 +49,31 @@ LOG_LIMIT = 400
 TIMEOUT_SEC = 1800
 
 
-def available_chips() -> list[dict[str, Any]]:
-    """Чипы, которые можно собрать прямо сейчас.
+def cache_root() -> Path:
+    """Каталог, куда fetch_data складывает слои набора."""
+    return config.PROJECT_ROOT / "data" / "cache"
 
-    Источник — выкачанные файлы ``S1Hand`` в ``data/cache``, а не список из
-    набора: предлагать оператору чип, которого нет на диске, значит обещать
-    кнопку, которая упадёт. Роль события в протоколе подписывается, чтобы было
-    видно, на знакомых модели данных собирается комплект или на новых.
+
+def chip_layers_missing(chip_id: str) -> list[str]:
+    """Слои чипа, которых ещё нет на диске."""
+    from src.contracts import HAND_LAYERS
+    from src.data import fetch
+
+    return [
+        layer
+        for layer in HAND_LAYERS
+        if not fetch.layer_path(chip_id, layer, cache_root()).is_file()
+    ]
+
+
+def available_chips() -> list[dict[str, Any]]:
+    """Все чипы набора, которые можно собрать.
+
+    Раньше сюда попадали только выкачанные чипы, и для любого другого оператору
+    предлагали идти в терминал за fetch_data. Теперь список — весь сплит, а
+    недостающие слои одного чипа сборка скачивает сама перед прогоном: это
+    несколько мегабайт из официального бакета, а не 700 МБ всего набора.
     """
-    root = config.PROJECT_ROOT / "data" / "cache" / "S1Hand"
-    if not root.is_dir():
-        return []
     parts = config.event_parts()
     built = {}
     for path in config.list_run_dirs():
@@ -70,18 +84,19 @@ def available_chips() -> list[dict[str, Any]]:
             body = chunks[1].rsplit("-b", 1)[0]
             built[body] = path.name
 
+    s1_dir = cache_root() / "S1Hand"
     items: list[dict[str, Any]] = []
-    for path in sorted(root.glob("*_S1Hand.tif")):
-        chip_id = path.name[: -len("_S1Hand.tif")]
-        event = chip_id.rsplit("_", 1)[0]
+    for chip_id, event in config.all_split_chips():
         items.append(
             {
                 "chip_id": chip_id,
                 "event_id": event,
                 "part": parts.get(event, ""),
                 "run_id": built.get(chip_id, ""),
+                "downloaded": (s1_dir / f"{chip_id}_S1Hand.tif").is_file(),
             }
         )
+    items.sort(key=lambda item: (item["event_id"], item["chip_id"]))
     return items
 
 
@@ -97,11 +112,11 @@ def validate_chip(chip_id: str) -> str:
             f"Идентификатор чипа {chip_id!r} не похож на чип Sen1Floods11: "
             "ожидается вид India_900498."
         )
-    known = {item["chip_id"] for item in available_chips()}
+    known = {chip for chip, _event in config.all_split_chips()}
     if name not in known:
         raise ValueError(
-            f"Чип {name} не выкачан в data/cache. Выполните "
-            "python -m src.cli.fetch_data и повторите."
+            f"Чипа {name} нет в размеченной части Sen1Floods11: собрать можно только "
+            "чип из списков сплита."
         )
     return name
 
@@ -197,7 +212,56 @@ class BuildManager:
 
     # ── выполнение ───────────────────────────────────────────────────────────
 
+    def _log(self, job: BuildJob, text: str) -> None:
+        with self._lock:
+            job.lines.append(text)
+            if len(job.lines) > LOG_LIMIT:
+                del job.lines[: len(job.lines) - LOG_LIMIT]
+
+    def _ensure_chip(self, job: BuildJob) -> bool:
+        """Докачивает слои чипа и метаданные набора, если их нет на диске.
+
+        Это ровно то, что fetch_data сделал бы для одного чипа: те же файлы из того
+        же официального бакета в тот же data/cache. Возвращает False, если скачать
+        не удалось, — тогда сборку не запускаем, а говорим почему.
+        """
+        from src.data import fetch
+
+        missing = chip_layers_missing(job.chip_id)
+        meta = cache_root() / "Sen1Floods11_Metadata.geojson"
+        if not missing and meta.is_file():
+            return True
+        root = cache_root()
+        try:
+            root.mkdir(parents=True, exist_ok=True)
+            probe = root / ".write_probe"
+            probe.write_text("ok", encoding="utf-8")
+            probe.unlink()
+        except OSError:
+            self._finish(
+                job,
+                "error",
+                "чип не выкачан, а каталог data/cache недоступен на запись — скачать его некуда",
+            )
+            return False
+        if missing:
+            self._log(job, f"Чип {job.chip_id} не выкачан: скачиваю {len(missing)} слоя из официального бакета Sen1Floods11…")
+        try:
+            for layer in missing:
+                path = fetch.fetch_one(job.chip_id, layer, root)
+                self._log(job, f"  {layer}: {path.stat().st_size / 1e6:.1f} МБ")
+            if not meta.is_file():
+                fetch.fetch_metadata(root)
+                self._log(job, "  Sen1Floods11_Metadata.geojson: даты съёмки событий")
+        except Exception as exc:  # сеть, бакет, диск — всё одинаково честно сказать
+            self._finish(job, "error", f"не удалось скачать чип {job.chip_id}: {exc}. Проверьте интернет и повторите.")
+            return False
+        self._log(job, "Слои на месте, запускаю сборку комплекта.")
+        return True
+
     def _run(self, job: BuildJob) -> None:
+        if not self._ensure_chip(job):
+            return
         command = [
             sys.executable,
             "-X",

@@ -1750,7 +1750,9 @@
       return '<option value="' + esc(c.chip_id) + '"' +
         (note ? ' label="' + esc(note) + '"' : '') + '></option>';
     }).join('');
-    $('build-chip-hint').textContent = 'доступно чипов: ' + items.length;
+    var have = items.filter(function (c) { return c.downloaded; }).length;
+    $('build-chip-hint').textContent = 'чипов в наборе: ' + items.length + ' · выкачано: ' + have +
+      (items.length > have ? ' · остальные скачаются сами при сборке' : '');
   }
 
   /** Подсказка под полем: роль события и то, что комплект уже есть. */
@@ -1763,12 +1765,14 @@
       if (BUILD.chips[i].chip_id === value) { found = BUILD.chips[i]; break; }
     }
     if (!found) {
-      hint.textContent = 'такого чипа нет среди выкачанных';
+      hint.textContent = 'такого чипа нет в размеченной части Sen1Floods11';
       return;
     }
     var parts = [found.event_id];
     if (found.part) parts.push(found.part);
     if (found.run_id) parts.push('комплект уже собран, сборка перезапишет его свежим');
+    // Выкачивать заранее не нужно: сборка сама скачает слои этого чипа, несколько мегабайт.
+    if (found.downloaded === false) parts.push('не выкачан — слои скачаются автоматически, несколько МБ');
     hint.textContent = parts.join(' · ');
   }
 

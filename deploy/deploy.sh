@@ -55,7 +55,7 @@ docker run -d \
     -v "${ROOT}/outputs":/app/outputs:ro \
     -v "${ROOT}/models":/app/models:ro \
     -v "${ROOT}/reports":/app/reports:ro \
-    -v "${ROOT}/data/cache":/app/data/cache:ro \
+    -v "${ROOT}/data/cache":/app/data/cache \
     -e FLOODVALUE_HOST=0.0.0.0 \
     -e FLOODVALUE_PORT=8000 \
     -e FLOODVALUE_RUN="${FLOODVALUE_RUN:-}" \

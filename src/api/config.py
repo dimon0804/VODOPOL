@@ -172,3 +172,20 @@ def event_chip_ids(event: str) -> list[str]:
 #: Снимок S1Hand чипа: сначала выкачанный, иначе — заголовок из официального бакета.
 S1_LOCAL = "data/cache/S1Hand/{chip}_S1Hand.tif"
 S1_REMOTE = "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand/{chip}_S1Hand.tif"
+
+
+def all_split_chips() -> list[tuple[str, str]]:
+    """Все чипы размеченной части набора со своим событием — из списков сплита."""
+    out: list[tuple[str, str]] = []
+    splits_dir = PROJECT_ROOT / "splits"
+    for part in ("train", "validation", "test", "holdout"):
+        path = splits_dir / f"{part}.csv"
+        if not path.is_file():
+            continue
+        with path.open(encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                chip = (row.get("chip_id") or "").strip()
+                event = (row.get("event") or row.get("event_id") or "").strip()
+                if chip:
+                    out.append((chip, event))
+    return out
