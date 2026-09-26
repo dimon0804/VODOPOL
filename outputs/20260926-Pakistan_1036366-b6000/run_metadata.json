@@ -135,6 +135,22 @@
     "availability": "даты сценарные, привязаны к дате события; см. scenario_dates",
     "broad_rule_B": "все зоны каталога, относящиеся к наблюдению события: широкое покрытие территории чипа без отбора по ожидаемому ущербу"
   },
+  "input_source": {
+    "kind": "sen1floods11",
+    "path": "data/cache/S1Hand/Pakistan_1036366_S1Hand.tif",
+    "extra_sources_declared": 0,
+    "note": "Снимок из официального набора Sen1Floods11."
+  },
+  "purpose": {
+    "key": "response",
+    "title_ru": "оперативное реагирование",
+    "who": "дежурный по паводку",
+    "acquisition_type": "new",
+    "processing_level": "L2",
+    "usage_type": "internal",
+    "guaranteed_purchase": true,
+    "why": "Вода стоит сейчас, и решение принимается в течение суток. Архивная сцена бесполезна: она снята до события или после него. Платим за срочность — коэффициент актуальности 1,8, самый дорогой в таблице."
+  },
   "total_expected_loss_rub": 4689385.323785245,
   "impact": {
     "units": [
@@ -422,7 +438,7 @@
     70.69238229461527,
     29.2520202598408
   ],
-  "commit": "534ef58b6d9c637ab2c5a80ec9b9395e1895b54e",
+  "commit": "2d10b44981358a9f2933050b03cebefe6309ac18",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",

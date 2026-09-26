@@ -632,10 +632,13 @@ details.more[open] summary { margin-bottom: 12px; }
 .ml-h { font: 700 10.5px var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 8px 0 4px; }
 .ml-h:first-child { margin-top: 0; }
 .ml-i { display: flex; align-items: center; gap: 9px; padding: 3px 0; }
-.ml-a { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--primary); background: #fff; flex: 0 0 auto; }
-.ml-a.high { border-width: 4px; }
-.ml-a.low { border-color: #9da0c9; }
-.ml-a.none { border-style: dashed; border-color: #a5a7c2; }
+/* Цвета — те же, что у точек на карте (PRIORITY_TIERS в app.js): светофор, о
+   котором просили эксперты. Меняются там — менять и здесь. */
+.ml-a { width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--primary); background: #fff; flex: 0 0 auto; }
+.ml-a.high { border-color: #c0392b; border-width: 4px; }
+.ml-a.mid { border-color: #d98324; }
+.ml-a.low { border-color: #2f8f4e; }
+.ml-a.none { border: 2px dashed #a5a7c2; }
 .ml-z { width: 18px; height: 12px; border-radius: 2px; flex: 0 0 auto; }
 .ml-z.plan { border: 2px solid #fff; background: rgba(61,65,128,.55); box-shadow: 0 0 0 1px #8b8fb8; }
 .ml-z.cat { border: 1.5px dashed #8b8fb8; background: rgba(255,255,255,.4); }
@@ -643,7 +646,8 @@ details.more[open] summary { margin-bottom: 12px; }
 .ml-c.cur { background: var(--orange); } .ml-c.built { background: var(--primary); } .ml-c.raw { border: 1.5px solid #fff; background: rgba(255,255,255,.25); box-shadow: 0 0 0 1px #8b8fb8; }
 .map-base { position: absolute; left: 14px; bottom: 34px; z-index: 600; background: rgba(255,255,255,.95); box-shadow: 0 2px 8px rgba(34,37,79,.15); }
 .leaflet-bottom.leaflet-left .leaflet-control-scale { margin-bottom: 76px; }
-.amark.sel span { box-shadow: 0 0 0 4px var(--orange), 0 1px 4px rgba(34,37,79,.3); }
+/* Выбор — тёмно-синим кольцом: оранжевое путалось бы со «средним» приоритетом. */
+.amark.sel span { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #22254f, 0 1px 4px rgba(34,37,79,.3); }
 .pick { position: relative; margin-top: 14px; border-radius: 16px; background: var(--panel-2); padding: 18px 22px; min-height: 76px; }
 .pick-empty b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 3px; }
 .pick-empty span { color: var(--muted); font-size: 13px; }
@@ -670,3 +674,79 @@ details.more[open] summary { margin-bottom: 12px; }
 .map-legend.lv-region .ml-region .ml-h { margin-top: 0; }
 .evpill span i { font-style: normal; color: var(--muted); }
 .evpill span:hover i { color: #dcdcf5; }
+
+/* Ступень приоритета проверки: цвет несёт смысл, поэтому рядом с ним всегда
+   стоит слово — цвет один, без подписи, не читается при дальтонизме и в печати. */
+.ptag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 700 12px var(--sans);
+  white-space: nowrap;
+}
+
+.ptag i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+
+/* Ступени приоритета под легендой слоя: объясняют цвет точек и зон на карте. */
+.lg-prio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+}
+
+.lg-prio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
+.lg-prio-item i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+
+/* ── обзорная карта набора ──────────────────────────────────────────────── */
+/* Высота задана долей экрана, а не пикселями: обзор нужен целиком, а не кусок
+   его с прокруткой — весь смысл страницы в том, чтобы увидеть всё сразу. */
+.overview-map {
+  height: min(62vh, 640px);
+  min-height: 380px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ov-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+}
+
+.ov-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
+.ov-item i {
+  width: 12px;
+  height: 9px;
+  border-radius: 2px;
+  flex: none;
+}

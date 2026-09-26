@@ -1,19 +1,19 @@
 {
-  "run_id": "20260926-Somalia_7931-b6000",
-  "chip_id": "Somalia_7931",
-  "event_id": "Somalia",
-  "source_chip_path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
-  "s1_path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
+  "run_id": "20260926-India_900498-b6000-damage",
+  "chip_id": "India_900498",
+  "event_id": "India",
+  "source_chip_path": "data/cache/S1Hand/India_900498_S1Hand.tif",
+  "s1_path": "data/cache/S1Hand/India_900498_S1Hand.tif",
   "threshold": 0.15,
   "budget_rub": 6000.0,
-  "decision_deadline": "2018-05-08",
+  "decision_deadline": "2016-08-13",
   "scenario_dates": {
-    "event_date": "2018-05-07",
-    "decision_deadline": "2018-05-08",
-    "new_observation_at": "2018-05-08",
-    "new_available_at": "2018-05-08",
-    "archive_observation_at": "2017-11-08",
-    "archive_available_at": "2018-05-08"
+    "event_date": "2016-08-12",
+    "decision_deadline": "2016-08-13",
+    "new_observation_at": "2016-08-13",
+    "new_available_at": "2016-08-13",
+    "archive_observation_at": "2016-02-14",
+    "archive_available_at": "2016-08-13"
   },
   "dates_status": "сценарные: привязаны к дате съёмки события из Sen1Floods11_Metadata.geojson, подтверждением поставщика не являются",
   "target_class": "временное затопление",
@@ -23,7 +23,7 @@
   "placement_rule": "Равномерная выборка пикселя по всей сетке чипа генератором numpy PCG64 с фиксированным зерном. Пиксель принимается, если оба канала S1 в нём конечны (валидная область исходного снимка) и он ещё не занят другим объектом; иначе выборка повторяется. Ручные метки, вероятностный растр и карта ущерба при размещении не используются. Объекты назначаются типам в порядке таблицы кейса.",
   "probability_rule": "p_flood берётся из flood_probability.tif в пикселе, содержащем координату объекта, без сглаживания и независимо от бинарной маски.",
   "loss_model": "EL = p_flood × V × q, p из flood_probability.tif независимо от маски",
-  "chip_split_part": "test",
+  "chip_split_part": "train",
   "split": {
     "dataset": "Sen1Floods11 v1.1",
     "seed": 2026,
@@ -137,21 +137,21 @@
   },
   "input_source": {
     "kind": "sen1floods11",
-    "path": "data/cache/S1Hand/Somalia_7931_S1Hand.tif",
+    "path": "data/cache/S1Hand/India_900498_S1Hand.tif",
     "extra_sources_declared": 0,
     "note": "Снимок из официального набора Sen1Floods11."
   },
   "purpose": {
-    "key": "response",
-    "title_ru": "оперативное реагирование",
-    "who": "дежурный по паводку",
-    "acquisition_type": "new",
+    "key": "damage",
+    "title_ru": "оценка ущерба для компенсаций",
+    "who": "экономист-оценщик",
+    "acquisition_type": "archive",
     "processing_level": "L2",
     "usage_type": "internal",
     "guaranteed_purchase": true,
-    "why": "Вода стоит сейчас, и решение принимается в течение суток. Архивная сцена бесполезна: она снята до события или после него. Платим за срочность — коэффициент актуальности 1,8, самый дорогой в таблице."
+    "why": "Паводок прошёл, считаются выплаты. Нужна сцена, снятая в пик разлива, и она к этому моменту уже архивная. Переплачивать за срочность незачем: коэффициент 0,6 вместо 1,8, то есть втрое дешевле за тот же кадр."
   },
-  "total_expected_loss_rub": 197628.00245080143,
+  "total_expected_loss_rub": 3157188.733574003,
   "impact": {
     "units": [
       {
@@ -174,117 +174,33 @@
       }
     ],
     "totals": {
-      "expected_loss_rub": 197628.00245080143,
-      "compensation_rub": 197628.00245080143,
-      "expected_objects": 0.0564,
+      "expected_loss_rub": 3157188.733574003,
+      "compensation_rub": 3157188.733574003,
+      "expected_objects": 1.4472,
       "assessed_objects": 10,
       "total_objects": 10,
-      "expected_area_km2": 0.2094,
-      "expected_area_ha": 20.94,
-      "mask_area_km2": 0.0
+      "expected_area_km2": 4.8834,
+      "expected_area_ha": 488.34,
+      "mask_area_km2": 13.2428
     },
     "area": {
-      "expected_km2": 0.2094,
-      "expected_ha": 20.94,
-      "mask_km2": 0.0,
-      "mask_ha": 0.0,
+      "expected_km2": 4.8834,
+      "expected_ha": 488.34,
+      "mask_km2": 13.2428,
+      "mask_ha": 1324.28,
       "chip_km2": 26.2144,
-      "share_of_chip": 0.007988,
+      "share_of_chip": 0.186285,
       "valid_pixels": 262144,
       "note": "Ожидаемая площадь — сумма вероятностей по валидным пикселям; площадь по маске — те же пиксели с отсечением по порогу. Первая учитывает неуверенные пиксели пропорционально, вторая считает их целиком или никак."
     },
     "by_class": [
       {
-        "asset_class": "school",
-        "title_ru": "школа",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.031,
-        "expected_loss_rub": 111674.6,
-        "value_rub": 18000000,
-        "vulnerability": 0.2,
-        "asset_ids": [
-          "a07"
-        ],
-        "not_assessed": 0
-      },
-      {
-        "asset_class": "water_intake",
-        "title_ru": "водозабор",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.0042,
-        "expected_loss_rub": 20073.43,
-        "value_rub": 16000000,
-        "vulnerability": 0.3,
-        "asset_ids": [
-          "a10"
-        ],
-        "not_assessed": 0
-      },
-      {
-        "asset_class": "clinic",
-        "title_ru": "клиника",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.0042,
-        "expected_loss_rub": 18818.84,
-        "value_rub": 30000000,
-        "vulnerability": 0.15,
-        "asset_ids": [
-          "a06"
-        ],
-        "not_assessed": 0
-      },
-      {
-        "asset_class": "workshop",
-        "title_ru": "мастерская",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.005,
-        "expected_loss_rub": 13488.46,
-        "value_rub": 6000000,
-        "vulnerability": 0.45,
-        "asset_ids": [
-          "a08"
-        ],
-        "not_assessed": 0
-      },
-      {
-        "asset_class": "substation",
-        "title_ru": "электроподстанция",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.0014,
-        "expected_loss_rub": 11368.2,
-        "value_rub": 20000000,
-        "vulnerability": 0.4,
-        "asset_ids": [
-          "a02"
-        ],
-        "not_assessed": 0
-      },
-      {
-        "asset_class": "warehouse",
-        "title_ru": "склад",
-        "count": 1,
-        "assessed": 1,
-        "expected_objects": 0.0025,
-        "expected_loss_rub": 6152.15,
-        "value_rub": 10000000,
-        "vulnerability": 0.25,
-        "asset_ids": [
-          "a01"
-        ],
-        "not_assessed": 0
-      },
-      {
         "asset_class": "telecom_node",
         "title_ru": "узел связи",
         "count": 1,
         "assessed": 1,
-        "expected_objects": 0.0023,
-        "expected_loss_rub": 4534.44,
+        "expected_objects": 0.3676,
+        "expected_loss_rub": 735270.8,
         "value_rub": 4000000,
         "vulnerability": 0.5,
         "asset_ids": [
@@ -293,12 +209,26 @@
         "not_assessed": 0
       },
       {
+        "asset_class": "school",
+        "title_ru": "школа",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.2027,
+        "expected_loss_rub": 729680.53,
+        "value_rub": 18000000,
+        "vulnerability": 0.2,
+        "asset_ids": [
+          "a07"
+        ],
+        "not_assessed": 0
+      },
+      {
         "asset_class": "facility",
         "title_ru": "производственный объект",
         "count": 1,
         "assessed": 1,
-        "expected_objects": 0.0025,
-        "expected_loss_rub": 3937.38,
+        "expected_objects": 0.4205,
+        "expected_loss_rub": 672808.31,
         "value_rub": 8000000,
         "vulnerability": 0.2,
         "asset_ids": [
@@ -307,12 +237,82 @@
         "not_assessed": 0
       },
       {
+        "asset_class": "road_unit",
+        "title_ru": "участок дороги",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.3719,
+        "expected_loss_rub": 557855.13,
+        "value_rub": 5000000,
+        "vulnerability": 0.3,
+        "asset_ids": [
+          "a03"
+        ],
+        "not_assessed": 0
+      },
+      {
+        "asset_class": "substation",
+        "title_ru": "электроподстанция",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.031,
+        "expected_loss_rub": 248165.79,
+        "value_rub": 20000000,
+        "vulnerability": 0.4,
+        "asset_ids": [
+          "a02"
+        ],
+        "not_assessed": 0
+      },
+      {
+        "asset_class": "water_intake",
+        "title_ru": "водозабор",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.0254,
+        "expected_loss_rub": 121861.45,
+        "value_rub": 16000000,
+        "vulnerability": 0.3,
+        "asset_ids": [
+          "a10"
+        ],
+        "not_assessed": 0
+      },
+      {
+        "asset_class": "workshop",
+        "title_ru": "мастерская",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.0119,
+        "expected_loss_rub": 32182.54,
+        "value_rub": 6000000,
+        "vulnerability": 0.45,
+        "asset_ids": [
+          "a08"
+        ],
+        "not_assessed": 0
+      },
+      {
+        "asset_class": "clinic",
+        "title_ru": "клиника",
+        "count": 1,
+        "assessed": 1,
+        "expected_objects": 0.006,
+        "expected_loss_rub": 26871.39,
+        "value_rub": 30000000,
+        "vulnerability": 0.15,
+        "asset_ids": [
+          "a06"
+        ],
+        "not_assessed": 0
+      },
+      {
         "asset_class": "pumping_station",
         "title_ru": "насосная станция",
         "count": 1,
         "assessed": 1,
-        "expected_objects": 0.0009,
-        "expected_loss_rub": 3889.22,
+        "expected_objects": 0.0042,
+        "expected_loss_rub": 17564.25,
         "value_rub": 12000000,
         "vulnerability": 0.35,
         "asset_ids": [
@@ -321,16 +321,16 @@
         "not_assessed": 0
       },
       {
-        "asset_class": "road_unit",
-        "title_ru": "участок дороги",
+        "asset_class": "warehouse",
+        "title_ru": "склад",
         "count": 1,
         "assessed": 1,
-        "expected_objects": 0.0025,
-        "expected_loss_rub": 3691.29,
-        "value_rub": 5000000,
-        "vulnerability": 0.3,
+        "expected_objects": 0.006,
+        "expected_loss_rub": 14928.55,
+        "value_rub": 10000000,
+        "vulnerability": 0.25,
         "asset_ids": [
-          "a03"
+          "a01"
         ],
         "not_assessed": 0
       }
@@ -379,18 +379,15 @@
     "note": "Объекты без надёжной оценки: ущерб не равен нулю, он неизвестен."
   },
   "proxy_check": {
-    "n_points": 8,
-    "n_skipped_without_label": 2,
-    "skipped_asset_ids": [
-      "a02",
-      "a09"
-    ],
+    "n_points": 10,
+    "n_skipped_without_label": 0,
+    "skipped_asset_ids": [],
     "status": "checked",
-    "mae_rub": 22715.670501929708,
-    "rmse_rub": 41067.55160808441,
-    "bias_rub": 22715.670501929708,
-    "sum_predicted_rub": 181725.36401543766,
-    "sum_reference_rub": 0.0,
+    "mae_rub": 394103.05104218423,
+    "rmse_rub": 581514.0604479135,
+    "bias_rub": -44281.1266425997,
+    "sum_predicted_rub": 3157188.733574003,
+    "sum_reference_rub": 3600000.0,
     "rule": "Контрольные точки — те же десять объектов, размещённые случайно до расчёта."
   },
   "proxy_check_note": "Демонстрационный чип может входить в обучающую часть — он выбирается по наглядности. Поэтому рядом лежит проверка на независимом чипе из части test; именно её и следует считать оценкой качества перехода «вероятность → рубли».",
@@ -418,21 +415,21 @@
   "rank_sensitivity": {
     "file": "sensitivity_ranks.csv",
     "notes": [
-      "p_uncertain_x0.7 — сменили позицию: a02, a03, a04, a05, a08",
-      "p_uncertain_x1.3 — сменили позицию: a04, a09",
-      "V_clinic_x0.5 — сменили позицию: a02, a06, a08",
-      "V_telecom_node_x3.0 — сменили позицию: a01, a02, a08, a09",
+      "p_uncertain_x0.7 — приоритеты не изменились",
+      "p_uncertain_x1.3 — приоритеты не изменились",
+      "V_clinic_x0.5 — сменили позицию: a01, a05, a06",
+      "V_telecom_node_x3.0 — приоритеты не изменились",
       "V_substation_x0.6 — приоритеты не изменились",
-      "q_workshop_x0.4 — сменили позицию: a01, a02, a08",
-      "q_school_x2.0 — приоритеты не изменились",
-      "no_data_top1 — сменили позицию: a01, a02, a03, a04, a05, a06, a08, a09, a10; ушли из ранжирования: a07"
+      "q_workshop_x0.4 — сменили позицию: a01, a05, a06, a08",
+      "q_school_x2.0 — сменили позицию: a07, a09",
+      "no_data_top1 — сменили позицию: a01, a02, a03, a04, a05, a06, a07, a08, a10; ушли из ранжирования: a09"
     ]
   },
   "bounds": [
-    45.30383640871571,
-    3.7254931463004795,
-    45.34983015126263,
-    3.771486888847399
+    93.73524731062194,
+    26.72236441976023,
+    93.78124105316887,
+    26.76835816230715
   ],
   "commit": "2d10b44981358a9f2933050b03cebefe6309ac18",
   "generated_at": "2026-09-26",
@@ -441,6 +438,6 @@
     "python -m src.cli.make_splits",
     "python -m src.cli.train_baseline",
     "python -m src.cli.train_main",
-    "python -m src.cli.run_bundle --chip Somalia_7931 --budget 6000"
+    "python -m src.cli.run_bundle --chip India_900498 --budget 6000"
   ]
 }

@@ -98,6 +98,47 @@ def _budget_curve(run_dir: Path) -> dict | None:
     return {"points": points, "full_coverage": full, "broad_cost": broad_cost}
 
 
+def _reliability_block(reports: Path) -> list[str]:
+    """Диаграммы надёжности на независимых частях, а не только на validation.
+
+    На validation калибратор и обучался, и показывать только его значит показывать
+    подгонку вместо проверки. Здесь берутся корзины с частей, которые калибратор не видел.
+    """
+    out: list[str] = []
+    for name, title in (("metrics_compare.json", "test"),
+                        ("metrics_compare_holdout.json", "holdout, Bolivia")):
+        payload = _load_json(reports / name)
+        if not payload:
+            continue
+        block = payload.get("calibration_on_this_part", {})
+        bins = None
+        for value in block.values():
+            if isinstance(value, list) and value and isinstance(value[0], dict):
+                bins = value
+                break
+        if not bins:
+            continue
+        out += [
+            "",
+            f"Диаграмма надёжности на части «{title}» (ECE {_fmt(block.get('ece'))}):",
+            "",
+            "| Корзина | Предсказано | Наблюдается | Отношение | Пикселей |",
+            "| --- | ---: | ---: | ---: | ---: |",
+        ]
+        for item in bins:
+            n = int(item.get("n_pixels") or 0)
+            if n < 1000:
+                continue
+            pred = float(item.get("mean_predicted") or 0)
+            obs = float(item.get("observed_fraction") or 0)
+            ratio = (obs / pred) if pred else 0
+            out.append(
+                f"| {item['bin_low']:.2f}–{item['bin_high']:.2f} | {pred:.3f} | "
+                f"{obs:.3f} | ×{ratio:.1f} | {n:,} |"
+            )
+    return out
+
+
 def build(run_dir: Path, reports: Path) -> str:
     meta = _load_json(run_dir / C.F_RUN_METADATA) or {}
     compare = _load_json(reports / "metrics_compare.json")
@@ -323,6 +364,32 @@ def build(run_dir: Path, reports: Path) -> str:
     # ── вероятности ──────────────────────────────────────────────────────────
     add("## 4. Надёжность вероятностей и неопределённость")
     add("")
+    for _line in _reliability_block(reports):
+        add(_line)
+    add("")
+    add(
+        "**Что из этих таблиц следует, и это неприятно.** На независимой проверке "
+        "вероятности держатся близко к наблюдаемой доле воды. На отложенном событии, "
+        "которого модель не видела вообще, они систематически **занижены**: там, где "
+        "модель говорит 0,15, воды оказывается 0,50, а в самой нижней корзине разрыв "
+        "пятикратный. Перекос односторонний, это не шум."
+    )
+    add("")
+    add(
+        "Для карты воды это означало бы просто пропуски. Для нашей задачи последствие "
+        "прямее: ожидаемый ущерб считается как EL = p × V × q, он линеен по p, и "
+        "занижение вероятности в два-три раза занижает ущерб ровно во столько же. "
+        "То есть на новом регионе наши рублёвые оценки — это нижняя граница, а не "
+        "точечная оценка, и распорядителю средств надо говорить именно так."
+    )
+    add("")
+    add(
+        "Почему мы это не «починили» подкруткой. Калибратор обучается на validation и "
+        "к тесту не прикасается — таков протокол, и переучивать его на отложенном "
+        "событии значило бы подогнать проверку под ответ. Правильное решение другое: "
+        "при переносе на новый регион калибровку надо пересчитывать на размеченных "
+        "сценах этого региона, и до тех пор ущерб честнее объявлять диапазоном."
+    )
     if validation:
         calib = validation.get("calibration", {})
         add(

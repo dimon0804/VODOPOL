@@ -364,6 +364,11 @@ def create_app(state: RunState | None = None) -> FastAPI:
                     "budget_rub": summary.get("budget_rub"),
                     "threshold": summary.get("threshold"),
                     "part": parts.get(str(event), ""),
+                    # Цель запуска в списке обязательна: два прогона по одному чипу
+                    # с разными целями отличаются только ценой, и без подписи они
+                    # выглядят как дубль одной строки.
+                    "purpose": (summary.get("purpose") or {}).get("key", ""),
+                    "purpose_title": (summary.get("purpose") or {}).get("title_ru", ""),
                     "current": (summary.get("run_id") or path.name) == current,
                 }
             )
