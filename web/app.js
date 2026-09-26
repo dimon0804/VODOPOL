@@ -200,6 +200,10 @@
 
   function initMap() {
     S.map = L.map('map', { preferCanvas: true, zoomControl: true, minZoom: 3 });
+    // Leaflet 1.9 вставляет в подпись собственный флаг. В панели оценки ущерба ему
+    // делать нечего, а ссылка на библиотеку остаётся — лицензия требует именно её.
+    S.map.attributionControl.setPrefix(
+      '<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
     // Географический контекст. Тайлы приглушены фильтром в styles.css; если сети
     // нет, подложка просто не появится — слои запуска от неё не зависят.
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

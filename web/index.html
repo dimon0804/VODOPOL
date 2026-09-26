@@ -7,9 +7,10 @@
   <!-- Без этого браузер просит /favicon.ico и получает 404: в консоли на защите
        висела бы красная строка, не связанная ни с одной настоящей ошибкой. -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-  <link rel="stylesheet" href="styles.css?v=5">
+  <!-- Leaflet лежит рядом, а не на unpkg: на защите интернета может не быть,
+       а панель без карты это не панель. Версия 1.9.4, файлы в web/vendor/leaflet. -->
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -202,8 +203,7 @@
   <span class="mark none">нет оценки</span> значение пустое, нулём не заменяется
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="app.js?v=5"></script>
+<script src="vendor/leaflet/leaflet.js?v=1"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
