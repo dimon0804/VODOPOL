@@ -1082,7 +1082,9 @@
       html += '<tr><td>' + esc(r.title_ru || r.asset_class) + '</td>' +
         '<td class="n">' + fmt(r.expected_objects, 2) + '</td>' +
         '<td class="n">' + money(r.expected_loss_rub) +
-        '<span class="bar" style="width:' + Math.round(share * 100) + '%"></span></td></tr>';
+        // Дорожка фиксированной ширины: полоска в процентах от ячейки стояла в одну
+        // строку с числом и у самого крупного объекта вылезала за край карточки.
+        '<span class="ibar"><i style="width:' + Math.round(share * 100) + '%"></i></span></td></tr>';
     });
     html += '</tbody>';
     $('impact-classes').innerHTML = html;

@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=23">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body>
 
@@ -24,7 +24,6 @@
     <a href="#/objects" data-page="objects">Объекты и ущерб</a>
     <a href="#/plan" data-page="plan">План съёмки</a>
     <a href="#/methods" data-page="methods">Методы и качество</a>
-    <a href="#/prices" data-page="prices">Цены и допущения</a>
   </nav>
 
   <div class="topactions">
@@ -356,22 +355,6 @@
   <div class="tab" data-tab="data" id="m-data"></div>
 </section>
 
-<!-- ════════════════════════ ЦЕНЫ И ДОПУЩЕНИЯ ════════════════════════ -->
-<section class="page" id="page-prices" data-page="prices">
-  <div class="page-head">
-    <h1>Цены и допущения</h1>
-    <div class="page-actions">
-      <a class="btn dl" data-file="run_metadata.json" href="/api/files/run_metadata.json">run_metadata.json</a>
-    </div>
-  </div>
-  <div class="tabs" data-tabs="prices">
-    <a href="#/prices/cost" data-tab="cost">Стоимость и нормативы</a>
-    <a href="#/prices/about" data-tab="about">О прототипе</a>
-  </div>
-  <div class="tab" data-tab="cost" id="p-cost"></div>
-  <div class="tab" data-tab="about" id="p-about"></div>
-</section>
-
 </main>
 
 <footer class="footer">
@@ -386,7 +369,7 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=21"></script>
-<script src="pages.js?v=21"></script>
+<script src="app.js?v=24"></script>
+<script src="pages.js?v=24"></script>
 </body>
 </html>

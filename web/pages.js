@@ -12,11 +12,9 @@
   var V = null;               // window.VODOPOL, появляется после app.js
   var REPORTS = {};           // кэш отчётов модели
   var RANKS = { run: null, rows: null };
-  var META = { run: null, data: null };
   var ROUTE = { page: 'home', tab: '' };
-  var DEFAULT_TAB = { methods: 'quality', prices: 'cost' };
+  var DEFAULT_TAB = { methods: 'quality' };
   var zoneLabels = null;      // слой подписей Z1…Zn на карте
-  var priceZone = null;       // выбранная зона на странице «Цены»
   var methodsPart = 'test';   // test | holdout на вкладке качества
 
   function $(id) { return document.getElementById(id); }
@@ -92,7 +90,6 @@
     if (ROUTE.page === 'objects') renderObjects();
     if (ROUTE.page === 'plan') renderPlan();
     if (ROUTE.page === 'methods') renderMethods();
-    if (ROUTE.page === 'prices') renderPrices();
   }
 
   // ── подписи зон Z1…Zn ─────────────────────────────────────────────────────
@@ -604,105 +601,6 @@
           '<p class="note">Основной метод на новом событии держится на уровне test; пороговый метод на Bolivia выигрывает с запасом. ' +
           'Модель на новом событии не дообучалась.</p></section></div>';
     }).catch(function (e) { failBox('m-data', e); });
-  }
-
-  // ── цены и допущения ─────────────────────────────────────────────────────
-
-  function runMeta() {
-    var run = V.currentRunId();
-    if (META.run === run && META.data) return Promise.resolve(META.data);
-    return V.getJSON('/api/files/run_metadata.json').then(function (d) { META = { run: run, data: d }; return d; });
-  }
-
-  function renderPrices() {
-    if (ROUTE.tab === 'about') return renderAbout();
-    return renderCost();
-  }
-
-  function renderCost() {
-    var S = V.S;
-    var pos = planPositions(), strat = S.strategy;
-    if (!pos.length) {
-      pos = ((S.strategies && S.strategies.positions) || []).filter(function (p) { return p.strategy === 'C'; });
-      strat = 'C';
-    }
-    if (!pos.some(function (p) { return p.candidate_id === priceZone; })) priceZone = pos.length ? pos[0].candidate_id : null;
-    var p = pos.filter(function (x) { return x.candidate_id === priceZone; })[0];
-    var byId = {};
-    S.candidates.features.forEach(function (f) { byId[f.properties.candidate_id] = f.properties; });
-    runMeta().catch(function () { return {}; }).then(function (meta) {
-      var pr = (meta && meta.pricing) || {};
-      var chips = pos.map(function (x) {
-        return '<button class="chipbtn' + (x.candidate_id === priceZone ? ' on' : '') + '" data-zone="' + esc(x.candidate_id) + '">' + esc(zoneLabel(x.candidate_id)) + '</button>';
-      }).join('');
-      var left;
-      if (!p) {
-        left = '<p class="muted">Платных позиций нет ни в текущей стратегии, ни в C — считать нечего.</p>';
-      } else {
-        var z = byId[p.candidate_id] || {};
-        var f = function (label, value, scen) {
-          return '<div class="fld"><div class="fld-l">' + esc(label) + '</div><div class="fld-v"><i class="' + (scen ? 'd-s' : 'd-m') + '"></i>' + value + '</div></div>';
-        };
-        left = '<div class="flds">' +
-          f('Контур', 'полигон без вырезов, по сетке ' + fmt(z.cell_km, 1) + ' км', false) +
-          f('Площадь К', fmt(p.area_km2, 3) + ' км² (мин. 1 км², проверка до округления)', false) +
-          f('Сенсор / разрешение', esc(V.SENSOR_WORD[z.sensor_type] || z.sensor_type) + ', ' + fmt(z.resolution_m, 1) + ' м', true) +
-          f('Ставка Б', money(p.base_rate_rub_km2) + ' ₽/км²', true) +
-          f('Источник ставки', 'сценарий из постановки кейса, не от поставщика', true) +
-          f('Уровень обработки О', esc(p.processing_level) + ', k = ' + fmt(p.processing_coef, 2), false) +
-          f('Условия использования П', esc(V.USAGE_WORD[p.usage_type] || p.usage_type) + ', k = ' + fmt(p.usage_coef, 2), false) +
-          f('Гарантированная покупка', p.guaranteed_purchase ? 'да' : 'нет', true) +
-          f('Актуальность Т', esc(V.ACQ_WORD[z.acquisition_type] || z.acquisition_type) + ', k = ' + fmt(p.freshness_coef, 2), true) +
-          f('Скидка Р', 'k = ' + fmt(p.discount_coef, 2) + ' · площадь группы ' + fmt(p.group_area_km2, 1) + ' км²', false) +
-          f('Округление', esc(pr.rounding || 'деньги до копеек, ROUND_HALF_UP'), false) +
-          f('Даты', 'съёмка ' + esc(z.observation_at || DASH) + ' · доступно ' + esc(z.available_at || DASH), true) +
-          '</div>' +
-          '<div class="total"><div><div class="total-l">Итого за ' + esc(zoneLabel(p.candidate_id)) + '</div><div class="total-v">' + money(p.cost_rub) + ' ₽</div></div>' +
-          '<div class="total-f">К × Б × О × П × Т × Р = ' + fmt(p.area_km2, 3) + ' × ' + money(p.base_rate_rub_km2) + ' × ' + fmt(p.processing_coef, 2) + ' × ' +
-            fmt(p.usage_coef, 2) + ' × ' + fmt(p.freshness_coef, 2) + ' × ' + fmt(p.discount_coef, 2) +
-            '<br><span class="muted">цена за км² ' + money(p.unit_price_rub_km2) + ' ₽ · стратегия ' + esc(strat) + ' · скидка Р зависит от состава корзины</span></div></div>';
-      }
-      $('p-cost').innerHTML =
-        '<div class="split2"><section class="card"><div class="card-head"><h2>Расчёт стоимости заказа</h2><div class="chips" id="zone-chips">' + chips + '</div></div>' +
-          '<div class="lgd2"><span><i class="d-s"></i>сценарное</span><span><i class="d-m"></i>по норме и контуру</span></div>' + left + '</section>' +
-        '<section class="card"><div class="card-head"><h2>Нормативная база</h2></div>' +
-          '<div class="norm-t">ПП РФ № 840</div><div class="muted small">' + esc(S.summary.legal_edition || '') +
-            (pr.legal_check_date ? ' · проверено ' + new Date(pr.legal_check_date).toLocaleDateString('ru-RU') : '') + '</div>' +
-          '<div class="small muted" style="margin-top:6px">РП = Б × К × О × П × Т × Р · контрольные примеры постановки 1 703,46 / 946,37 / 567,82 воспроизводятся знак в знак</div>' +
-          '<div class="sub-h">Реальный заказ</div><ul class="dots m"><li>порядок — по норме</li><li>цены и сроки — от поставщика</li><li>договор и лицензия на данные</li></ul>' +
-          '<div class="sub-h">Учебный сценарий</div><ul class="dots s"><li>ставка Б ' + money(pr.base_rate_rub_km2) + ' ₽/км² — сценарная</li><li>даты съёмки и доступности — сценарные</li><li>покупка не выполнялась</li></ul>' +
-          '<div class="note small">Сценарная ставка не является официальным тарифом. ' + esc(pr.base_rate_source || '') + '</div></section></div>';
-      Array.prototype.forEach.call(document.querySelectorAll('#zone-chips .chipbtn'), function (b) {
-        b.addEventListener('click', function () { priceZone = b.getAttribute('data-zone'); renderCost(); });
-      });
-    });
-  }
-
-  function renderAbout() {
-    var S = V.S;
-    var files = ['flood_probability.tif, flood_mask.tif', 'assets.geojson, asset_loss.csv', 'candidate_orders.geojson',
-      'procurement_plan.csv, strategy_plans.json', 'strategy_comparison.csv, sensitivity.csv', 'run_metadata.json, source_manifest.json'];
-    var checks = ['нет NaN и Inf ни в одном файле', 'зоны ≥ 1 км², без вырезов', 'маска = p ≥ τ (' + fmt(S.summary.threshold, 2) + ')',
-      'у partial и no_data — пусто, а не ноль', 'скидка Р — на корзину целиком', 'ставка помечена scenario'];
-    $('p-about').innerHTML =
-      '<div class="grid-2"><section class="card"><div class="card-head"><h2>Границы прототипа</h2></div><ul class="dots s">' +
-        '<li>Оценка по одному чипу 5 × 5 км и одному моменту съёмки</li>' +
-        '<li>Перенос проверен на одном отложенном событии — Bolivia</li>' +
-        '<li>V и q — учебные значения из постановки, не реестр имущества</li>' +
-        '<li>Ставка съёмки и даты доступности — сценарные</li>' +
-        '<li>Фактическая покупка данных не выполнялась</li>' +
-        '<li>Не официальная оценка ущерба</li></ul></section>' +
-      '<section class="card"><div class="card-head"><h2>План развития</h2></div><ol class="road">' +
-        '<li>Проверка на большем числе новых событий</li><li>Реальные объекты и кадастровая стоимость</li>' +
-        '<li>Котировки от поставщиков ДЗЗ вместо сценарной ставки</li><li>Пилот с оператором и сверка с фактом</li></ol></section></div>' +
-      '<section class="card"><div class="card-head"><h2>Воспроизводимость</h2><span class="muted small">все файлы получаются из кода в репозитории · валидатор — десять проверок</span></div>' +
-        '<div class="repro"><ul class="checks">' + files.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
-        '<ul class="checks">' + checks.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' +
-        '<div class="code"><div class="code-h">Запуск на официальном S1-чипе</div><pre>$ python -m src.cli.run_bundle \\\n    --chip ' + esc(S.summary.chip_id) +
-        ' \\\n    --budget ' + Math.round(num(S.summary.budget_rub) || 0) + '\n$ python -m src.validate_bundle \\\n    outputs/' + esc(S.summary.run_id) +
-        '</pre><div class="code-f">без переобучения · без вспомогательных данных</div></div></div>' +
-        '<div class="hero-actions"><a class="btn ghost" href="' + V.withRun('/api/bundle.zip') + '">Выгрузить комплект</a>' +
-        '<a class="btn ghost" href="https://github.com/dimon0804/VODOPOL#readme" target="_blank" rel="noopener">README</a></div></section>';
   }
 
   // ── общее ────────────────────────────────────────────────────────────────
