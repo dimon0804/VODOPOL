@@ -34,6 +34,7 @@ from src.assets import (
     unassessed_exposure,
 )
 from src.data import chips as chips_mod
+from src import impact as impact_mod
 from src.data import fetch
 from src.export.bundle import assemble, new_run_id
 from src.methods.baseline_threshold import BaselineThreshold
@@ -43,6 +44,30 @@ from src.procurement.pricing import position_row
 from src.procurement.strategies import StrategyConfig, build_strategies
 from src.sensitivity import run_sensitivity
 from src.sensitivity_ranks import COLUMNS as RANK_COLUMNS, run as run_rank_sensitivity
+
+
+def _quality_percent() -> dict:
+    """Метрики независимой проверки в процентах — для панели и для защиты.
+
+    Берём именно часть test: качество решения оценивается на событиях, которых
+    модель не видела, и подставлять сюда цифры с обучения было бы подлогом.
+    Файла может не быть, если evaluate ещё не запускали, — тогда поле пустое,
+    и панель честно покажет, что оценки нет.
+    """
+    path = Path("reports/metrics_compare.json")
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    main = impact_mod.percent_quality(payload, "main_flood")
+    baseline = impact_mod.percent_quality(payload, "baseline_flood")
+    if not main:
+        return {}
+    main["baseline"] = baseline
+    main["source_file"] = path.as_posix()
+    return main
 
 
 def priority_raster(prob: np.ndarray, uncertainty: np.ndarray) -> np.ndarray:
@@ -401,6 +426,9 @@ def main() -> None:
     # ── паспорт запуска ──────────────────────────────────────────────────────
     run_id = new_run_id(args.chip, args.budget)
     baseline = BaselineThreshold.load(args.baseline) if args.baseline.exists() else None
+    impact = impact_mod.summarize(asset_rows, assets, prob_out, model.threshold, total_el)
+    quality = _quality_percent()
+
     metadata = {
         "run_id": run_id,
         "chip_id": args.chip,
@@ -475,6 +503,12 @@ def main() -> None:
             "broad_rule_B": config.broad_rule,
         },
         "total_expected_loss_rub": total_el,
+        # Одно событие в трёх единицах сразу. Рубль не единственный язык, на
+        # котором про паводок разговаривают: дежурному важнее школы и клиники,
+        # главе района — гектары. Считается из того же растра и того же портфеля.
+        "impact": impact,
+        # Качество карты в процентах: на слух доли единицы не воспринимаются.
+        "quality_pct": quality,
         "unassessed_exposure": unassessed,
         "proxy_check": proxy,
         "proxy_check_note": (
@@ -515,6 +549,24 @@ def main() -> None:
             "run_metadata": metadata,
             "source_manifest": build_source_manifest(args.chip, chip_path),
         },
+    )
+
+    # Последствия в натуральных единицах кладём отдельным файлом: в обязательный
+    # состав комплекта он не входит, но панель и защита опираются именно на него,
+    # и держать его только внутри паспорта неудобно.
+    (run_dir / "impact_summary.json").write_text(
+        json.dumps(
+            {"run_id": run_id, "chip_id": args.chip, **impact, "quality_pct": quality},
+            ensure_ascii=False,
+            indent=2,
+            allow_nan=False,
+        ),
+        encoding="utf-8",
+    )
+    print(
+        f"  в натуральных единицах: {impact['totals']['expected_objects']:.2f} объектов, "
+        f"{impact['totals']['expected_area_km2']:.2f} км² ожидаемого затопления",
+        flush=True,
     )
 
     # Сдвиг приоритетов при изменении p, V и q — критерий 14. В обязательный состав

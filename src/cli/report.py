@@ -43,6 +43,61 @@ def _money(value) -> str:
     return f"{float(value):,.2f}".replace(",", " ")
 
 
+def _budget_curve(run_dir: Path) -> dict | None:
+    """Кривая «бюджет → закрытый ущерб» и точка, где покрытие становится полным.
+
+    Считается тем же RunContext.strategies, что стоит за слайдером панели, поэтому
+    число в отчёте и число на экране совпадают по построению. Раньше эта цифра жила
+    только в панели, и на защите её нечем было подтвердить в сданных файлах.
+    """
+    try:
+        from src.runtime import RunContext
+
+        ctx = RunContext.load(run_dir)
+        base = ctx.strategies(None)
+    except Exception:  # отчёт важнее одного раздела: не собралось — пропускаем
+        return None
+
+    def row_of(payload: dict, name: str) -> dict:
+        rows = payload.get("comparison") or payload.get("rows") or []
+        for row in rows:
+            if row.get("strategy") == name:
+                return row
+        return {}
+
+    broad = row_of(base, "B")
+    broad_cost = float(broad.get("decision_cost_rub") or 0)
+    if broad_cost <= 0:
+        return None
+
+    points: list[dict] = []
+    full: dict | None = None
+    steps = 24
+    for index in range(1, steps + 1):
+        budget = broad_cost * index / steps
+        try:
+            payload = ctx.strategies(budget)
+        except Exception:
+            break
+        row = row_of(payload, "C")
+        share = float(row.get("coverage_share") or 0)
+        point = {
+            "budget": budget,
+            "cost": float(row.get("decision_cost_rub") or 0),
+            "covered": float(row.get("covered_expected_loss_rub") or 0),
+            "share": share,
+        }
+        # В таблицу берём не все двадцать четыре точки, а каждую четвёртую: отчёт
+        # читают глазами, и сплошной столбец чисел в нём бесполезен.
+        if index % 4 == 0 or (full is None and share >= 0.999):
+            points.append(point)
+        if full is None and share >= 0.999:
+            full = point
+    if not points:
+        return None
+    return {"points": points, "full_coverage": full, "broad_cost": broad_cost}
+
+
 def build(run_dir: Path, reports: Path) -> str:
     meta = _load_json(run_dir / C.F_RUN_METADATA) or {}
     compare = _load_json(reports / "metrics_compare.json")
@@ -476,6 +531,44 @@ def build(run_dir: Path, reports: Path) -> str:
             "объявляется."
         )
         add("")
+    saturation = _budget_curve(run_dir)
+    if saturation:
+        add("### Сколько нужно денег, чтобы закрыть весь ущерб")
+        add("")
+        add(
+            "Объявленный бюджет — не единственный вопрос, который задаёт распорядитель "
+            "средств. Второй вопрос звучит так: сколько вообще надо, чтобы вопросов не "
+            "осталось. Ответ считается тем же кодом, что и стратегии, просто прогнанным "
+            "по возрастающему бюджету."
+        )
+        add("")
+        add("| Бюджет, руб. | Стоимость C | Покрытый ущерб | Доля портфеля |")
+        add("| ---: | ---: | ---: | ---: |")
+        for point in saturation["points"]:
+            add(
+                f"| {_money(point['budget'])} | {_money(point['cost'])} | "
+                f"{_money(point['covered'])} | {point['share'] * 100:.1f} % |"
+            )
+        add("")
+        full = saturation.get("full_coverage")
+        if full:
+            ratio = saturation["broad_cost"] / full["cost"] if full["cost"] else None
+            add(
+                f"**Насыщение наступает при бюджете {_money(full['budget'])} руб.** Выборочная "
+                f"стратегия C тратит там {_money(full['cost'])} руб. и закрывает весь "
+                f"ожидаемый ущерб портфеля, {_money(full['covered'])} руб. Широкая закупка B "
+                f"даёт ровно тот же стопроцентный охват за {_money(saturation['broad_cost'])} "
+                + (f"руб. — в {ratio:.1f} раза дороже." if ratio else "руб.")
+            )
+            add("")
+            add(
+                "Это и есть главный практический вывод расчёта. Не «мы лучше определяем "
+                "воду», а «при одинаковом результате порядок заказа решает, во сколько он "
+                "обойдётся». Дальше точки насыщения рост бюджета ничего не добавляет: "
+                "покрывать больше нечего, и это тоже ответ распорядителю средств."
+            )
+            add("")
+
     if plan_rows:
         example = plan_rows[0]
         add("Пример расчёта одной позиции, который можно пересчитать на калькуляторе:")

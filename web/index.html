@@ -10,7 +10,7 @@
   <!-- Leaflet лежит рядом, а не на unpkg: на защите интернета может не быть,
        а панель без карты это не панель. Версия 1.9.4, файлы в web/vendor/leaflet. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 
@@ -114,11 +114,28 @@
   <!-- ── боковая колонка ────────────────────────────────────────────────── -->
   <aside class="side">
 
+    <!-- Масштаб события: одно и то же считается в рублях, объектах и гектарах.
+         Рубль не единственный язык, на котором про паводок разговаривают. -->
+    <section class="card" id="card-impact">
+      <div class="card-head">
+        <h2>Что под водой</h2>
+        <span class="mark model" id="impact-quality" title="точность на независимой проверке">—</span>
+      </div>
+      <div class="impact-row" id="impact-totals"></div>
+      <table class="tbl" id="impact-classes"></table>
+      <p class="note" id="impact-note"></p>
+    </section>
+
     <section class="card" id="card-budget">
       <div class="card-head">
-        <h2>Бюджет решения</h2>
+        <h2>Бюджет на уточняющую съёмку</h2>
         <span class="recalc hidden" id="recalc">пересчёт…</span>
       </div>
+      <p class="note" id="budget-purpose">
+        Это <b>не</b> стоимость ликвидации последствий. Это деньги на то, чтобы
+        <b>узнать точнее</b>: заказать съёмку высокого разрешения там, где спутникового
+        снимка 10 м не хватает, чтобы понять, залит объект или нет.
+      </p>
       <div class="budget-value">
         <span class="big num" id="budget-num">—</span>
         <span class="unit">₽</span>
@@ -127,6 +144,11 @@
       </div>
       <input type="range" id="rng-budget" min="0" max="60000" step="250" value="20000">
       <div class="scale" id="budget-scale"></div>
+      <div class="budget-context" id="budget-context"></div>
+      <div class="budget-jumps">
+        <button class="btn ghost" id="btn-budget-full" type="button">закрыть весь ущерб</button>
+        <button class="btn ghost" id="btn-budget-broad" type="button">заказать всё</button>
+      </div>
       <p class="note">
         Слайдер пересчитывает только отбор зон, их цену по ПП РФ № 840 и сравнение стратегий.
         Модель <b>не переобучается</b>, порог бинаризации, карта вероятностей и портфель объектов
@@ -255,6 +277,6 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

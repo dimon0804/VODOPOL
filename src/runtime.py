@@ -161,6 +161,11 @@ class RunContext:
             "methods": meta.get("methods", {}),
             "bounds": meta.get("bounds"),
             "sources": sources,
+            # Последствия в натуральных единицах и качество в процентах: панель
+            # показывает одно событие сразу в рублях, объектах и гектарах.
+            "impact": meta.get("impact", {}),
+            "quality_pct": meta.get("quality_pct", {}),
+            "total_expected_loss_rub": meta.get("total_expected_loss_rub"),
         }
 
     def assets(self) -> dict[str, Any]:

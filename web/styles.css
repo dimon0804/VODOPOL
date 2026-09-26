@@ -752,3 +752,61 @@ table.grid .empty { color: var(--none); }
   border: 1px solid var(--line-soft);
   border-radius: 6px;
 }
+
+
+/* ── масштаб события и бюджет в контексте ───────────────────────────────── */
+/* Три единицы стоят рядом намеренно: рубли, объекты и гектары это одно и то же
+   событие, и читать их надо вместе, а не переключателем. */
+.impact-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.impact-cell {
+  padding: 7px 9px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+
+.impact-cell .v {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.impact-cell .k {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Столбик доли внутри строки таблицы: глазом сравнивать проще, чем числа. */
+.bar {
+  display: block;
+  height: 4px;
+  margin-top: 3px;
+  border-radius: 2px;
+  background: var(--accent-dim);
+}
+
+.budget-context {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.budget-context b { color: var(--text); }
+
+.budget-jumps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}

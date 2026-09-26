@@ -1,0 +1,222 @@
+{
+  "run_id": "20260926-Bolivia_103757-b6000",
+  "chip_id": "Bolivia_103757",
+  "units": [
+    {
+      "key": "rub",
+      "title": "рубли",
+      "short": "₽",
+      "note": "ожидаемый прямой ущерб: p × V × q по каждому объекту"
+    },
+    {
+      "key": "objects",
+      "title": "объекты",
+      "short": "об.",
+      "note": "ожидаемое число пострадавших объектов: сумма вероятностей"
+    },
+    {
+      "key": "area",
+      "title": "площадь",
+      "short": "км²",
+      "note": "ожидаемая площадь затопления: сумма вероятностей по пикселям"
+    }
+  ],
+  "totals": {
+    "expected_loss_rub": 9915201.098006219,
+    "compensation_rub": 9915201.098006219,
+    "expected_objects": 2.3858,
+    "assessed_objects": 10,
+    "total_objects": 10,
+    "expected_area_km2": 1.6268,
+    "expected_area_ha": 162.68,
+    "mask_area_km2": 4.1196
+  },
+  "area": {
+    "expected_km2": 1.6268,
+    "expected_ha": 162.68,
+    "mask_km2": 4.1196,
+    "mask_ha": 411.96,
+    "chip_km2": 10.1623,
+    "share_of_chip": 0.160081,
+    "valid_pixels": 101623,
+    "note": "Ожидаемая площадь — сумма вероятностей по валидным пикселям; площадь по маске — те же пиксели с отсечением по порогу. Первая учитывает неуверенные пиксели пропорционально, вторая считает их целиком или никак."
+  },
+  "by_class": [
+    {
+      "asset_class": "substation",
+      "title_ru": "электроподстанция",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.3676,
+      "expected_loss_rub": 2941083.19,
+      "value_rub": 20000000,
+      "vulnerability": 0.4,
+      "asset_ids": [
+        "a02"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "water_intake",
+      "title_ru": "водозабор",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.5144,
+      "expected_loss_rub": 2468946.65,
+      "value_rub": 16000000,
+      "vulnerability": 0.3,
+      "asset_ids": [
+        "a10"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "pumping_station",
+      "title_ru": "насосная станция",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.4263,
+      "expected_loss_rub": 1790414.27,
+      "value_rub": 12000000,
+      "vulnerability": 0.35,
+      "asset_ids": [
+        "a05"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "school",
+      "title_ru": "школа",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.3521,
+      "expected_loss_rub": 1267605.65,
+      "value_rub": 18000000,
+      "vulnerability": 0.2,
+      "asset_ids": [
+        "a07"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "telecom_node",
+      "title_ru": "узел связи",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.3226,
+      "expected_loss_rub": 645145.89,
+      "value_rub": 4000000,
+      "vulnerability": 0.5,
+      "asset_ids": [
+        "a09"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "facility",
+      "title_ru": "производственный объект",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.256,
+      "expected_loss_rub": 409565.54,
+      "value_rub": 8000000,
+      "vulnerability": 0.2,
+      "asset_ids": [
+        "a04"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "workshop",
+      "title_ru": "мастерская",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.0634,
+      "expected_loss_rub": 171065.22,
+      "value_rub": 6000000,
+      "vulnerability": 0.45,
+      "asset_ids": [
+        "a08"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "warehouse",
+      "title_ru": "склад",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.0634,
+      "expected_loss_rub": 158393.72,
+      "value_rub": 10000000,
+      "vulnerability": 0.25,
+      "asset_ids": [
+        "a01"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "clinic",
+      "title_ru": "клиника",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.0109,
+      "expected_loss_rub": 49164.83,
+      "value_rub": 30000000,
+      "vulnerability": 0.15,
+      "asset_ids": [
+        "a06"
+      ],
+      "not_assessed": 0
+    },
+    {
+      "asset_class": "road_unit",
+      "title_ru": "участок дороги",
+      "count": 1,
+      "assessed": 1,
+      "expected_objects": 0.0092,
+      "expected_loss_rub": 13816.14,
+      "value_rub": 5000000,
+      "vulnerability": 0.3,
+      "asset_ids": [
+        "a03"
+      ],
+      "not_assessed": 0
+    }
+  ],
+  "note": "Все три единицы посчитаны из одного и того же вероятностного растра и одного портфеля объектов. «Ожидаемое число объектов» — это сумма вероятностей, а не счёт по маске: объект с вероятностью 0,4 даёт 0,4 ожидаемого объекта. Округлять его до целого нельзя — получится предположение, выданное за факт.",
+  "quality_pct": {
+    "scope": "main_flood",
+    "part": "test",
+    "chips": 84,
+    "f1_pct": 47.7,
+    "iou_pct": 31.3,
+    "precision_pct": 40.4,
+    "recall_pct": 58.2,
+    "pixels": 17879873,
+    "titles": {
+      "precision_pct": "из того, что названо затоплением, действительно затоплено",
+      "recall_pct": "из того, что затоплено, найдено моделью",
+      "f1_pct": "сводная оценка полноты и точности",
+      "iou_pct": "доля совпадения найденной и настоящей области"
+    },
+    "note": "Проценты — те же метрики сегментации, умноженные на сто. Долю верно классифицированных пикселей (accuracy) не приводим сознательно: вода занимает малую часть снимка, и по этой метрике алгоритм «воды нет» получил бы больше девяноста процентов.",
+    "baseline": {
+      "scope": "baseline_flood",
+      "part": "test",
+      "chips": 84,
+      "f1_pct": 51.5,
+      "iou_pct": 34.6,
+      "precision_pct": 43.1,
+      "recall_pct": 63.9,
+      "pixels": 17879873,
+      "titles": {
+        "precision_pct": "из того, что названо затоплением, действительно затоплено",
+        "recall_pct": "из того, что затоплено, найдено моделью",
+        "f1_pct": "сводная оценка полноты и точности",
+        "iou_pct": "доля совпадения найденной и настоящей области"
+      },
+      "note": "Проценты — те же метрики сегментации, умноженные на сто. Долю верно классифицированных пикселей (accuracy) не приводим сознательно: вода занимает малую часть снимка, и по этой метрике алгоритм «воды нет» получил бы больше девяноста процентов."
+    },
+    "source_file": "reports/metrics_compare.json"
+  }
+}

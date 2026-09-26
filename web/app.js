@@ -146,10 +146,46 @@
       Math.round(x[2] + (y[2] - x[2]) * t) + ')';
   }
 
+  /**
+   * Светофор приоритета проверки.
+   *
+   * Раньше здесь был плавный градиент от красного к бежевому, и он читался плохо:
+   * между четвёртым и пятым объектом разницы на глаз нет, а решение принимается
+   * именно между ними. Человек надёжно различает три состояния, а не десять
+   * оттенков, поэтому приоритет разложен на три ступени по тому же рангу.
+   *
+   * Границы ступеней не случайны: верхняя треть портфеля — то, что проверяют в
+   * первую очередь, нижняя — то, до чего доходят, если останутся деньги.
+   */
+  var PRIORITY_TIERS = [
+    { key: 'high', title: 'высокий', color: '#e5484d', text: 'проверять в первую очередь' },
+    { key: 'mid', title: 'средний', color: '#f5a524', text: 'проверять, если позволяет бюджет' },
+    { key: 'low', title: 'низкий', color: '#30a46c', text: 'можно отложить' },
+    { key: 'none', title: 'нет оценки', color: '#6c7686', text: 'оценка не построена' }
+  ];
+
+  function priorityTier(rank, total) {
+    if (rank === null || rank === undefined || rank === '') return PRIORITY_TIERS[3];
+    var n = Number(rank);
+    var count = Number(total) || 10;
+    if (!isFinite(n) || n < 1) return PRIORITY_TIERS[3];
+    if (n <= Math.ceil(count / 3)) return PRIORITY_TIERS[0];
+    if (n <= Math.ceil((count * 2) / 3)) return PRIORITY_TIERS[1];
+    return PRIORITY_TIERS[2];
+  }
+
+  function rankedCount() {
+    var rows = ((S.assets || {}).features) || [];
+    var n = 0;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i].properties.rank;
+      if (r !== null && r !== undefined && r !== '') n++;
+    }
+    return n || 10;
+  }
+
   function rankColor(rank) {
-    if (rank === null || rank === undefined) return '#6c7686';
-    var t = Math.min(1, Math.max(0, (Number(rank) - 1) / 9));
-    return mix('#e03131', '#ffd8a8', t);
+    return priorityTier(rank, rankedCount()).color;
   }
 
   function rankRadius(rank) {
@@ -327,17 +363,36 @@
     return null;
   }
 
+  /** Лучший (то есть самый срочный) ранг среди объектов, попавших в зону. */
+  function zoneTier(props) {
+    var ids = String(props.covered_asset_ids || '').split(';').filter(Boolean);
+    if (!ids.length) return PRIORITY_TIERS[3];
+    var rows = ((S.assets || {}).features) || [];
+    var best = null;
+    for (var i = 0; i < rows.length; i++) {
+      var pr = rows[i].properties;
+      if (ids.indexOf(pr.asset_id) < 0) continue;
+      var r = pr.rank;
+      if (r === null || r === undefined || r === '') continue;
+      if (best === null || Number(r) < best) best = Number(r);
+    }
+    return priorityTier(best, rankedCount());
+  }
+
   function zoneStyle(feature) {
     var id = feature.properties.candidate_id;
     var chosen = !!selectedSet()[id];
     var picked = S.selectedZone === id;
     if (chosen) {
+      // Заказанная зона красится по срочности того, ради чего её заказали:
+      // оператор видит на карте не «куплено/не куплено», а «куплено ради чего».
+      var tier = zoneTier(feature.properties);
       return {
-        color: picked ? '#e0f2fe' : '#38bdf8',
-        weight: picked ? 2.4 : 1.6,
+        color: picked ? '#ffffff' : tier.color,
+        weight: picked ? 2.6 : 1.8,
         opacity: 0.95,
-        fillColor: '#38bdf8',
-        fillOpacity: 0.22
+        fillColor: tier.color,
+        fillOpacity: picked ? 0.34 : 0.24
       };
     }
     return {
@@ -866,7 +921,12 @@
       html += '<h3>Слои</h3><div class="lnote">Тематический слой выключен</div>';
     }
 
-    html += '<div class="rowitem" style="margin-top:7px"><span class="swatch" style="background:rgba(56,189,248,.35);border-color:#38bdf8"></span>зоны стратегии ' + esc(S.strategy) + '</div>';
+    html += '<div class="rowitem" style="margin-top:7px">зоны стратегии ' + esc(S.strategy) + ' по срочности:</div>';
+    for (var ti = 0; ti < 3; ti++) {
+      var t = PRIORITY_TIERS[ti];
+      html += '<div class="rowitem"><span class="swatch" style="background:' + t.color +
+        '55;border-color:' + t.color + '"></span>' + esc(t.title) + ' — ' + esc(t.text) + '</div>';
+    }
     html += '<div class="rowitem"><span class="swatch" style="background:transparent;border-color:#93a1b3;border-style:dashed"></span>каталог зон, не заказаны</div>';
     html += '<div class="ranks">';
     [1, 3, 5, 7, 10].forEach(function (rank) {
@@ -964,6 +1024,70 @@
 
   // ── бюджет ───────────────────────────────────────────────────────────────
 
+  // ── масштаб события ──────────────────────────────────────────────────────
+
+  /**
+   * Одно событие в трёх единицах. Все три приходят из /api/run и посчитаны из
+   * того же вероятностного растра, что и рублёвый ущерб: отдельной модели
+   * «в штуках» нет, иначе числа начали бы расходиться между собой.
+   */
+  function renderImpact() {
+    var imp = (S.summary && S.summary.impact) || {};
+    var t = imp.totals || {};
+    var q = (S.summary && S.summary.quality_pct) || {};
+
+    if (!t.expected_loss_rub && !t.expected_objects) {
+      $('impact-totals').innerHTML = '<div class="empty-hint">Оценка последствий не построена.</div>';
+      $('impact-classes').innerHTML = '';
+      $('impact-note').textContent = '';
+      $('impact-quality').textContent = '—';
+      return;
+    }
+
+    function cell(value, key, title) {
+      return '<div class="impact-cell" title="' + esc(title || '') + '"><span class="v">' +
+        value + '</span><span class="k">' + esc(key) + '</span></div>';
+    }
+
+    $('impact-totals').innerHTML =
+      cell(money(t.expected_loss_rub) + ' ₽', 'ожидаемый ущерб',
+        'Сумма p × V × q по десяти объектам портфеля') +
+      cell(fmt(t.expected_objects, 2), 'объектов из ' + (t.total_objects || 10),
+        'Сумма вероятностей: объект с вероятностью 0,4 даёт 0,4 ожидаемого объекта') +
+      cell(fmt(t.expected_area_km2, 2) + ' км²', 'ожидаемое затопление',
+        'Сумма вероятностей по пикселям снимка, умноженная на площадь пикселя');
+
+    var rows = imp.by_class || [];
+    var top = rows.slice(0, 6);
+    var maxLoss = 0;
+    top.forEach(function (r) { maxLoss = Math.max(maxLoss, Number(r.expected_loss_rub) || 0); });
+    var html = '<thead><tr><th>объект</th><th class="n">ожид. шт.</th><th class="n">ущерб, ₽</th></tr></thead><tbody>';
+    top.forEach(function (r) {
+      var share = maxLoss ? (Number(r.expected_loss_rub) || 0) / maxLoss : 0;
+      html += '<tr><td>' + esc(r.title_ru || r.asset_class) + '</td>' +
+        '<td class="n">' + fmt(r.expected_objects, 2) + '</td>' +
+        '<td class="n">' + money(r.expected_loss_rub) +
+        '<span class="bar" style="width:' + Math.round(share * 100) + '%"></span></td></tr>';
+    });
+    html += '</tbody>';
+    $('impact-classes').innerHTML = html;
+
+    if (q.f1_pct !== null && q.f1_pct !== undefined) {
+      $('impact-quality').textContent = 'точность ' + fmt(q.precision_pct, 1) + ' %';
+      $('impact-quality').title =
+        'На независимой проверке, часть test, ' + (q.chips || '—') + ' чипов: из того, что ' +
+        'названо затоплением, действительно затоплено ' + fmt(q.precision_pct, 1) + ' %; ' +
+        'из того, что затоплено, найдено ' + fmt(q.recall_pct, 1) + ' %; сводная F1 ' +
+        fmt(q.f1_pct, 1) + ' %, совпадение областей IoU ' + fmt(q.iou_pct, 1) + ' %.';
+    } else {
+      $('impact-quality').textContent = 'точность не посчитана';
+    }
+
+    $('impact-note').textContent =
+      'Ожидаемое число объектов и площадь — суммы вероятностей, а не счёт по маске. ' +
+      'Округлять их до целого нельзя: получится предположение, выданное за факт.';
+  }
+
   function setupBudget() {
     var declared = toNum(S.summary && S.summary.budget_rub) || 0;
     var b = comparisonRow('B');
@@ -981,11 +1105,55 @@
 
     $('budget-scale').innerHTML = '<span>0</span><span>' + fmt(max / 2, 0) + '</span><span>' + fmt(max, 0) + '</span>';
     $('budget-num').textContent = fmt(S.budget, 0);
+    renderBudgetContext();
+  }
+
+  /**
+   * Бюджет сам по себе — голое число, и на чекпоинте это прозвучало прямо:
+   * шесть тысяч рублей выглядят несерьёзно, пока рядом не написано, к чему они
+   * относятся. Поэтому под слайдером всегда стоит отношение к ожидаемому ущербу
+   * и к двум опорным точкам: сколько надо, чтобы закрыть всё, и во что обошлась
+   * бы закупка без разбора.
+   */
+  function renderBudgetContext() {
+    var node = $('budget-context');
+    if (!node) return;
+    var imp = (S.summary && S.summary.impact) || {};
+    var loss = toNum((imp.totals || {}).expected_loss_rub);
+    var b = comparisonRow('B');
+    var broad = toNum(b && b.decision_cost_rub);
+    var parts = [];
+
+    if (loss) {
+      var share = (S.budget / loss) * 100;
+      parts.push('Это <b>' + (share < 0.1 ? share.toFixed(3) : share.toFixed(1)) +
+        ' %</b> ожидаемого ущерба <b>' + money(loss) + ' ₽</b>, в который обойдётся само ' +
+        'событие. Съёмка не уменьшает ущерб — она уменьшает незнание о нём.');
+    }
+    var sat = (typeof curveSaturation === 'function') ? curveSaturation() : null;
+    if (sat && sat.budget) {
+      parts.push('Чтобы закрыть <b>весь</b> ожидаемый ущерб, достаточно <b>' +
+        money(sat.budget) + ' ₽</b>.');
+    }
+    if (broad) {
+      parts.push('Закупка без разбора стоила бы <b>' + money(broad) + ' ₽</b>.');
+    }
+    node.innerHTML = parts.join(' ');
+  }
+
+  /** Ставит слайдер на конкретную сумму и запускает пересчёт, как при перетаскивании. */
+  function setBudget(value) {
+    var rng = $('rng-budget');
+    if (!rng || value === null || value === undefined) return;
+    var v = Math.max(Number(rng.min), Math.min(Number(rng.max), Number(value)));
+    rng.value = v;
+    onBudgetInput();
   }
 
   function onBudgetInput() {
     S.budget = Number($('rng-budget').value);
     $('budget-num').textContent = fmt(S.budget, 0);
+    renderBudgetContext();
     // Маркер «сейчас» на кривой двигается сразу, без запроса: кривая от бюджета не зависит.
     if (S.curve) drawCurve();
     if (S.budgetTimer) clearTimeout(S.budgetTimer);
@@ -1069,6 +1237,9 @@
       for (var k = 0; k < CURVE_PARALLEL; k++) pump();
     }).then(function (points) {
       S.curve = points.filter(function (p) { return p && p.covered !== null; });
+      // Точка насыщения известна только после кривой, а подпись под слайдером на
+      // неё ссылается — поэтому контекст перерисовываем ещё раз.
+      renderBudgetContext();
       S.curveFull = full;
       if (!S.curve.length) {
         $('curve-status').textContent = 'сервис не отдал ни одной точки';
@@ -1440,6 +1611,20 @@
     $('btn-order-csv').addEventListener('click', downloadWorkOrderCsv);
     $('btn-order-print').addEventListener('click', openWorkOrderPrint);
     $('btn-request').addEventListener('click', openProcurementRequest);
+    // Две опорные точки бюджета, на которые чаще всего хотят посмотреть: сколько
+    // нужно, чтобы вопросов не осталось, и во что обошлась бы закупка без разбора.
+    var jumpFull = $('btn-budget-full');
+    if (jumpFull) jumpFull.addEventListener('click', function () {
+      var sat = curveSaturation();
+      if (sat && sat.budget) setBudget(sat.budget);
+    });
+    var jumpBroad = $('btn-budget-broad');
+    if (jumpBroad) jumpBroad.addEventListener('click', function () {
+      var b = comparisonRow('B');
+      var cost = toNum(b && b.decision_cost_rub);
+      if (cost) setBudget(cost);
+    });
+
     $('btn-budget-reset').addEventListener('click', function () {
       $('rng-budget').value = S.declaredBudget;
       onBudgetInput();
@@ -1692,6 +1877,7 @@
 
       renderHeader();
       renderMeta();
+      renderImpact();
       initMap();
       renderZones();
       renderAssets();
