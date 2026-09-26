@@ -2,11 +2,11 @@
   "sources": [
     {
       "id": "Bolivia_103757_S1Hand",
-      "file": "data\\cache\\S1Hand\\Bolivia_103757_S1Hand.tif",
+      "file": "data/cache/S1Hand/Bolivia_103757_S1Hand.tif",
       "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/S1Hand/Bolivia_103757_S1Hand.tif",
       "dataset": "Sen1Floods11 v1.1",
       "event": "Bolivia",
-      "observation_date": "см. Sen1Floods11_Metadata.geojson",
+      "observation_date": "2018-02-15",
       "published": "2020",
       "license": "Cloud to Street, открытый доступ, цитирование обязательно",
       "purpose": "обязательный исходный снимок, единственный вход основного метода",
@@ -14,6 +14,8 @@
     },
     {
       "id": "Bolivia_103757_LabelHand",
+      "file": "data/cache/LabelHand/Bolivia_103757_LabelHand.tif",
+      "observation_date": "2018-02-15",
       "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/LabelHand/Bolivia_103757_LabelHand.tif",
       "dataset": "Sen1Floods11 v1.1",
       "published": "2020",
@@ -23,6 +25,8 @@
     },
     {
       "id": "Bolivia_103757_JRCWaterHand",
+      "file": "data/cache/JRCWaterHand/Bolivia_103757_JRCWaterHand.tif",
+      "observation_date": "1984-2020 (период наблюдения JRC Global Surface Water)",
       "url": "https://storage.googleapis.com/sen1floods11/v1.1/data/flood_events/HandLabeled/JRCWaterHand/Bolivia_103757_JRCWaterHand.tif",
       "dataset": "Sen1Floods11 v1.1",
       "source": "JRC Global Surface Water, Landsat 1984–2020",

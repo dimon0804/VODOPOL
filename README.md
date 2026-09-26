@@ -16,7 +16,7 @@
 | --- | --- |
 | Панель оператора | `python -m src.api` → http://localhost:8000 |
 | То же без установки зависимостей | `docker compose up --build` → http://localhost:8000 |
-| Готовый комплект одного запуска | `outputs/20260926-India_900498-b6000/` |
+| Готовые комплекты запусков | `outputs/20260926-India_900498-b6000/` — демонстрационный; `outputs/20260926-Bolivia_103757-b6000/` — чип отложенного события |
 | Проверка комплекта | `python -m src.validate_bundle outputs/<run_id>` — десять проверок |
 | Итоговый отчёт | [`reports/report.md`](reports/report.md) |
 | Журнал экспериментов | [`reports/experiments.md`](reports/experiments.md) — вместе с отклонёнными гипотезами |
@@ -65,6 +65,16 @@ python -m src.cli.fetch_data
 pip install -r requirements.txt
 python -m src.api            # панель на http://localhost:8000
 ```
+
+Либо в контейнере, без установки зависимостей:
+
+```bash
+docker compose up --build    # панель на http://localhost:8000
+```
+
+Образ собран и проверен: панель отвечает, подложка S1 и все слои отдаются из
+контейнера. Исходный набор в образ не кладётся, комплекты запусков и веса монтируются
+снаружи — пересобирать образ при новом запуске не нужно.
 
 Панель сама находит свежий комплект в `outputs/`. Конкретный комплект задаётся
 переменной `FLOODVALUE_RUN`.
@@ -146,7 +156,7 @@ python -m src.cli.s1_only --chip Bolivia_103757            # 13. проверк�
 Модель применяется без какой-либо подгонки, чип задаётся параметром:
 
 ```bash
-python -m src.cli.run_bundle --chip Bolivia_103757 --budget 20000
+python -m src.cli.run_bundle --chip Bolivia_103757 --budget 6000
 ```
 
 Bolivia — событие, не участвовавшее ни в обучении, ни в калибровке, ни в выборе порога.
