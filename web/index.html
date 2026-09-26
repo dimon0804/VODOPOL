@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=25">
+  <link rel="stylesheet" href="styles.css?v=31">
 </head>
 <body>
 
@@ -146,13 +146,39 @@
           <div class="map-pills">
             <label class="mpill"><input type="checkbox" id="chk-assets" checked><span>Объекты</span></label>
             <label class="mpill"><input type="checkbox" id="chk-zones" checked><span>Зоны</span></label>
-            <button type="button" class="mpill mbtn" id="btn-overview" title="Показать на карте все события набора и все собранные чипы">Все чипы</button>
+            <button type="button" class="mpill mbtn" id="btn-overview" title="Регион события: все его чипы сразу">Регион</button>
           </div>
-          <div class="map-north" title="север сверху">▲</div>
+          <!-- Легенда прямо на карте, как в «Фенологе»: что значит цвет, видно,
+               не отрывая глаз от снимка. -->
+          <div class="map-legend" id="map-legend">
+            <div class="ml-h">Приоритет проверки</div>
+            <div class="ml-i"><i class="ml-a high"></i>Высокий</div>
+            <div class="ml-i"><i class="ml-a mid"></i>Средний</div>
+            <div class="ml-i"><i class="ml-a low"></i>Низкий</div>
+            <div class="ml-i"><i class="ml-a none"></i>Нет оценки</div>
+            <div class="ml-h">Зоны съёмки</div>
+            <div class="ml-i"><i class="ml-z plan"></i>В плане</div>
+            <div class="ml-i"><i class="ml-z cat"></i>Каталог</div>
+            <div class="ml-region hidden" id="ml-region">
+              <div class="ml-h">Чипы события</div>
+              <div class="ml-i"><i class="ml-c cur"></i>Открыт</div>
+              <div class="ml-i"><i class="ml-c built"></i>Собран</div>
+              <div class="ml-i"><i class="ml-c raw"></i>Не собран</div>
+            </div>
+          </div>
+          <div class="map-base segmented small" id="basemap-switch">
+            <button type="button" data-base="sat" class="active">Снимок</button>
+            <button type="button" data-base="osm">Схема</button>
+          </div>
           <div class="mapctl-note" id="s1-note"></div>
         </div>
       </div>
       <div class="legend" id="legend"></div>
+      <!-- Выбор на карте, как «Поле не выбрано» в «Фенологе»: детали под картой, а
+           не во всплывающем окне, которое закрывает половину снимка. -->
+      <div class="pick" id="map-pick">
+        <div class="pick-empty"><b>Объект не выбран</b><span>Нажмите объект или зону на карте — здесь появится, откуда взялся ущерб и во что обойдётся проверка.</span></div>
+      </div>
     </section>
 
     <div class="stack">
@@ -368,7 +394,7 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=25"></script>
-<script src="pages.js?v=27"></script>
+<script src="app.js?v=31"></script>
+<script src="pages.js?v=33"></script>
 </body>
 </html>

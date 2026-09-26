@@ -195,13 +195,81 @@
     });
   }
 
-  /** Открыть объект на карте: те же обработчики, что у строк проверенной таблицы. */
+  /** Открыть объект на карте и показать его в карточке под картой. */
   function openAsset(id) {
     if (ROUTE.page !== 'map') location.hash = '#/map';
-    setTimeout(function () {
-      var tr = document.querySelector('#tbl-assets tr[data-asset="' + id + '"]');
-      if (tr) tr.click();
-    }, 120);
+    setTimeout(function () { selectAsset(id, true); }, 150);
+  }
+
+  // ── выбор на карте: карточка под картой, как в «Фенологе» ────────────────
+
+  var picked = null;   // маркер выбранного объекта
+
+  function clearPick() {
+    if (picked && picked._icon) L.DomUtil.removeClass(picked._icon, 'sel');
+    picked = null;
+    if (V.S.selectedZone) { V.S.selectedZone = null; V.restyleZones(); }
+    $('map-pick').innerHTML = '<div class="pick-empty"><b>Объект не выбран</b><span>Нажмите объект или зону на карте — ' +
+      'здесь появится, откуда взялся ущерб и во что обойдётся проверка.</span></div>';
+  }
+
+  function pickCard(html) {
+    $('map-pick').innerHTML = '<button class="pick-x" type="button" title="Снять выбор">×</button><div class="pick-body">' + html + '</div>';
+    $('map-pick').querySelector('.pick-x').addEventListener('click', clearPick);
+    $('map-pick').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function selectAsset(id, fly) {
+    var S = V.S, found = null;
+    if (!S.assetsLayer) return;
+    S.assetsLayer.eachLayer(function (l) { if (l.feature && l.feature.properties.asset_id === id) found = l; });
+    if (!found) return;
+    if (picked && picked._icon) L.DomUtil.removeClass(picked._icon, 'sel');
+    picked = found;
+    if (found._icon) L.DomUtil.addClass(found._icon, 'sel');
+    if (S.selectedZone) { S.selectedZone = null; V.restyleZones(); }
+    if (fly && !S.map.getBounds().pad(-0.1).contains(found.getLatLng())) S.map.panTo(found.getLatLng());
+    pickCard(V.assetPopup(found.feature.properties, found.feature.geometry));
+  }
+
+  function selectZone(id) {
+    var S = V.S;
+    var f = S.candidates.features.filter(function (x) { return x.properties.candidate_id === id; })[0];
+    if (!f) return;
+    if (picked && picked._icon) L.DomUtil.removeClass(picked._icon, 'sel');
+    picked = null;
+    S.selectedZone = id;
+    V.restyleZones();
+    V.showZoneCard(f);   // та же карточка зоны, что на «Плане съёмки»
+    pickCard('<div class="popup"><h4>Зона ' + esc(zoneLabel(id)) + '</h4></div>' + $('zone-body').innerHTML);
+  }
+
+  /** Клики по объектам и зонам ведут в карточку под картой, а не во всплывающее окно. */
+  function bindMapClicks() {
+    var S = V.S;
+    if (S.assetsLayer) S.assetsLayer.eachLayer(function (l) {
+      l.off('click');
+      l.unbindPopup();
+      l.on('click', function () { selectAsset(l.feature.properties.asset_id, false); });
+    });
+    if (S.zonesLayer) S.zonesLayer.eachLayer(function (l) {
+      l.off('click');
+      l.unbindPopup();
+      l.on('click', function () { selectZone(l.feature.properties.candidate_id); });
+    });
+  }
+
+  function setBasemap(kind) {
+    var S = V.S;
+    if (!S.basemaps || S.basemap === kind) return;
+    S.map.removeLayer(S.basemaps[S.basemap]);
+    S.basemaps[kind].addTo(S.map);
+    S.basemaps[kind].bringToBack();
+    S.basemap = kind;
+    $('mapwrap').classList.toggle('base-osm', kind === 'osm');
+    Array.prototype.forEach.call(document.querySelectorAll('#basemap-switch button'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-base') === kind);
+    });
   }
 
   // ── объекты и ущерб ──────────────────────────────────────────────────────
@@ -612,6 +680,8 @@
   var OV = { data: null, events: null, eventLabels: null, chips: null, chipMarks: null, wide: false };
   var OV_DETAIL_ZOOM = 10;   // ближе — показываем зоны и объекты, дальше — обзор
 
+  function openedRun(fallback) { return V.currentRunId() || fallback || ''; }
+
   function openRun(id) {
     if (!id || id === V.currentRunId()) return;
     window.location.href = window.location.pathname + '?run=' + encodeURIComponent(id) + (window.location.hash || '');
@@ -637,6 +707,8 @@
 
     var parts = {};
     (d.chips || []).forEach(function (c) { if (c.event_id) parts[c.event_id] = c.part; });
+    var opened = openedRun(d.current);
+    (d.chips || []).forEach(function (c) { c.current = c.run_id === opened; });
     var perEvent = {};
     (d.chips || []).forEach(function (c) { perEvent[c.event_id] = (perEvent[c.event_id] || 0) + 1; });
 
@@ -687,8 +759,6 @@
     S.map.on('zoomend', syncOverview);
     syncOverview();
     var n = (d.chips || []).length, ne = (d.events.features || []).length;
-    $('btn-overview').title = 'Все ' + ne + ' ' + V.plural(ne, 'событие', 'события', 'событий') + ' набора и ' + n + ' ' +
-      V.plural(n, 'собранный чип', 'собранных чипа', 'собранных чипов') + (d.events_source ? ' · контуры: ' + d.events_source : '');
   }
 
   function chipTip(c) {
@@ -718,18 +788,84 @@
       if (!far && x[1] && !S.map.hasLayer(g)) g.addTo(S.map);
     });
     OV.wide = far;
-    $('btn-overview').textContent = far ? 'К чипу' : 'Все чипы';
   }
+
+  // ── регион события: все его чипы сразу, как поля региона в «Фенологе» ────
+
+  var REG = { data: null, layer: null, on: false, busy: false };
 
   function toggleOverview() {
     var S = V.S;
-    if (!S.map) return;
-    if (OV.wide) { V.fitChip(); return; }
-    var all = L.latLngBounds([]);
-    if (OV.events) all.extend(OV.events.getBounds());
-    if (OV.chips) OV.chips.eachLayer(function (l) { all.extend(l.getBounds()); });
-    // Справа запас шире: пилюли чипов тянутся вправо от центра и у края обрезались.
-    if (all.isValid()) S.map.fitBounds(all, { paddingTopLeft: [40, 50], paddingBottomRight: [120, 40] });
+    if (!S.map || REG.busy) return;
+    if (REG.on) { REG.on = false; V.fitChip(); syncRegionButton(); return; }
+    if (REG.data && REG.data.event === S.summary.event_id) { showRegion(); return; }
+    REG.busy = true;
+    $('btn-overview').textContent = 'загрузка чипов…';
+    V.getJSON('/api/event-chips?event=' + encodeURIComponent(S.summary.event_id)).then(function (d) {
+      REG.data = d;
+      drawRegion();
+      showRegion();
+    }).catch(function (e) {
+      V.$('banner').className = 'banner warn';
+      V.$('banner').textContent = 'Регион события не загружен: ' + e.message;
+    }).then(function () { REG.busy = false; syncRegionButton(); });
+  }
+
+  function drawRegion() {
+    var S = V.S, d = REG.data;
+    if (REG.layer) S.map.removeLayer(REG.layer);
+    REG.layer = L.layerGroup();
+    var opened = openedRun(V.S.summary && V.S.summary.run_id);
+    (d.chips || []).forEach(function (c) {
+      var b = c.bounds;
+      if (!b) return;
+      c.current = !!c.run_id && c.run_id === opened;
+      var kind = c.current ? 'cur' : c.run_id ? 'built' : 'raw';
+      var style = {
+        cur: { color: '#ffffff', weight: 2.5, fillColor: '#c8763c', fillOpacity: 0.55 },
+        built: { color: '#ffffff', weight: 2, fillColor: '#454986', fillOpacity: 0.55 },
+        raw: { color: '#ffffff', weight: 1.4, fillColor: '#ffffff', fillOpacity: 0.12 }
+      }[kind];
+      var r = L.rectangle([[b[1], b[0]], [b[3], b[2]]], style);
+      r.bindTooltip('<b>' + esc(c.chip_id) + '</b><br>' + esc(d.event) + (d.part ? ' · ' + esc(d.part) : '') + '<br>' +
+        (kind === 'cur' ? 'открыт сейчас' : kind === 'built' ? 'собран · нажмите, чтобы открыть' : 'не собран · нажмите, чтобы собрать'),
+        { className: 'ovtip', sticky: true });
+      r.on('click', function () {
+        if (kind === 'built') openRun(c.run_id);
+        else if (kind === 'raw') openBuild(c.chip_id);
+      });
+      r.addTo(REG.layer);
+    });
+    REG.layer.addTo(S.map);
+    $('ml-region').classList.remove('hidden');
+  }
+
+  function showRegion() {
+    var S = V.S, all = L.latLngBounds([]);
+    REG.data.chips.forEach(function (c) { if (c.bounds) all.extend([[c.bounds[1], c.bounds[0]], [c.bounds[3], c.bounds[2]]]); });
+    if (all.isValid()) S.map.fitBounds(all, { padding: [60, 60] });
+    REG.on = true;
+    syncRegionButton();
+  }
+
+  function syncRegionButton() {
+    var d = REG.data, n = d ? d.chips.length : 0, built = d ? d.chips.filter(function (c) { return c.run_id; }).length : 0;
+    $('btn-overview').textContent = REG.on ? 'К чипу' : 'Регион';
+    $('btn-overview').title = d ? d.event + ': ' + n + ' ' + V.plural(n, 'чип', 'чипа', 'чипов') + ', собрано ' + built +
+      (d.missing ? ' · без контура ' + d.missing : '') : 'Регион события: все его чипы сразу';
+  }
+
+  /** Несобранный чип — окно сборки Димы с уже подставленным чипом. */
+  function openBuild(chip) {
+    var open = $('btn-build-open');
+    if (open) open.click();
+    setTimeout(function () {
+      var input = $('build-chip');
+      if (!input) return;
+      input.value = chip;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }, 300);
   }
 
   // ── общее ────────────────────────────────────────────────────────────────
@@ -747,8 +883,9 @@
     if (why === 'error') return;
     if (why === 'boot') {
       V.S._zlabels = zoneIndex();
-      if (V.S.map && !V.S._zoomMoved) { V.S.map.zoomControl.setPosition('topright'); V.S._zoomMoved = true; }
+      if (V.S.map && !V.S._zoomMoved) { V.S.map.zoomControl.setPosition('bottomright'); V.S._zoomMoved = true; }
       loadOverview();
+      bindMapClicks();
       if (V.S.map && !V.S._scale) {
         V.S._scale = L.control.scale({ imperial: false, position: 'bottomleft', maxWidth: 160 }).addTo(V.S.map);
       }
@@ -783,6 +920,9 @@
         fitTimer = setTimeout(function () { V.S.map.invalidateSize(); if (!OV.wide) V.fitChip(); }, 60);
       }).observe($('mapwrap'));
     }
+    Array.prototype.forEach.call(document.querySelectorAll('#basemap-switch button'), function (b) {
+      b.addEventListener('click', function () { setBasemap(b.getAttribute('data-base')); });
+    });
     var ovb = $('btn-overview');
     if (ovb) ovb.addEventListener('click', toggleOverview);
     // Подписи зон появляются вместе со слоем зон.

@@ -247,11 +247,11 @@ input[type="range"] { width: 100%; accent-color: var(--primary); height: 22px; c
 .mapcard-title { font-size: 19px; font-weight: 700; color: var(--ink); }
 .mapcard-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .mapslot { position: relative; }
-.mapwrap { position: relative; height: 640px; border-radius: 16px; overflow: hidden; background: #e9e7d8; }
+.mapwrap { position: relative; height: 580px; border-radius: 16px; overflow: hidden; background: #e9e7d8; }
 #page-plan .mapwrap { height: 500px; }
 #map { position: absolute; inset: 0; background: #e9e7d8; }
 .leaflet-container { font-family: var(--sans); }
-.leaflet-tile-pane { filter: grayscale(1) contrast(.85) brightness(1.08); opacity: .55; }
+.base-osm .leaflet-tile-pane { filter: grayscale(1) contrast(.85) brightness(1.08); opacity: .55; }
 /* Растры считает расчётный модуль в синей палитре; здесь только сдвиг оттенка к
    фирменному тёмно-синему. Легенда ниже сдвигается тем же фильтром — совпадают. */
 .leaflet-image-layer.raster-probability, .leaflet-image-layer.raster-mask, .lg-prob, .lg-mask .swatch { filter: hue-rotate(22deg) saturate(.8); }
@@ -622,3 +622,32 @@ details.more[open] summary { margin-bottom: 12px; }
 .runmark span:hover { background: var(--primary-d); }
 .runmark.on span { background: var(--orange); }
 .ovtip { font: 12px/1.45 var(--sans); color: var(--text); border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(34,37,79,.15); }
+
+/* ── карта как в «Фенологе»: легенда на снимке, подложка, карточка выбора ── */
+.map-legend {
+  position: absolute; top: 14px; right: 14px; z-index: 600;
+  background: rgba(255,255,255,.96); border-radius: 14px; padding: 12px 16px 10px;
+  box-shadow: 0 4px 16px rgba(34,37,79,.18); font-size: 12.5px; color: var(--ink); min-width: 150px;
+}
+.ml-h { font: 700 10.5px var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 8px 0 4px; }
+.ml-h:first-child { margin-top: 0; }
+.ml-i { display: flex; align-items: center; gap: 9px; padding: 3px 0; }
+.ml-a { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--primary); background: #fff; flex: 0 0 auto; }
+.ml-a.high { border-width: 4px; }
+.ml-a.low { border-color: #9da0c9; }
+.ml-a.none { border-style: dashed; border-color: #a5a7c2; }
+.ml-z { width: 18px; height: 12px; border-radius: 2px; flex: 0 0 auto; }
+.ml-z.plan { border: 2px solid #fff; background: rgba(61,65,128,.55); box-shadow: 0 0 0 1px #8b8fb8; }
+.ml-z.cat { border: 1.5px dashed #8b8fb8; background: rgba(255,255,255,.4); }
+.ml-c { width: 16px; height: 12px; border-radius: 2px; flex: 0 0 auto; }
+.ml-c.cur { background: var(--orange); } .ml-c.built { background: var(--primary); } .ml-c.raw { border: 1.5px solid #fff; background: rgba(255,255,255,.25); box-shadow: 0 0 0 1px #8b8fb8; }
+.map-base { position: absolute; left: 14px; bottom: 34px; z-index: 600; background: rgba(255,255,255,.95); box-shadow: 0 2px 8px rgba(34,37,79,.15); }
+.leaflet-bottom.leaflet-left .leaflet-control-scale { margin-bottom: 76px; }
+.amark.sel span { box-shadow: 0 0 0 4px var(--orange), 0 1px 4px rgba(34,37,79,.3); }
+.pick { position: relative; margin-top: 14px; border-radius: 16px; background: var(--panel-2); padding: 18px 22px; min-height: 76px; }
+.pick-empty b { display: block; color: var(--ink); font-size: 15px; margin-bottom: 3px; }
+.pick-empty span { color: var(--muted); font-size: 13px; }
+.pick-x { position: absolute; top: 10px; right: 12px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: #fff; color: var(--muted); font-size: 17px; cursor: pointer; }
+.pick-x:hover { color: var(--ink); }
+.pick-body .popup h4 { font-size: 16px; }
+.pick-body .popup dl { grid-template-columns: max-content 1fr; }

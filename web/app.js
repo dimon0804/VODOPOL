@@ -276,12 +276,22 @@
     // делать нечего, а ссылка на библиотеку остаётся — лицензия требует именно её.
     S.map.attributionControl.setPrefix(
       '<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
-    // Географический контекст. Тайлы приглушены фильтром в styles.css; если сети
-    // нет, подложка просто не появится — слои запуска от неё не зависят.
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap · снимок Sentinel-1, Sen1Floods11'
-    }).addTo(S.map);
+    // Географический контекст, как в «Фенологе»: по умолчанию спутниковый снимок —
+    // на нём видно реку, поля и застройку вокруг чипа; схема OSM — запасной вариант,
+    // легче и выручает на слабом канале. Если сети нет, подложки просто не будет:
+    // слои запуска от неё не зависят.
+    S.basemaps = {
+      sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19,
+        attribution: '© Esri, Maxar, Earthstar Geographics · снимок Sentinel-1, Sen1Floods11'
+      }),
+      osm: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap · снимок Sentinel-1, Sen1Floods11'
+      })
+    };
+    S.basemap = 'sat';
+    S.basemaps.sat.addTo(S.map);
 
     fitChip();
   }
@@ -411,18 +421,19 @@
       // оператор видит на карте не «куплено/не куплено», а «куплено ради чего».
       var tier = zoneTier(feature.properties);
       return {
-        color: picked ? '#1f2250' : '#3d4180',
-        weight: picked ? 3 : 2,
+        // Белая рамка: на спутниковой подложке тёмно-синяя терялась на тёмной воде и лесе.
+        color: picked ? '#c8763c' : '#ffffff',
+        weight: picked ? 3.2 : 2.4,
         opacity: 1,
         dashArray: null,  // setStyle не сбрасывает пунктир сам — зона из каталога осталась бы пунктирной
-        fillColor: tier.color,
-        fillOpacity: picked ? 0.22 : 0.12
+        fillColor: '#3d4180',
+        fillOpacity: picked ? 0.34 : 0.26
       };
     }
     return {
-      color: picked ? '#1f2250' : '#ffffff',
-      weight: picked ? 2.4 : 1.4,
-      opacity: 0.95,
+      color: picked ? '#c8763c' : '#ffffff',
+      weight: picked ? 2.6 : 1.1,
+      opacity: picked ? 1 : 0.75,
       fillColor: '#ffffff',
       fillOpacity: 0.02,
       dashArray: '5 4'

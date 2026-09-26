@@ -217,6 +217,35 @@ def _event_footprints(app: FastAPI) -> tuple[dict[str, Any], str]:
     return result
 
 
+def _read_chip_bounds(chip_ids: list[str]) -> dict[str, list[float] | None]:
+    """Границы снимков чипов: с диска, если выкачан, иначе заголовок из бакета.
+
+    Читается только заголовок GeoTIFF — HTTP-запрос с диапазоном, а не весь файл.
+    Чип, который не прочитался (нет сети), остаётся без контура, а не роняет ответ.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    import rasterio
+
+    env = {
+        "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
+        "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
+        "GDAL_HTTP_TIMEOUT": "15",
+    }
+
+    def one(chip: str) -> tuple[str, list[float] | None]:
+        local = config.PROJECT_ROOT / config.S1_LOCAL.format(chip=chip)
+        source = str(local) if local.is_file() else "/vsicurl/" + config.S1_REMOTE.format(chip=chip)
+        try:
+            with rasterio.Env(**env), rasterio.open(source) as ds:
+                return chip, [float(v) for v in ds.bounds]
+        except Exception:
+            return chip, None
+
+    with ThreadPoolExecutor(max_workers=16) as pool:
+        return dict(pool.map(one, chip_ids))
+
+
 def _guard(action: str, call: Callable[[], Any]) -> Any:
     """Ошибку расчёта превращает в понятный ответ, а не в трейсбек на экране."""
     try:
@@ -373,6 +402,52 @@ def create_app(state: RunState | None = None) -> FastAPI:
             )
         events, source = _event_footprints(app)
         return json_ok({"current": current, "chips": chips, "events": events, "events_source": source})
+
+    @app.get("/api/event-chips", summary="Все чипы одного события с контурами — как поля региона")
+    def event_chips(event: str = Query(..., description="Событие Sen1Floods11, например Bolivia")) -> JSONResponse:
+        """Регион события целиком: все его чипы из сплита, собранные и нет.
+
+        Контур чипа — границы его снимка S1Hand. Выкачанный файл читается с диска,
+        остальные — только заголовок из официального бакета по HTTP (несколько
+        килобайт на чип, сам снимок не качается). Результат держится в памяти.
+        """
+        ids = config.event_chip_ids(event)
+        if not ids:
+            raise HTTPException(status_code=404, detail=f"события {event} нет в списках сплита")
+        cache = getattr(app.state, "event_chip_cache", None)
+        if cache is None:
+            cache = app.state.event_chip_cache = {}
+        if event not in cache:
+            cache[event] = _read_chip_bounds(ids)
+        bounds = cache[event]
+
+        state: RunState = app.state.run
+        current = _run_id_of(state.ctx) if state.ctx is not None else ""
+        built: dict[str, str] = {}
+        for path in config.list_run_dirs():
+            try:
+                summary = (state.opened.get(path.name) or RunContext.load(path)).summary()
+            except Exception:
+                continue
+            if summary.get("chip_id"):
+                built[str(summary["chip_id"])] = summary.get("run_id") or path.name
+        chips = [
+            {
+                "chip_id": chip,
+                "bounds": bounds.get(chip),
+                "run_id": built.get(chip),
+                "current": bool(built.get(chip)) and built.get(chip) == current,
+            }
+            for chip in ids
+        ]
+        return json_ok(
+            {
+                "event": event,
+                "part": config.event_parts().get(event, ""),
+                "chips": chips,
+                "missing": sum(1 for c in chips if not c["bounds"]),
+            }
+        )
 
     # ── сборка нового комплекта ──────────────────────────────────────────────
 
