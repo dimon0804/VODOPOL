@@ -543,3 +543,7 @@ table.grid .empty { color: var(--none); }
 .curve .c-tip .sub { color: var(--muted); margin-top: 2px; }
 .curve-table summary { cursor: pointer; color: var(--muted); font-size: 11.5px; margin-top: 6px; }
 .curve-table summary:hover { color: var(--text); }
+
+/* Кнопки наряда в шапке карточки объектов — вторичные, не спорят с «Выгрузить комплект». */
+.order-btns { margin-left: auto; display: flex; gap: 6px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }

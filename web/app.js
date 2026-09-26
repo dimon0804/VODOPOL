@@ -1042,10 +1042,137 @@
     $('tbl-curve').innerHTML = html + '</tbody>';
   }
 
+  // ── наряд на обследование ────────────────────────────────────────────────
+  //
+  // Рабочий документ для бригады: объекты в порядке приоритета, где они, что про них
+  // известно и попадают ли они в заказанную съёмку. Все числа — из /api/assets и
+  // /api/strategies как есть; панель только сортирует и раскладывает по строкам.
+  // У объектов без оценки p, ущерб и ранг пустые — ноль здесь был бы ложью.
+
+  function workOrderRows() {
+    var features = (S.assets && S.assets.features) || [];
+    var covered = coveredSet();
+    var plan = {};
+    ((S.strategies && S.strategies.plans && S.strategies.plans[S.strategy]) || []).forEach(function (id) { plan[id] = true; });
+    var zonesFor = {};
+    ((S.candidates && S.candidates.features) || []).forEach(function (z) {
+      var zp = z.properties;
+      if (!plan[zp.candidate_id]) return;
+      (zp.covered_asset_ids || []).forEach(function (aid) { (zonesFor[aid] = zonesFor[aid] || []).push(zp.candidate_id); });
+    });
+    var rows = features.map(function (f) {
+      var p = f.properties, c = (f.geometry && f.geometry.coordinates) || [];
+      var ok = p.status === 'ok';
+      return {
+        rank: ok ? toNum(p.rank) : null,
+        id: p.asset_id,
+        type: ASSET_TITLES[p.asset_class] || p.asset_class || '',
+        lon: toNum(c[0]), lat: toNum(c[1]),
+        p: ok ? toNum(p.p_flood) : null,
+        loss: ok ? toNum(p.expected_loss_rub) : null,
+        unc: ok ? toNum(p.uncertainty) : null,
+        status: ASSET_STATUS_WORD[p.status] || p.status || '',
+        covered: !!covered[p.asset_id],
+        zones: (zonesFor[p.asset_id] || []).join(' '),
+        value: toNum(p.asset_value_rub),
+        q: toNum(p.vulnerability_coef)
+      };
+    });
+    // Сначала оценённые по рангу, затем без оценки — по номеру: их приоритет неизвестен.
+    rows.sort(function (a, b) {
+      if (a.rank !== null && b.rank !== null) return a.rank - b.rank;
+      if (a.rank !== null) return -1;
+      if (b.rank !== null) return 1;
+      return String(a.id).localeCompare(String(b.id));
+    });
+    return rows;
+  }
+
+  function orderStamp() {
+    var s = S.summary || {};
+    return {
+      run: s.run_id || '', chip: s.chip_id || '', event: s.event_id || '',
+      deadline: s.decision_deadline || '', strategy: S.strategy, budget: S.budget,
+      made: new Date().toLocaleString('ru-RU')
+    };
+  }
+
+  function csvCell(v) {
+    if (v === null || v === undefined) return '';
+    var t = String(v);
+    return /[",\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  }
+
+  function downloadWorkOrderCsv() {
+    var st = orderStamp();
+    var head = ['priority', 'asset_id', 'asset_type', 'lon', 'lat', 'p_flood', 'expected_loss_rub',
+      'uncertainty', 'status', 'covered_by_survey', 'survey_zones', 'asset_value_rub', 'vulnerability_coef'];
+    var lines = [head.join(',')];
+    workOrderRows().forEach(function (r) {
+      lines.push([r.rank, r.id, r.type,
+        r.lon === null ? null : r.lon.toFixed(6), r.lat === null ? null : r.lat.toFixed(6),
+        r.p === null ? null : r.p.toFixed(4), r.loss === null ? null : r.loss.toFixed(2),
+        r.unc === null ? null : r.unc.toFixed(3), r.status,
+        r.covered ? 'yes' : 'no', r.zones, r.value, r.q].map(csvCell).join(','));
+    });
+    // BOM — чтобы Excel открыл кириллицу в UTF-8, а не в кодировке системы.
+    var blob = new Blob(['﻿' + lines.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'vodopol_naryad_' + (st.run || 'run') + '_' + st.strategy + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  function openWorkOrderPrint() {
+    var st = orderStamp();
+    var rows = workOrderRows();
+    var h = '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Наряд на обследование — ' + esc(st.chip) + '</title><style>' +
+      'body{font:12px/1.4 system-ui,"Segoe UI",Arial,sans-serif;color:#111;margin:18mm 14mm}' +
+      'h1{font-size:18px;margin:0 0 4px}.sub{color:#555;margin:0 0 12px}' +
+      'dl{display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:0 0 14px}dt{color:#555}dd{margin:0;font-weight:600}' +
+      'table{width:100%;border-collapse:collapse;font-size:11.5px}th,td{border:1px solid #bbb;padding:4px 6px;vertical-align:top}' +
+      'th{background:#f1f1f1;text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}' +
+      'td.done{width:70px}tr.nocover td{background:#fff8e6}.note{color:#444;font-size:10.5px;margin:10px 0 0}' +
+      '.sign{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:28px}.sign div{border-top:1px solid #333;padding-top:3px;color:#555;font-size:10.5px}' +
+      '@media print{body{margin:10mm}button{display:none}}</style></head><body>' +
+      '<button onclick="print()" style="float:right">Печать</button>' +
+      '<h1>Наряд на обследование</h1><p class="sub">Водополь · оценка ущерба от паводка · документ сформирован ' + esc(st.made) + '</p>' +
+      '<dl><dt>запуск</dt><dd>' + esc(st.run) + '</dd><dt>чип / событие</dt><dd>' + esc(st.chip) + ' · ' + esc(st.event) + '</dd>' +
+      '<dt>срок решения</dt><dd>' + esc(st.deadline) + ' (сценарная дата)</dd>' +
+      '<dt>стратегия съёмки</dt><dd>' + esc(STRATEGY_TITLE[st.strategy] || st.strategy) + '</dd>' +
+      '<dt>бюджет решения</dt><dd>' + money(st.budget) + ' ₽</dd></dl>' +
+      '<table><thead><tr><th>№</th><th>объект</th><th>координаты, °<br>долгота, широта</th><th>p затопления</th>' +
+      '<th>ожидаемый ущерб, ₽</th><th>неопр.</th><th>статус</th><th>покрыт съёмкой</th><th>отметка бригады</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      h += '<tr class="' + (r.covered ? '' : 'nocover') + '"><td class="n">' + (r.rank === null ? '—' : r.rank) + '</td>' +
+        '<td><b>' + esc(r.id) + '</b> · ' + esc(r.type) + '</td>' +
+        '<td class="n">' + (r.lon === null ? '—' : r.lon.toFixed(6) + ', ' + r.lat.toFixed(6)) + '</td>' +
+        '<td class="n">' + (r.p === null ? '—' : fmt(r.p, 4)) + '</td>' +
+        '<td class="n">' + (r.loss === null ? '—' : money(r.loss)) + '</td>' +
+        '<td class="n">' + (r.unc === null ? '—' : fmt(r.unc, 3)) + '</td>' +
+        '<td>' + esc(r.status) + '</td>' +
+        '<td>' + (r.covered ? 'да' + (r.zones ? '<br><small>' + esc(r.zones) + '</small>' : '') : 'нет — только наземно') + '</td>' +
+        '<td class="done"></td></tr>';
+    });
+    h += '</tbody></table>' +
+      '<p class="note">Порядок — по рангу ожидаемого ущерба: EL = p × V × q, p — выход модели по вероятностному растру, ' +
+      'V и q заданы условием кейса. Объекты без оценки идут в конце, их p, ущерб и ранг пустые — это «неизвестно», а не ноль. ' +
+      'Отметка «покрыт съёмкой» относится к выбранной стратегии и считается по сценарной ставке съёмки: при другой ставке состав заказа может измениться. ' +
+      'Строки, не покрытые съёмкой, выделены — по ним подтверждение возможно только на месте.</p>' +
+      '<div class="sign"><div>выдал</div><div>принял, бригадир</div><div>дата обследования</div></div>' +
+      '</body></html>';
+    var w = window.open('', '_blank');
+    if (!w) { banner('Браузер заблокировал новое окно: разрешите всплывающие окна для этой страницы или выгрузите наряд в CSV.', 'warn'); return; }
+    w.document.open(); w.document.write(h); w.document.close();
+  }
+
   // ── события интерфейса ───────────────────────────────────────────────────
 
   function wire() {
     $('rng-budget').addEventListener('input', onBudgetInput);
+    $('btn-order-csv').addEventListener('click', downloadWorkOrderCsv);
+    $('btn-order-print').addEventListener('click', openWorkOrderPrint);
     $('btn-budget-reset').addEventListener('click', function () {
       $('rng-budget').value = S.declaredBudget;
       onBudgetInput();
@@ -1134,6 +1261,7 @@
       if (budget) budget.disabled = true;
       var reset = $('btn-budget-reset');
       if (reset) reset.disabled = true;
+      ['btn-order-csv', 'btn-order-print'].forEach(function (id) { if ($(id)) $(id).disabled = true; });
 
       // Шапка иначе навсегда остаётся в состоянии «загрузка…».
       $('runline').innerHTML = '<span class="muted">комплект не загружен</span>';
