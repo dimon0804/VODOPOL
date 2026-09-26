@@ -231,3 +231,55 @@ def test_страница_панели_отдаётся(client: TestClient) -> N
     assert "Водополь" in response.text
     assert client.get("/app.js").status_code == 200
     assert client.get("/styles.css").status_code == 200
+
+
+# ── выбор комплекта ──────────────────────────────────────────────────────────
+# Оператор переключает чип прямо в панели, параметром run. Проверяется главное:
+# список собирается из outputs, чужой идентификатор отвергается, а выбранный
+# комплект действительно подменяет данные во всех ответах, а не только в паспорте.
+
+
+def test_runs_перечисляет_собранные_комплекты(client: TestClient) -> None:
+    payload = client.get("/api/runs").json()
+    assert payload["runs"], "ни один комплект не перечислен"
+    for item in payload["runs"]:
+        assert item["run_id"]
+        assert item["chip_id"]
+    assert any(item["current"] for item in payload["runs"])
+
+
+def test_роль_события_подписана(client: TestClient) -> None:
+    """Оператор должен видеть, училась модель на этом событии или нет."""
+    known = {"обучение", "настройка", "независимая проверка", "отложенное событие"}
+    parts = {item["part"] for item in client.get("/api/runs").json()["runs"]}
+    assert parts & known, f"роли событий не подписаны: {parts}"
+
+
+def test_чужой_идентификатор_комплекта_отвергается(client: TestClient) -> None:
+    for bad in ("../../etc", "нет-такого", "/etc/passwd", "."):
+        response = client.get("/api/run", params={"run": bad})
+        assert response.status_code == 404, bad
+        assert "не найден" in response.json()["error"]
+
+
+def test_выбранный_комплект_подменяет_все_ответы(client: TestClient) -> None:
+    runs = client.get("/api/runs").json()["runs"]
+    if len(runs) < 2:
+        pytest.skip("для проверки переключения нужны два собранных комплекта")
+    other = next(item for item in runs if not item["current"])
+    run_id = other["run_id"]
+
+    assert client.get("/api/run", params={"run": run_id}).json()["chip_id"] == other["chip_id"]
+    for path in ("/api/assets", "/api/candidates", "/api/sensitivity", "/api/strategies"):
+        assert client.get(path, params={"run": run_id}).status_code == 200, path
+
+    # Растр обязан отличаться: общий кеш на два комплекта означал бы карту
+    # предыдущего чипа под подписью нового, и панель врала бы молча.
+    here = client.get("/api/raster/probability.png")
+    there = client.get("/api/raster/probability.png", params={"run": run_id})
+    assert here.status_code == there.status_code == 200
+    assert here.content != there.content
+
+    archive = client.get("/api/bundle.zip", params={"run": run_id})
+    assert archive.status_code == 200
+    assert run_id in archive.headers["x-run-id"]

@@ -10,7 +10,7 @@
   <!-- Leaflet лежит рядом, а не на unpkg: на защите интернета может не быть,
        а панель без карты это не панель. Версия 1.9.4, файлы в web/vendor/leaflet. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
@@ -25,6 +25,14 @@
   </div>
 
   <div class="topactions">
+    <!-- Выбор комплекта. Список собирается из /api/runs, то есть из каталога
+         outputs: собрали новый чип командой run_bundle — он появится здесь сам. -->
+    <label class="runpick" for="run-select">
+      <span class="runpick-label">чип</span>
+      <select id="run-select" title="Комплект запуска, открытый в панели">
+        <option value="">загрузка…</option>
+      </select>
+    </label>
     <span class="pill" id="health-pill">соединение…</span>
     <a class="btn" id="bundle-link" href="/api/bundle.zip">Выгрузить комплект</a>
   </div>
@@ -204,6 +212,6 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

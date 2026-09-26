@@ -577,3 +577,42 @@ table.grid .empty { color: var(--none); }
 .t-key { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
 .t-key.t-ok { background: var(--ok); } .t-key.t-late { background: var(--bad); } .t-key.t-context { background: var(--muted-2); }
 .timeline .t-label { fill: var(--muted); font: 10.5px var(--sans); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; }
+
+
+/* ── выбор комплекта в шапке ────────────────────────────────────────────── */
+/* Рядом с пилюлей состояния: оператор сначала смотрит, что открыто, и тут же
+   может открыть другое. Ширину ограничиваем, иначе длинные run_id растягивают
+   шапку и выдавливают строку паспорта на вторую полосу. */
+.runpick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.runpick-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+#run-select {
+  max-width: 260px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#run-select:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) {
+  .runpick-label { display: none; }
+  #run-select { max-width: 180px; }
+}

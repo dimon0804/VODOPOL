@@ -166,7 +166,29 @@
 
   // ── сеть ─────────────────────────────────────────────────────────────────
 
-  function getJSON(path) {
+  /**
+   * Выбранный комплект живёт в адресной строке (?run=...), а не в памяти страницы.
+   * Из-за этого ссылка на конкретный чип пересылается и открывается как есть — на
+   * защите это удобнее, чем объяснять, что и где нажать. Пустая строка означает
+   * комплект, открытый сервисом по умолчанию.
+   */
+  function currentRunId() {
+    try {
+      return new URLSearchParams(window.location.search).get('run') || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /** Добавляет к адресу выбранный комплект, сохраняя уже имеющиеся параметры. */
+  function withRun(path) {
+    var runId = currentRunId();
+    if (!runId) return path;
+    return path + (path.indexOf('?') >= 0 ? '&' : '?') + 'run=' + encodeURIComponent(runId);
+  }
+
+  function getJSON(rawPath) {
+    var path = withRun(rawPath);
     return fetch(path, { headers: { Accept: 'application/json' } }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) {
         if (!r.ok) throw new Error(body.error || body.detail || ('HTTP ' + r.status + ' ' + path));
@@ -176,7 +198,7 @@
   }
 
   function fetchRaster(kind) {
-    return fetch('/api/raster/' + kind + '.png').then(function (r) {
+    return fetch(withRun('/api/raster/' + kind + '.png')).then(function (r) {
       if (!r.ok) {
         return r.json().catch(function () { return {}; }).then(function (body) {
           throw new Error(body.error || body.detail || ('слой ' + kind + ' недоступен'));
@@ -1448,10 +1470,54 @@
     });
   }
 
+  // ── выбор комплекта ──────────────────────────────────────────────────────
+
+  /**
+   * Наполняет список чипов. Рядом с идентификатором пишем роль события в
+   * протоколе: «обучение» или «независимая проверка» — это единственное, что
+   * оператору действительно нужно знать, выбирая, на чём смотреть результат.
+   */
+  function renderRunPicker() {
+    var select = $('run-select');
+    if (!select) return;
+    getJSON('/api/runs').then(function (data) {
+      var runs = (data && data.runs) || [];
+      if (!runs.length) {
+        select.innerHTML = '<option value="">комплектов нет</option>';
+        select.disabled = true;
+        return;
+      }
+      var chosen = currentRunId() || (data && data.current) || '';
+      select.innerHTML = runs.map(function (r) {
+        var label = (r.chip_id || r.run_id);
+        if (r.observation_date) label += ' · ' + r.observation_date;
+        if (r.part) label += ' · ' + r.part;
+        return '<option value="' + esc(r.run_id) + '"' +
+          (r.run_id === chosen ? ' selected' : '') + '>' + esc(label) + '</option>';
+      }).join('');
+      select.disabled = false;
+      select.title = 'Комплект запуска. Смена чипа перечитывает готовые файлы; ' +
+        'модель при этом не переобучается.';
+    }).catch(function () {
+      select.innerHTML = '<option value="">список недоступен</option>';
+      select.disabled = true;
+    });
+
+    select.addEventListener('change', function () {
+      var value = select.value;
+      if (!value) return;
+      // Перезагружаем страницу с новым параметром вместо точечного обновления:
+      // у панели полтора десятка связанных представлений, слои карты и два холста,
+      // и выборочный сброс любого из них — это тихий рассинхрон чисел на экране.
+      window.location.search = '?run=' + encodeURIComponent(value);
+    });
+  }
+
   // ── старт ────────────────────────────────────────────────────────────────
 
   function boot() {
     wire();
+    renderRunPicker();
     Promise.all([
       getJSON('/api/health'),
       getJSON('/api/run'),
@@ -1468,6 +1534,9 @@
       S.strategies = res[5];
       S.budget = toNum(S.strategies.budget_rub);
       if (S.budget === null) S.budget = toNum(S.summary.budget_rub);
+
+      var bundleLink = $('bundle-link');
+      if (bundleLink) bundleLink.href = withRun('/api/bundle.zip');
 
       renderHeader();
       renderMeta();
@@ -1497,6 +1566,8 @@
         bundle.removeAttribute('href');
         bundle.title = 'Комплект не загружен — выгружать нечего';
       }
+      var picker = $('run-select');
+      if (picker) picker.disabled = true;
       var ctl = $('mapctl');
       if (ctl) {
         var inputs = ctl.querySelectorAll('input');

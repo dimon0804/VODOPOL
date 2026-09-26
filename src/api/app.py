@@ -80,6 +80,8 @@ class RunState:
     source: str = "none"
     message: str = ""
     raster_cache: dict[str, tuple[bytes, list[float]]] = field(default_factory=dict)
+    #: Открытые по запросу соседние комплекты: run_id -> контекст.
+    opened: dict[str, RunContext] = field(default_factory=dict)
 
     @property
     def is_demo(self) -> bool:
@@ -139,6 +141,43 @@ def load_state() -> RunState:
 # ─────────────────────────────────────────────────────────────────────────────
 # Вспомогательное
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+def _run_id_of(ctx: RunContext) -> str:
+    """Идентификатор комплекта, не роняя запрос на нечитаемом паспорте."""
+    try:
+        return str(ctx.summary().get("run_id") or "")
+    except Exception:  # pragma: no cover — защитный путь
+        return ""
+
+
+def _select_ctx(state: RunState, run_id: str | None) -> RunContext:
+    """Комплект, с которым работает запрос: открытый по умолчанию или выбранный.
+
+    Панель переключает чип параметром ``run``. Контекст соседнего комплекта
+    открывается один раз и запоминается: переключение туда-обратно не перечитывает
+    файлы. Модель при этом не трогается вообще — читаются готовые артефакты.
+    """
+    if not run_id:
+        return _require_ctx(state)
+    current = state.ctx
+    if current is not None and not current.is_demo and _run_id_of(current) == run_id:
+        return current
+    opened = state.opened.get(run_id)
+    if opened is not None:
+        return opened
+    path = config.run_dir_by_id(run_id)
+    if path is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"Комплект {run_id!r} не найден в {config.OUTPUTS_DIR.name}/. "
+                "Соберите его командой python -m src.cli.run_bundle --chip <id>."
+            ),
+        )
+    ctx = _guard(f"Комплект {run_id}", lambda: RunContext.load(path))
+    state.opened[run_id] = ctx
+    return ctx
 
 
 def _require_ctx(state: RunState) -> RunContext:
@@ -238,11 +277,51 @@ def create_app(state: RunState | None = None) -> FastAPI:
                 payload["message"] = f"Паспорт запуска не прочитан: {exc}"
         return json_ok(payload)
 
+    @app.get("/api/runs", summary="Собранные комплекты, доступные для показа")
+    def runs() -> JSONResponse:
+        """Перечень комплектов для выпадающего списка панели.
+
+        Собирается из каталога outputs/, а не из конфигурации: собрали новый чип
+        командой run_bundle — он появляется в списке без перезапуска сервиса.
+        """
+        state: RunState = app.state.run
+        current = _run_id_of(state.ctx) if state.ctx is not None else ""
+        parts = config.event_parts()
+        items: list[dict[str, Any]] = []
+        for path in config.list_run_dirs():
+            try:
+                ctx = state.opened.get(path.name) or RunContext.load(path)
+            except Exception:  # каталог есть, читать нечего — молча пропускаем
+                continue
+            try:
+                summary = ctx.summary()
+            except Exception:
+                continue
+            event = summary.get("event_id") or ""
+            items.append(
+                {
+                    "run_id": summary.get("run_id") or path.name,
+                    "chip_id": summary.get("chip_id"),
+                    "event_id": event,
+                    "observation_date": summary.get("observation_date"),
+                    "budget_rub": summary.get("budget_rub"),
+                    "threshold": summary.get("threshold"),
+                    "part": parts.get(str(event), ""),
+                    "current": (summary.get("run_id") or path.name) == current,
+                }
+            )
+        return json_ok({"current": current, "runs": items})
+
     # ── данные ───────────────────────────────────────────────────────────────
 
     @app.get("/api/run", summary="Паспорт запуска")
-    def run_summary() -> JSONResponse:
-        ctx = _require_ctx(app.state.run)
+    def run_summary(
+    run: str | None = Query(
+        default=None,
+        description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+    ),
+    ) -> JSONResponse:
+        ctx = _select_ctx(app.state.run, run)
         summary = dict(_guard("Паспорт запуска", ctx.summary))
         # Границы дублируем рядом с растрами: панели удобнее брать их одним запросом.
         summary.setdefault("bounds", None)
@@ -250,13 +329,23 @@ def create_app(state: RunState | None = None) -> FastAPI:
         return json_ok(summary)
 
     @app.get("/api/assets", summary="Объекты портфеля с ущербом")
-    def assets() -> JSONResponse:
-        ctx = _require_ctx(app.state.run)
+    def assets(
+    run: str | None = Query(
+        default=None,
+        description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+    ),
+    ) -> JSONResponse:
+        ctx = _select_ctx(app.state.run, run)
         return json_ok(_guard("Объекты портфеля", ctx.assets))
 
     @app.get("/api/candidates", summary="Каталог зон дополнительной съёмки")
-    def candidates() -> JSONResponse:
-        ctx = _require_ctx(app.state.run)
+    def candidates(
+    run: str | None = Query(
+        default=None,
+        description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+    ),
+    ) -> JSONResponse:
+        ctx = _select_ctx(app.state.run, run)
         return json_ok(_guard("Каталог зон", ctx.candidates))
 
     @app.get("/api/strategies", summary="Сравнение стратегий A/B/C")
@@ -266,21 +355,36 @@ def create_app(state: RunState | None = None) -> FastAPI:
             ge=0,
             description="Бюджет в рублях. Без параметра — бюджет, объявленный в комплекте.",
         ),
+    run: str | None = Query(
+        default=None,
+        description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+    ),
     ) -> JSONResponse:
-        ctx = _require_ctx(app.state.run)
+        ctx = _select_ctx(app.state.run, run)
         return json_ok(_guard("Стратегии A/B/C", lambda: ctx.strategies(budget)))
 
     @app.get("/api/sensitivity", summary="Таблица чувствительности")
-    def sensitivity() -> JSONResponse:
-        ctx = _require_ctx(app.state.run)
+    def sensitivity(
+    run: str | None = Query(
+        default=None,
+        description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+    ),
+    ) -> JSONResponse:
+        ctx = _select_ctx(app.state.run, run)
         return json_ok(_guard("Чувствительность", ctx.sensitivity))
 
     # ── карта ────────────────────────────────────────────────────────────────
 
     @app.get("/api/raster/{kind}.png", summary="Слой карты в PNG")
-    def raster(kind: str) -> Response:
-        run: RunState = app.state.run
-        ctx = _require_ctx(run)
+    def raster(
+        kind: str,
+        run: str | None = Query(
+            default=None,
+            description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+        ),
+    ) -> Response:
+        state: RunState = app.state.run
+        ctx = _select_ctx(state, run)
         if kind not in config.RASTER_KINDS:
             raise HTTPException(
                 status_code=400,
@@ -289,7 +393,10 @@ def create_app(state: RunState | None = None) -> FastAPI:
                     f"Допустимые значения: {', '.join(config.RASTER_KINDS)}."
                 ),
             )
-        cached = run.raster_cache.get(kind)
+        # Ключ кеша включает комплект: иначе переключение чипа отдавало бы
+        # картинку предыдущего, и карта врала бы молча.
+        cache_key = (_run_id_of(ctx) or "current") + "|" + kind
+        cached = state.raster_cache.get(cache_key)
         if cached is None:
             try:
                 png, bounds = _guard(f"Слой {kind}", lambda: ctx.raster_png(kind))
@@ -310,9 +417,9 @@ def create_app(state: RunState | None = None) -> FastAPI:
                     ) from exc
                 raise
             cached = (png, [float(value) for value in bounds])
-            if len(run.raster_cache) >= config.RASTER_CACHE_SIZE:
-                run.raster_cache.clear()
-            run.raster_cache[kind] = cached
+            if len(state.raster_cache) >= config.RASTER_CACHE_SIZE:
+                state.raster_cache.clear()
+            state.raster_cache[cache_key] = cached
         png, bounds = cached
         return Response(
             content=png,
@@ -326,9 +433,13 @@ def create_app(state: RunState | None = None) -> FastAPI:
     # ── выгрузка ─────────────────────────────────────────────────────────────
 
     @app.get("/api/bundle.zip", summary="Комплект запуска одним архивом")
-    def bundle() -> Response:
-        run: RunState = app.state.run
-        ctx = _require_ctx(run)
+    def bundle(
+        run: str | None = Query(
+            default=None,
+            description="Идентификатор комплекта. Без параметра — открытый по умолчанию.",
+        ),
+    ) -> Response:
+        ctx = _select_ctx(app.state.run, run)
         archive = _guard("Выгрузка комплекта", ctx.bundle_zip)
         run_id = "demo"
         try:

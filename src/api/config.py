@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import csv
 import os
 from pathlib import Path
 
@@ -44,14 +45,70 @@ def env_run_dir() -> Path | None:
     return path
 
 
+def list_run_dirs() -> list[Path]:
+    """Все готовые комплекты в outputs/, свежие первыми.
+
+    Признак готовности — наличие run_metadata.json: каталог, в котором расчёт
+    оборвался на середине, в список не попадёт и панель на нём не сломается.
+    """
+    if not OUTPUTS_DIR.is_dir():
+        return []
+    runs = [d for d in OUTPUTS_DIR.iterdir() if d.is_dir() and (d / RUN_MARKER).is_file()]
+    return sorted(runs, key=lambda d: (d / RUN_MARKER).stat().st_mtime, reverse=True)
+
+
+def run_dir_by_id(run_id: str) -> Path | None:
+    """Каталог комплекта по его идентификатору, с проверкой, что он наш.
+
+    Идентификатор приходит из запроса, поэтому проверяется дважды: он обязан быть
+    одним именем без разделителей пути, и он обязан найтись среди каталогов,
+    которые перечисляет list_run_dirs. Подняться выше outputs/ таким путём нельзя.
+    """
+    name = (run_id or "").strip()
+    if not name or name in {".", ".."} or "/" in name or "\\" in name:
+        return None
+    for path in list_run_dirs():
+        if path.name == name:
+            return path
+    return None
+
+
+def event_parts() -> dict[str, str]:
+    """Событие -> часть протокола, в которой оно лежит.
+
+    Нужно панели: оператор должен видеть, показываем мы чип, на котором модель
+    училась, или событие, которого она не видела. Без этой подписи выбор комплекта
+    превращается в лотерею из непрозрачных идентификаторов.
+    """
+    titles = {
+        "train": "обучение",
+        "validation": "настройка",
+        "test": "независимая проверка",
+        "holdout": "отложенное событие",
+    }
+    mapping: dict[str, str] = {}
+    splits_dir = PROJECT_ROOT / "splits"
+    if not splits_dir.is_dir():
+        return mapping
+    for part, title in titles.items():
+        path = splits_dir / f"{part}.csv"
+        if not path.is_file():
+            continue
+        try:
+            with path.open(encoding="utf-8", newline="") as handle:
+                for row in csv.DictReader(handle):
+                    event = (row.get("event") or row.get("event_id") or "").strip()
+                    if event:
+                        mapping.setdefault(event, title)
+        except OSError:
+            continue
+    return mapping
+
+
 def discover_run_dir() -> Path | None:
     """Самый свежий комплект в outputs/ — когда переменная окружения не задана."""
-    if not OUTPUTS_DIR.is_dir():
-        return None
-    runs = [d for d in OUTPUTS_DIR.iterdir() if d.is_dir() and (d / RUN_MARKER).is_file()]
-    if not runs:
-        return None
-    return max(runs, key=lambda d: (d / RUN_MARKER).stat().st_mtime)
+    runs = list_run_dirs()
+    return runs[0] if runs else None
 
 
 def host_port() -> tuple[str, int]:

@@ -1,0 +1,175 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.65460813691804,
+          29.212808797688986
+        ]
+      },
+      "properties": {
+        "asset_id": "a01",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "warehouse",
+        "asset_value_rub": 10000000,
+        "vulnerability_coef": 0.25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.67580837762326,
+          29.25080753420724
+        ]
+      },
+      "properties": {
+        "asset_id": "a02",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "substation",
+        "asset_value_rub": 20000000,
+        "vulnerability_coef": 0.4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.667903203123,
+          29.23517684826356
+        ]
+      },
+      "properties": {
+        "asset_id": "a03",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "road_unit",
+        "asset_value_rub": 5000000,
+        "vulnerability_coef": 0.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.66341162670241,
+          29.248382082940118
+        ]
+      },
+      "properties": {
+        "asset_id": "a04",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "facility",
+        "asset_value_rub": 8000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.66269297447512,
+          29.222420771229064
+        ]
+      },
+      "properties": {
+        "asset_id": "a05",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "pumping_station",
+        "asset_value_rub": 12000000,
+        "vulnerability_coef": 0.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.68272540531098,
+          29.213796944501517
+        ]
+      },
+      "properties": {
+        "asset_id": "a06",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "clinic",
+        "asset_value_rub": 30000000,
+        "vulnerability_coef": 0.15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.68802546548729,
+          29.219635993848293
+        ]
+      },
+      "properties": {
+        "asset_id": "a07",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "school",
+        "asset_value_rub": 18000000,
+        "vulnerability_coef": 0.2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.65451830538963,
+          29.218827510092584
+        ]
+      },
+      "properties": {
+        "asset_id": "a08",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "workshop",
+        "asset_value_rub": 6000000,
+        "vulnerability_coef": 0.45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.67643719832215,
+          29.21253930310375
+        ]
+      },
+      "properties": {
+        "asset_id": "a09",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "telecom_node",
+        "asset_value_rub": 4000000,
+        "vulnerability_coef": 0.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70.66008786015117,
+          29.247483767655996
+        ]
+      },
+      "properties": {
+        "asset_id": "a10",
+        "chip_id": "Pakistan_1036366",
+        "asset_class": "water_intake",
+        "asset_value_rub": 16000000,
+        "vulnerability_coef": 0.3
+      }
+    }
+  ]
+}
