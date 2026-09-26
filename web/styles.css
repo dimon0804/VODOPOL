@@ -605,3 +605,20 @@ details.more[open] summary { margin-bottom: 12px; }
 .tbl tbody td:first-child::first-letter { text-transform: uppercase; }
 .ibar { display: inline-block; width: 90px; height: 6px; margin-left: 12px; border-radius: 3px; background: var(--lav); vertical-align: middle; overflow: hidden; }
 .ibar i { display: block; height: 100%; background: var(--primary); border-radius: 3px; }
+
+/* ── обзор: все события и все чипы на одной карте ──────────────────────── */
+.mbtn { border: 0; cursor: pointer; }
+.mbtn::before { content: "◎"; margin-right: 6px; color: var(--primary); }
+.evlab span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap;
+  font: 700 12px var(--sans); color: var(--ink); letter-spacing: .02em;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff;
+}
+.runmark span {
+  position: absolute; transform: translate(-50%, -50%); white-space: nowrap; cursor: pointer;
+  background: var(--primary); color: #fff; border: 2px solid #fff; border-radius: 999px;
+  padding: 2px 9px; font: 700 11px var(--sans); box-shadow: 0 2px 8px rgba(34,37,79,.3);
+}
+.runmark span:hover { background: var(--primary-d); }
+.runmark.on span { background: var(--orange); }
+.ovtip { font: 12px/1.45 var(--sans); color: var(--text); border-radius: 10px; border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(34,37,79,.15); }

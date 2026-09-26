@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="img/logo.png">
   <!-- Leaflet лежит рядом, а не на CDN: на защите интернета может не быть. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=1">
-  <link rel="stylesheet" href="styles.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
 
@@ -146,6 +146,7 @@
           <div class="map-pills">
             <label class="mpill"><input type="checkbox" id="chk-assets" checked><span>Объекты</span></label>
             <label class="mpill"><input type="checkbox" id="chk-zones" checked><span>Зоны</span></label>
+            <button type="button" class="mpill mbtn" id="btn-overview" title="Показать на карте все события набора и все собранные чипы">Все чипы</button>
           </div>
           <div class="map-north" title="север сверху">▲</div>
           <div class="mapctl-note" id="s1-note"></div>
@@ -367,7 +368,7 @@
 </footer>
 
 <script src="vendor/leaflet/leaflet.js?v=1"></script>
-<script src="app.js?v=24"></script>
-<script src="pages.js?v=24"></script>
+<script src="app.js?v=25"></script>
+<script src="pages.js?v=27"></script>
 </body>
 </html>

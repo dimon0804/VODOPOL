@@ -145,3 +145,8 @@ REPORT_FILES = {
     "experiments.json": "reports/experiments.json",
     "split_manifest.json": "splits/split_manifest.json",
 }
+
+#: Контуры событий Sen1Floods11 для обзорной карты. Файл кладёт fetch_data; если
+#: набор не выкачан, сервис один раз берёт его из официального бакета.
+METADATA_PATH = "data/cache/Sen1Floods11_Metadata.geojson"
+METADATA_URL = "https://storage.googleapis.com/sen1floods11/v1.1/Sen1Floods11_Metadata.geojson"

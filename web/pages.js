@@ -603,6 +603,135 @@
     }).catch(function (e) { failBox('m-data', e); });
   }
 
+  // ── обзор: все события и все чипы сразу ──────────────────────────────────
+  //
+  // Как поля в «Фенологе»: на одной карте видно всё, что есть, а не только
+  // открытый чип. Контуры событий — из официальных метаданных набора, чипы —
+  // собранные комплекты. Клик по чипу открывает его в панели.
+
+  var OV = { data: null, events: null, eventLabels: null, chips: null, chipMarks: null, wide: false };
+  var OV_DETAIL_ZOOM = 10;   // ближе — показываем зоны и объекты, дальше — обзор
+
+  function openRun(id) {
+    if (!id || id === V.currentRunId()) return;
+    window.location.href = window.location.pathname + '?run=' + encodeURIComponent(id) + (window.location.hash || '');
+  }
+
+  function loadOverview() {
+    V.getJSON('/api/overview').then(function (d) {
+      OV.data = d;
+      drawOverview();
+    }).catch(function () { /* обзор — дополнение: без него чип работает как раньше */ });
+  }
+
+  function ringCenter(geom) {
+    var b = L.geoJSON(geom).getBounds();
+    return b.getCenter();
+  }
+
+  function drawOverview() {
+    var S = V.S, d = OV.data;
+    if (!S.map || !d) return;
+    S.map.setMinZoom(1);
+    ['events', 'eventLabels', 'chips', 'chipMarks'].forEach(function (k) { if (OV[k]) { S.map.removeLayer(OV[k]); OV[k] = null; } });
+
+    var parts = {};
+    (d.chips || []).forEach(function (c) { if (c.event_id) parts[c.event_id] = c.part; });
+    var perEvent = {};
+    (d.chips || []).forEach(function (c) { perEvent[c.event_id] = (perEvent[c.event_id] || 0) + 1; });
+
+    OV.events = L.geoJSON(d.events, {
+      style: function () { return { color: '#454986', weight: 1.4, opacity: 0.8, dashArray: '4 3', fillColor: '#454986', fillOpacity: 0.06 }; },
+      onEachFeature: function (f, layer) {
+        var p = f.properties || {};
+        layer.bindTooltip('<b>' + esc(p.location) + '</b><br>съёмка S1 ' + esc(String(p.s1_date || '').replace(/\//g, '.')) +
+          (parts[p.location] ? '<br>' + esc(parts[p.location]) : '') +
+          '<br>собрано чипов: ' + (perEvent[p.location] || 0), { sticky: true, className: 'ovtip' });
+      }
+    });
+    OV.eventLabels = L.layerGroup();
+    (d.events.features || []).forEach(function (f) {
+      var p = f.properties || {};
+      if (perEvent[p.location]) return;  // событие уже подписано пилюлей своего чипа
+      L.marker(ringCenter(f), {
+        icon: L.divIcon({ className: 'evlab', html: '<span>' + esc(p.location) + '</span>', iconSize: [0, 0] }),
+        interactive: false, keyboard: false
+      }).addTo(OV.eventLabels);
+    });
+
+    OV.chips = L.layerGroup();
+    OV.chipMarks = L.layerGroup();
+    var stack = {};
+    (d.chips || []).forEach(function (c) {
+      var b = c.bounds;
+      var k = stack[c.event_id] = (stack[c.event_id] || 0) + 1;
+      if (!b || b.length !== 4) return;
+      var ll = [[b[1], b[0]], [b[3], b[2]]];
+      var rect = L.rectangle(ll, { color: c.current ? '#c8763c' : '#22254f', weight: 2, fillColor: c.current ? '#c8763c' : '#454986', fillOpacity: 0.35 });
+      rect.bindTooltip(chipTip(c), { className: 'ovtip' });
+      rect.on('click', function () { openRun(c.run_id); });
+      rect.addTo(OV.chips);
+      var mk = L.marker(L.latLngBounds(ll).getCenter(), {
+        icon: L.divIcon({ className: 'runmark' + (c.current ? ' on' : ''), html: '<span style="margin-top:' + ((k - 1) * 24) + 'px">' + esc(c.chip_id) + '</span>', iconSize: [0, 0] }),
+        keyboard: false, riseOnHover: true
+      });
+      mk.bindTooltip(chipTip(c), { className: 'ovtip', direction: 'top', offset: [0, -10] });
+      mk.on('click', function () { openRun(c.run_id); });
+      mk.addTo(OV.chipMarks);
+    });
+
+    OV.events.addTo(S.map);
+    OV.chips.addTo(S.map);
+    OV.events.bringToBack();
+    S.map.off('zoomend', syncOverview);
+    S.map.on('zoomend', syncOverview);
+    syncOverview();
+    var n = (d.chips || []).length, ne = (d.events.features || []).length;
+    $('btn-overview').title = 'Все ' + ne + ' ' + V.plural(ne, 'событие', 'события', 'событий') + ' набора и ' + n + ' ' +
+      V.plural(n, 'собранный чип', 'собранных чипа', 'собранных чипов') + (d.events_source ? ' · контуры: ' + d.events_source : '');
+  }
+
+  function chipTip(c) {
+    return '<b>' + esc(c.chip_id) + '</b>' + (c.current ? ' · открыт' : ' · нажмите, чтобы открыть') +
+      '<br>' + esc(c.event_id) + (c.part ? ' · ' + esc(c.part) : '') + (c.observation_date ? ' · ' + esc(c.observation_date) : '') +
+      (c.total_expected_loss_rub != null ? '<br>ожидаемый ущерб ' + mln(c.total_expected_loss_rub) + ' млн ₽' : '');
+  }
+
+  /** Далеко — обзор с подписями, близко — детали открытого чипа без лишнего. */
+  function syncOverview() {
+    var S = V.S;
+    if (!S.map || !OV.data) return;
+    var far = S.map.getZoom() < OV_DETAIL_ZOOM;
+    [OV.eventLabels, OV.chipMarks].forEach(function (g) {
+      if (!g) return;
+      if (far && !S.map.hasLayer(g)) g.addTo(S.map);
+      if (!far && S.map.hasLayer(g)) S.map.removeLayer(g);
+    });
+    if (OV.events) OV.events.setStyle({ fillOpacity: far ? 0.06 : 0, opacity: far ? 0.8 : 0.35 });
+    // Номера объектов и подписи зон на обзоре мира висели бы россыпью поверх
+    // континентов. Прячем их вдали и возвращаем вблизи — с учётом галочек.
+    var assetsOn = $('chk-assets').checked, zonesOn = $('chk-zones').checked;
+    [[S.assetsLayer, assetsOn], [zoneLabels, zonesOn]].forEach(function (x) {
+      var g = x[0];
+      if (!g) return;
+      if (far && S.map.hasLayer(g)) S.map.removeLayer(g);
+      if (!far && x[1] && !S.map.hasLayer(g)) g.addTo(S.map);
+    });
+    OV.wide = far;
+    $('btn-overview').textContent = far ? 'К чипу' : 'Все чипы';
+  }
+
+  function toggleOverview() {
+    var S = V.S;
+    if (!S.map) return;
+    if (OV.wide) { V.fitChip(); return; }
+    var all = L.latLngBounds([]);
+    if (OV.events) all.extend(OV.events.getBounds());
+    if (OV.chips) OV.chips.eachLayer(function (l) { all.extend(l.getBounds()); });
+    // Справа запас шире: пилюли чипов тянутся вправо от центра и у края обрезались.
+    if (all.isValid()) S.map.fitBounds(all, { paddingTopLeft: [40, 50], paddingBottomRight: [120, 40] });
+  }
+
   // ── общее ────────────────────────────────────────────────────────────────
 
   /** Кнопки скачивания отдельных файлов — всегда про открытый комплект. */
@@ -619,6 +748,7 @@
     if (why === 'boot') {
       V.S._zlabels = zoneIndex();
       if (V.S.map && !V.S._zoomMoved) { V.S.map.zoomControl.setPosition('topright'); V.S._zoomMoved = true; }
+      loadOverview();
       if (V.S.map && !V.S._scale) {
         V.S._scale = L.control.scale({ imperial: false, position: 'bottomleft', maxWidth: 160 }).addTo(V.S.map);
       }
@@ -650,9 +780,11 @@
       new ResizeObserver(function () {
         if (!V || !V.S.map) return;
         clearTimeout(fitTimer);
-        fitTimer = setTimeout(function () { V.S.map.invalidateSize(); V.fitChip(); }, 60);
+        fitTimer = setTimeout(function () { V.S.map.invalidateSize(); if (!OV.wide) V.fitChip(); }, 60);
       }).observe($('mapwrap'));
     }
+    var ovb = $('btn-overview');
+    if (ovb) ovb.addEventListener('click', toggleOverview);
     // Подписи зон появляются вместе со слоем зон.
     var chk = $('chk-zones');
     if (chk) chk.addEventListener('change', function () {

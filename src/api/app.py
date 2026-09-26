@@ -189,6 +189,34 @@ def _require_ctx(state: RunState) -> RunContext:
     return state.ctx
 
 
+def _event_footprints(app: FastAPI) -> tuple[dict[str, Any], str]:
+    """Контуры событий Sen1Floods11 для обзорной карты.
+
+    Сначала файл, который скачала fetch_data. Если набор не выкачан — один раз
+    берём тот же файл из официального бакета и держим в памяти: в репозиторий
+    чужие данные не кладём. Нет сети — обзор показывает только собранные чипы.
+    """
+    cached = getattr(app.state, "event_footprints", None)
+    if cached is not None:
+        return cached
+    empty = {"type": "FeatureCollection", "features": []}
+    result: tuple[dict[str, Any], str]
+    path = config.PROJECT_ROOT / config.METADATA_PATH
+    try:
+        if path.is_file():
+            result = (json.loads(path.read_text(encoding="utf-8")), "data/cache")
+        else:
+            import urllib.request
+
+            with urllib.request.urlopen(config.METADATA_URL, timeout=6) as resp:
+                result = (json.loads(resp.read().decode("utf-8")), "официальный бакет Sen1Floods11")
+    except Exception:
+        # Не кэшируем провал: сеть может появиться, а файл — выкачаться позже.
+        return empty, "недоступно: набор не выкачан и бакет не ответил"
+    app.state.event_footprints = result
+    return result
+
+
 def _guard(action: str, call: Callable[[], Any]) -> Any:
     """Ошибку расчёта превращает в понятный ответ, а не в трейсбек на экране."""
     try:
@@ -311,6 +339,40 @@ def create_app(state: RunState | None = None) -> FastAPI:
                 }
             )
         return json_ok({"current": current, "runs": items})
+
+    @app.get("/api/overview", summary="Все события набора и все собранные чипы — для обзорной карты")
+    def overview() -> JSONResponse:
+        """Обзорный слой карты: всё сразу, как поля в «Фенологе».
+
+        События — контуры из официального Sen1Floods11_Metadata.geojson (его
+        скачивает fetch_data). Чипы — собранные комплекты с границами и ущербом из
+        паспорта запуска. Ничего не считается: всё читается как есть.
+        """
+        state: RunState = app.state.run
+        current = _run_id_of(state.ctx) if state.ctx is not None else ""
+        parts = config.event_parts()
+        chips: list[dict[str, Any]] = []
+        for path in config.list_run_dirs():
+            try:
+                ctx = state.opened.get(path.name) or RunContext.load(path)
+                summary = ctx.summary()
+            except Exception:
+                continue
+            event = summary.get("event_id") or ""
+            chips.append(
+                {
+                    "run_id": summary.get("run_id") or path.name,
+                    "chip_id": summary.get("chip_id"),
+                    "event_id": event,
+                    "part": parts.get(str(event), ""),
+                    "observation_date": summary.get("observation_date"),
+                    "bounds": summary.get("bounds"),
+                    "total_expected_loss_rub": summary.get("total_expected_loss_rub"),
+                    "current": (summary.get("run_id") or path.name) == current,
+                }
+            )
+        events, source = _event_footprints(app)
+        return json_ok({"current": current, "chips": chips, "events": events, "events_source": source})
 
     # ── сборка нового комплекта ──────────────────────────────────────────────
 
