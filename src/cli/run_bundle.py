@@ -40,6 +40,7 @@ from src.data import fetch
 from src.export.bundle import assemble, new_run_id
 from src.methods.baseline_threshold import BaselineThreshold
 from src.methods.main_model import MainModel
+from src.procurement import purposes as purposes_mod
 from src.procurement.candidates import CatalogConfig, build_catalog, selftest_catalog
 from src.procurement.pricing import position_row
 from src.procurement.strategies import StrategyConfig, build_strategies
@@ -390,6 +391,16 @@ def main() -> None:
         default=None,
         help="json со списком дополнительных источников для манифеста запуска",
     )
+    parser.add_argument(
+        "--purpose",
+        default=purposes_mod.DEFAULT_PURPOSE,
+        choices=[item.key for item in purposes_mod.PURPOSES],
+        help=(
+            "зачем заказывается съёмка: от этого зависят условия заказа и его цена "
+            "по ПП 840. response — оперативное реагирование, damage — оценка ущерба, "
+            "planning — планирование защитных сооружений"
+        ),
+    )
     parser.add_argument("--skip-validate", action="store_true")
     args = parser.parse_args()
 
@@ -408,6 +419,16 @@ def main() -> None:
         raise SystemExit(str(error))
     chip_path = args.s1_file if external_input else fetch.layer_path(args.chip, C.LAYER_S1)
     extra_sources = load_extra_sources(args.sources)
+    try:
+        purpose = purposes_mod.resolve(args.purpose)
+    except ValueError as error:
+        raise SystemExit(str(error))
+    print(
+        f"  цель запуска: {purpose.title_ru} ({purpose.who}); съёмка "
+        f"{purpose.acquisition_type}, обработка {purpose.processing_level}, "
+        f"режим {purpose.usage_type}",
+        flush=True,
+    )
 
     # ── вероятность и маска ──────────────────────────────────────────────────
     model = MainModel.load(args.model)
@@ -470,6 +491,10 @@ def main() -> None:
             available_at=dates["new_available_at"],
             context_observation_at=dates["archive_observation_at"],
             context_available_at=dates["archive_available_at"],
+            # Цель запуска задаёт условия заказа, а через них — коэффициенты
+            # ПП 840 и итоговую сумму. Ничего сверх таблиц норматива здесь нет:
+            # меняется только то, какие строки таблиц выбраны.
+            **purposes_mod.catalog_overrides(purpose),
         ),
     )
     problems = selftest_catalog(catalog)
@@ -503,7 +528,7 @@ def main() -> None:
         print(f"    {note}", flush=True)
 
     # ── паспорт запуска ──────────────────────────────────────────────────────
-    run_id = new_run_id(args.chip, args.budget)
+    run_id = new_run_id(args.chip, args.budget, purpose=purpose.key)
     baseline = BaselineThreshold.load(args.baseline) if args.baseline.exists() else None
     impact = impact_mod.summarize(asset_rows, assets, prob_out, model.threshold, total_el)
     quality = _quality_percent()
@@ -592,6 +617,8 @@ def main() -> None:
                 else "Снимок из официального набора Sen1Floods11."
             ),
         },
+        # Цель запуска в паспорте: по ней воспроизводится, почему цена именно такая.
+        "purpose": purposes_mod.as_dict(purpose),
         "total_expected_loss_rub": total_el,
         # Одно событие в трёх единицах сразу. Рубль не единственный язык, на
         # котором про паводок разговаривают: дежурному важнее школы и клиники,

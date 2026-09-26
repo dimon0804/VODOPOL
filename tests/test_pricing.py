@@ -408,3 +408,51 @@ def _run_standalone() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(_run_standalone())
+
+
+# ── цель запуска меняет цену ─────────────────────────────────────────────────
+# Эксперты на чекпоинте сказали: от цели зависят затраты. Это не лозунг, а
+# устройство ПП 840: за срочность платят коэффициентом актуальности, и новая
+# съёмка ровно втрое дороже архивной. Проверяем, что цель действительно
+# доезжает до цены, а не остаётся подписью.
+
+def test_цель_запуска_меняет_ставку() -> None:
+    from decimal import Decimal
+    from src import contracts as C
+    from src.procurement import purposes as purposes_mod
+
+    response = purposes_mod.resolve("response")
+    damage = purposes_mod.resolve("damage")
+    assert C.FRESHNESS_COEF[response.acquisition_type] == Decimal("1.8")
+    assert C.FRESHNESS_COEF[damage.acquisition_type] == Decimal("0.6")
+    # Ровно втрое: срочность — самая дорогая строка таблицы актуальности.
+    assert (
+        C.FRESHNESS_COEF[response.acquisition_type]
+        / C.FRESHNESS_COEF[damage.acquisition_type]
+        == Decimal("3")
+    )
+
+
+def test_все_цели_описаны_и_разрешаются() -> None:
+    from src.procurement import purposes as purposes_mod
+
+    assert len(purposes_mod.PURPOSES) >= 3
+    for item in purposes_mod.PURPOSES:
+        assert item.title_ru and item.who and item.why
+        assert purposes_mod.resolve(item.key) is item
+        overrides = purposes_mod.catalog_overrides(item)
+        assert set(overrides) == {
+            "acquisition_type",
+            "processing_level",
+            "usage_type",
+            "guaranteed_purchase",
+        }
+
+
+def test_неизвестная_цель_это_ошибка_а_не_молчаливый_откат() -> None:
+    import pytest as _pytest
+    from src.procurement import purposes as purposes_mod
+
+    with _pytest.raises(ValueError) as err:
+        purposes_mod.resolve("нет-такой-цели")
+    assert "допустимые" in str(err.value)

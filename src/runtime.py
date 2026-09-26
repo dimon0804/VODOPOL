@@ -166,6 +166,7 @@ class RunContext:
             "impact": meta.get("impact", {}),
             "quality_pct": meta.get("quality_pct", {}),
             "total_expected_loss_rub": meta.get("total_expected_loss_rub"),
+            "purpose": meta.get("purpose", {}),
         }
 
     def assets(self) -> dict[str, Any]:

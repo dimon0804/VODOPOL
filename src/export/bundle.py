@@ -123,11 +123,21 @@ class BundlePaths:
         )
 
 
-def new_run_id(chip_id: str, budget_rub: int | float | Decimal, at: date | None = None) -> str:
+def new_run_id(
+    chip_id: str,
+    budget_rub: int | float | Decimal,
+    at: date | None = None,
+    purpose: str = "",
+) -> str:
     """Человекочитаемый идентификатор запуска: ``20260926-India_900498-b250000``.
 
     Детерминирован: одни и те же чип, бюджет и дата дают один и тот же идентификатор.
     Дата передаётся явно, когда нужен воспроизводимый прогон прошлого дня.
+
+    Цель запуска попадает в имя только тогда, когда она не основная. Иначе два
+    прогона по одному чипу с разными целями писались бы в один каталог и молча
+    затирали друг друга — а цена у них разная, и именно её сравнивают.
+    Идентификаторы уже собранных комплектов при этом не меняются.
     """
     chip = _RUN_ID_SAFE.sub("_", str(chip_id).strip())
     if not chip:
@@ -138,7 +148,10 @@ def new_run_id(chip_id: str, budget_rub: int | float | Decimal, at: date | None 
     if budget < 0:
         raise BundleWriteError("бюджет не может быть отрицательным")
     day = (at or date.today()).strftime("%Y%m%d")
-    return f"{day}-{chip}-b{int(budget)}"
+    tail = ""
+    if purpose and purpose != "response":
+        tail = "-" + _RUN_ID_SAFE.sub("_", str(purpose).strip())
+    return f"{day}-{chip}-b{int(budget)}{tail}"
 
 
 def _raster_part(payload: Mapping[str, Any], key: str) -> tuple[Any, Mapping[str, Any]]:
