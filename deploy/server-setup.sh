@@ -45,7 +45,23 @@ systemctl enable --now docker >/dev/null 2>&1 || true
 if [ -d "$DIR/.git" ]; then
     say "Обновляю код в $DIR"
     git -C "$DIR" fetch --all --quiet
-    git -C "$DIR" reset --hard origin/master --quiet
+    # Имя основной ветки не угадываем: на GitVerse она master, на GitHub main.
+    # Захардкоженное имя роняло обновление на зеркале с другим именем ветки.
+    BRANCH="$(git -C "$DIR" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+    if [ -z "$BRANCH" ]; then
+        for candidate in origin/master origin/main; do
+            if git -C "$DIR" rev-parse --verify --quiet "$candidate" >/dev/null; then
+                BRANCH="$candidate"
+                break
+            fi
+        done
+    fi
+    if [ -n "$BRANCH" ]; then
+        echo "    ветка $BRANCH"
+        git -C "$DIR" reset --hard "$BRANCH" --quiet
+    else
+        echo "    основная ветка не определилась, оставляю код как есть" >&2
+    fi
 else
     say "Забираю код в $DIR"
     rm -rf "$DIR"
