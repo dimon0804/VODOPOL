@@ -605,3 +605,47 @@ details.more[open] summary { margin-bottom: 12px; }
 .tbl tbody td:first-child::first-letter { text-transform: uppercase; }
 .ibar { display: inline-block; width: 90px; height: 6px; margin-left: 12px; border-radius: 3px; background: var(--lav); vertical-align: middle; overflow: hidden; }
 .ibar i { display: block; height: 100%; background: var(--primary); border-radius: 3px; }
+
+
+/* Ступень приоритета проверки: цвет несёт смысл, поэтому рядом с ним всегда
+   стоит слово — цвет один, без подписи, не читается при дальтонизме и в печати. */
+.ptag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font: 700 12px var(--sans);
+  white-space: nowrap;
+}
+
+.ptag i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+
+/* Ступени приоритета под легендой слоя: объясняют цвет точек и зон на карте. */
+.lg-prio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+}
+
+.lg-prio-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+}
+
+.lg-prio-item i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}

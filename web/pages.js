@@ -227,7 +227,12 @@
         '<td class="r">' + fmt(p.vulnerability_coef, 2) + '</td>' +
         '<td><span class="elv">' + (ok ? mln(el) : DASH) + '</span>' + (ok ? '<span class="elbar"><i style="width:' + Math.max(2, Math.round((el || 0) / maxEL * 100)) + '%"></i></span>' : '') + '</td>' +
         '<td>' + (ok ? (inMask ? '<span class="dot on"></span>да' : '<span class="dot"></span>нет') : DASH) + '</td>' +
-        '<td>' + (tier.key === 'high' ? '<span class="tag">Высокий</span>' : '<span class="muted">' + esc(tier.title) + '</span>') + '</td></tr>';
+        // Приоритет цветом, а не только словом: эксперты просили светофор, потому
+        // что глазом ступень различается быстрее, чем прочитанное слово. Цвет
+        // задаём инлайном — он приходит из PRIORITY_TIERS и меняется там же.
+        '<td><span class="ptag" style="background:' + tier.color + '1f;color:' + tier.color +
+        ';box-shadow:inset 0 0 0 1px ' + tier.color + '66" title="' + esc(tier.text) + '">' +
+        '<i style="background:' + tier.color + '"></i>' + esc(cap(tier.title)) + '</span></td></tr>';
     });
     html += '</tbody><tfoot><tr><td></td><td><b>Итого</b></td><td colspan="4"></td><td><b>' + mln(S.summary.total_expected_loss_rub) +
       ' млн ₽</b></td><td colspan="2" class="muted small r">полоса — доля от наибольшего ущерба · приоритет — треть портфеля по рангу EL</td></tr></tfoot>';
