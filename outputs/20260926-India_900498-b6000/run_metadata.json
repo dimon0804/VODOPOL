@@ -109,6 +109,7 @@
       "ensemble_size": 3,
       "calibration": "изотоническая, на validation",
       "trained_on_chips": 251,
+      "trained_on_note": "Число обученных чипов может быть меньше числа чипов в train: чипы, где после отбора валидных пикселей не осталось ни одного пригодного образца, в обучение не попадают. Это не потеря данных, а отсев пустых кадров.",
       "threshold_selected_on": "validation"
     }
   },
@@ -171,7 +172,7 @@
     93.78124105316887,
     26.76835816230715
   ],
-  "commit": "ea0f08b743f325b9326e81b1ace4493ae280f3ac",
+  "commit": "23af61b7e018d8d19aa61782d74c5554cb20e1ec",
   "generated_at": "2026-09-26",
   "reproduce": [
     "python -m src.cli.fetch_data",

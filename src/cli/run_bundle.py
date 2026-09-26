@@ -307,6 +307,11 @@ def main() -> None:
                 "ensemble_size": len(model.boosters),
                 "calibration": "изотоническая, на validation",
                 "trained_on_chips": len(model.trained_on),
+                "trained_on_note": (
+                    "Число обученных чипов может быть меньше числа чипов в train: чипы, где "
+                    "после отбора валидных пикселей не осталось ни одного пригодного образца, "
+                    "в обучение не попадают. Это не потеря данных, а отсев пустых кадров."
+                ),
                 "threshold_selected_on": "validation",
             },
         },

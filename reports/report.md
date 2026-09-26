@@ -214,4 +214,4 @@ python -m src.cli.train_main
 python -m src.cli.run_bundle --chip India_900498 --budget 6000
 ```
 
-Commit: `ea0f08b743f325b9326e81b1ace4493ae280f3ac`. Дата сборки: 2026-09-26.
+Commit: `23af61b7e018d8d19aa61782d74c5554cb20e1ec`. Дата сборки: 2026-09-26.
