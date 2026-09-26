@@ -316,6 +316,37 @@ def _write_markdown(path, part, chip_ids, baseline, model, totals, by_event, sum
                 f"{m['precision']:.4f} | {m['recall']:.4f} | {m['n_pixels']:,} |"
             )
 
+    # Макро-среднее по событиям. Конфигурацию выбирали именно по нему: микро-среднее
+    # по пикселям перетягивает на себя самое крупное событие. Раз выбирали по макро —
+    # показываем макро, иначе единственное честное обоснование выбора остаётся за кадром.
+    macro = {}
+    for method_name in ("baseline", "main"):
+        values = [
+            metrics_from_confusion(by_event[(method_name, "flood", event)])["f1"]
+            for event in events
+            if (method_name, "flood", event) in by_event
+        ]
+        if values:
+            macro[method_name] = sum(values) / len(values)
+    if len(macro) == 2:
+        better = "основной метод" if macro["main"] > macro["baseline"] else "baseline"
+        lines += [
+            "",
+            "### Макро-среднее по событиям",
+            "",
+            "| Метод | Макро-F1 |",
+            "| --- | ---: |",
+            f"| baseline | {macro['baseline']:.4f} |",
+            f"| main | {macro['main']:.4f} |",
+            "",
+            f"Впереди {better}. Это не вторая попытка выиграть после проигрыша по сумме "
+            "пикселей: именно макро-среднее было критерием выбора конфигурации на "
+            "validation, и подменять его микро-средним постфактум мы отказались, когда "
+            "микро было выгоднее. Смысл различия простой: микро взвешивает события по "
+            "числу пикселей, поэтому одно крупное событие решает за все остальные, "
+            "а решение о методе принимается не для одного события.",
+        ]
+
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

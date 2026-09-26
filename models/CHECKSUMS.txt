@@ -1,0 +1,4 @@
+# Контрольные суммы весов. Сверка: python -m src.cli.verify_weights
+aae6fbb8c38ec4a2b0d46aacde071ef62a5e3869ea3bb4d93d6b6c8f5fc9c6b0  models/main/main_model.pkl
+807de12a306aaea58feaa4d574171710ff2e393258dae9362fd0dcb6c151a38e  models/main/main_model.json
+f4bba8a44d4f3dc6fa6a19a21d0e7d7a61f11283a31c987bf1a49dcb9c12b5ea  models/baseline.json

@@ -603,11 +603,17 @@
         // белый круг с обводкой; объект без оценки — пунктир. Это DOM, а не canvas:
         // номер должен читаться, а подписи на canvas Leaflet не рисует.
         var num = String(p.asset_id || '').replace(/^a0*/, '') || '?';
-        var tier = ok ? priorityTier(p.rank, rankedCount()).key : 'none';
+        var step = priorityTier(ok ? p.rank : null, rankedCount());
+        // Цвет берём из PRIORITY_TIERS инлайном, а не из CSS-класса. Класс задавал
+        // оттенки основной палитры, и на карте получался один тон разной силы —
+        // ровно то, что легенда под картой называла светофором. Расхождение между
+        // легендой и картой хуже отсутствия цвета: оно выглядит как ошибка счёта.
+        var paint = 'border-color:' + step.color + ';color:' + step.color +
+          (step.key === 'high' ? ';background:' + step.color + ';color:#fff' : '');
         return L.marker(latlng, {
           icon: L.divIcon({
-            className: 'amark amark-' + tier,
-            html: '<span>' + esc(num) + '</span>',
+            className: 'amark amark-' + step.key,
+            html: '<span style="' + paint + '">' + esc(num) + '</span>',
             iconSize: [26, 26],
             iconAnchor: [13, 13]
           }),
@@ -1106,14 +1112,34 @@
     $('impact-classes').innerHTML = html;
 
     if (q.f1_pct !== null && q.f1_pct !== undefined) {
-      $('impact-quality').textContent = 'точность ' + fmt(q.precision_pct, 1) + ' %';
+      // Одно число со словом «точность» читается как accuracy: «модель права в
+      // сорока процентах случаев». Это не то, что измерено, и на защите такую
+      // подпись разберут по косточкам. Поэтому на экране стоят оба числа сразу и
+      // названы тем, что они значат, а не одним словом за оба.
+      $('impact-quality').innerHTML =
+        'верно названо <b>' + fmt(q.precision_pct, 1) + ' %</b> · найдено <b>' +
+        fmt(q.recall_pct, 1) + ' %</b>';
       $('impact-quality').title =
-        'На независимой проверке, часть test, ' + (q.chips || '—') + ' чипов: из того, что ' +
-        'названо затоплением, действительно затоплено ' + fmt(q.precision_pct, 1) + ' %; ' +
-        'из того, что затоплено, найдено ' + fmt(q.recall_pct, 1) + ' %; сводная F1 ' +
-        fmt(q.f1_pct, 1) + ' %, совпадение областей IoU ' + fmt(q.iou_pct, 1) + ' %.';
+        'Независимая проверка, часть test, ' + (q.chips || '—') + ' чипов. ' +
+        'Из того, что модель назвала затоплением, действительно затоплено ' +
+        fmt(q.precision_pct, 1) + ' %. Из того, что затоплено на самом деле, модель нашла ' +
+        fmt(q.recall_pct, 1) + ' %. Сводная F1 ' + fmt(q.f1_pct, 1) + ' %, совпадение ' +
+        'областей IoU ' + fmt(q.iou_pct, 1) + ' %. Долю верно классифицированных ' +
+        'пикселей не приводим: вода занимает малую часть снимка, и по ней алгоритм ' +
+        '«воды нет» получил бы за девяносто процентов.';
     } else {
-      $('impact-quality').textContent = 'точность не посчитана';
+      $('impact-quality').innerHTML = 'качество не посчитано';
+    }
+
+    // Те же числа строкой под таблицей: всплывающая подсказка не появится ни на
+    // проекторе, ни в записи ролика, а именно там эти цифры и спросят.
+    var qnode = $('impact-quality-line');
+    if (qnode) {
+      qnode.innerHTML = (q.f1_pct === null || q.f1_pct === undefined) ? '' :
+        'Независимая проверка на ' + (q.chips || '—') + ' чипах событий, которых модель ' +
+        'не видела: верно названо <b>' + fmt(q.precision_pct, 1) + ' %</b>, найдено <b>' +
+        fmt(q.recall_pct, 1) + ' %</b>, сводная F1 <b>' + fmt(q.f1_pct, 1) + ' %</b>, ' +
+        'совпадение областей IoU <b>' + fmt(q.iou_pct, 1) + ' %</b>.';
     }
 
     $('impact-note').textContent =
